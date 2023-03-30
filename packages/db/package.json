@@ -1,0 +1,21 @@
+{
+  "name": "db",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:push": "npx prisma db push --skip-generate",
+    "db:generate": "npx prisma generate"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prisma": "^4.12.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.12.0"
+  }
+}

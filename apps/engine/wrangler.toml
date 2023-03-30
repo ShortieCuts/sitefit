@@ -1,0 +1,16 @@
+account_id = "d4ea528a4398361b4055258d1634ad6d"
+name = "engine"
+main = "src/index.ts"
+compatibility_date = "2023-03-29"
+
+[durable_objects]
+bindings = [{name = "ENGINE_INSTANCE", class_name = "EngineInstance"}]
+
+[[migrations]]
+tag = "v1" # Should be unique for each entry
+new_classes = ["EngineInstance"]
+
+[[r2_buckets]]
+binding = 'PROJECTS' # <~ valid JavaScript variable name
+bucket_name = 'projects'
+preview_bucket_name = 'projects-dev'
