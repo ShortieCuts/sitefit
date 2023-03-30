@@ -7,3 +7,7 @@
 [Firebase](https://console.firebase.google.com/u/0/project/cad-fitter/overview)
 
 [Planetscale](https://app.planetscale.com/presmoore/cad-mapper)
+
+[Architecture](https://www.figma.com/file/UGtYy5IRUIgfMrciJ3cSnj/CAD-Mapper-Arch?node-id=0-1&t=Xbw9WobAJoiIPhuL-0)
+
+[UI Design](https://www.figma.com/file/JN26dTj0w1Lh3KqPDKFIGz/Mobile-CAD-App-Prototype?t=oCg83Uay6AxBFLla-0)
