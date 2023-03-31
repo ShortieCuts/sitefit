@@ -1,5 +1,5 @@
 import { Object2D } from "./object";
-import { Serializable } from "./serializable";
+import type { Serializable } from "./serializable";
 
 export class Project implements Serializable {
   id: string;

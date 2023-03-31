@@ -2,18 +2,19 @@ import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { createProject, CreateProjectSchema } from 'api';
 
-import { validateRequest } from '$lib/server/api';
+import { validateRequest, validateRequestWithAuth } from '$lib/server/api';
 
 export const POST = (async ({ request }) => {
-	return validateRequest(
+	return validateRequestWithAuth(
 		request,
 		CreateProjectSchema.omit({
 			owner: true
 		}),
-		async (payload) => {
+		async (payload, user) => {
 			const projectId = await createProject({
-				...payload,
-				owner: 'pub'
+				name: payload.name,
+				description: payload.description ?? '',
+				owner: user.publicId
 			});
 
 			if (projectId) {

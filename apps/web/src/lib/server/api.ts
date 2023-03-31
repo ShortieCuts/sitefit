@@ -1,3 +1,4 @@
+import { getRequestUser, type PrismaUser } from 'auth';
 import { z } from 'zod';
 
 export function validateRequest<T>(
@@ -51,6 +52,26 @@ export function validateRequest<T>(
 					})
 				);
 			}
+		}
+	});
+}
+
+export function validateRequestWithAuth<T>(
+	request: Request,
+	zodObj: z.ZodType<T>,
+	fn: (payload: T, auth: PrismaUser) => Promise<Response>
+): Promise<Response> {
+	return validateRequest(request, zodObj, async (payload) => {
+		let user = await getRequestUser(request);
+		if (user) {
+			return await fn(payload, user);
+		} else {
+			return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+				status: 401,
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
 		}
 	});
 }

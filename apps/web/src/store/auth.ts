@@ -106,7 +106,10 @@ export const signOut = async () => {
 	let { firebaseAuth } = await import('./firebase');
 
 	await createSession({ delete: true });
-	return await firebaseAuth.signOut();
+
+	await firebaseAuth.signOut();
+
+	location.reload();
 };
 
 export const sendPasswordReset = async (email: string) => {

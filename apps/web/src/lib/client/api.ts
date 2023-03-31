@@ -51,7 +51,7 @@ export function createApiEndpointHelper<T, A>(
 			};
 		} else {
 			return {
-				data: (res as any).data as A,
+				data: res as any as A,
 				error: false,
 				message: ''
 			};
@@ -62,8 +62,11 @@ export function createApiEndpointHelper<T, A>(
 export const createProject = createApiEndpointHelper<
 	{
 		name: string;
+		description: string;
 	},
-	string
+	{
+		projectId: string;
+	}
 >('POST', '/api/project');
 
 export const createSession = createApiEndpointHelper<

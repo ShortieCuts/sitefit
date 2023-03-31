@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { db } from "db";
 import { nanoid } from "nanoid";
+import type { User } from "auth";
 
 export const CreateProjectSchema = z.object({
   owner: z.string().min(1).max(100),
   name: z.string().min(1).max(100),
+  description: z.string().max(500).optional().default(""),
 });
 
 export async function createProject(
@@ -14,7 +16,7 @@ export async function createProject(
     data: {
       publicId: nanoid(32),
       name: project.name,
-      description: "",
+      description: project.description ?? "",
       homeLat: 0,
       homeLong: 0,
       blanketAccess: "READ",
@@ -26,7 +28,6 @@ export async function createProject(
       },
     },
   });
-
   if (p) {
     return p.publicId;
   }

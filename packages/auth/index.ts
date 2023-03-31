@@ -14,6 +14,8 @@ import { nanoid } from "nanoid";
 
 import * as jose from "jose";
 
+export { PrismaUser };
+
 export type AuthState = {
   isAnonymous: boolean;
   isLoading: boolean;
