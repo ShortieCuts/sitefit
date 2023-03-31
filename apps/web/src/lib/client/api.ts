@@ -1,3 +1,4 @@
+import type { MetadataProject } from '$lib/types/project';
 import type { User } from 'auth';
 
 export async function getAuthHeader(): Promise<string> {
@@ -59,6 +60,24 @@ export function createApiEndpointHelper<T, A>(
 	};
 }
 
+export function createProjectApiEndpointHelper<T extends undefined, A>(
+	method: string,
+	endpoint: string
+): (projectId: string) => Promise<{ data: A; error: boolean; message: string }>;
+export function createProjectApiEndpointHelper<T, A>(
+	method: string,
+	endpoint: string
+): (projectId: string, payload: T) => Promise<{ data: A; error: boolean; message: string }>;
+export function createProjectApiEndpointHelper<T, A>(
+	method: string,
+	endpoint: string
+): (projectId: string, payload: T) => Promise<{ data: A; error: boolean; message: string }> {
+	return async (projectId: string, payload: T) => {
+		let realEndpoint = endpoint.replace('<projectId>', projectId);
+		return createApiEndpointHelper<T, A>(method, realEndpoint)(payload);
+	};
+}
+
 export const createProject = createApiEndpointHelper<
 	{
 		name: string;
@@ -89,3 +108,8 @@ export const updateMe = createApiEndpointHelper<
 		success: boolean;
 	}
 >('POST', '/api/user/update');
+
+export const getProjectMetadata = createProjectApiEndpointHelper<{}, MetadataProject>(
+	'POST',
+	'/api/project/<projectId>/metadata'
+);

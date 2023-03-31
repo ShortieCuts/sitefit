@@ -25,7 +25,7 @@
 </script>
 
 {#if auth.user}
-	<button class="flex flex-row items-center justify-center space-x-2">
+	<button class="flex flex-row items-center justify-center">
 		<UserProfilePicture user={auth.user} />
 
 		<Popover

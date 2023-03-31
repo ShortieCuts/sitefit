@@ -1,4 +1,5 @@
 import { getRequestUser, type PrismaUser } from 'auth';
+import { db } from 'db';
 import { z } from 'zod';
 
 export function validateRequest<T>(
@@ -65,6 +66,91 @@ export function validateRequestWithAuth<T>(
 		let user = await getRequestUser(request);
 		if (user) {
 			return await fn(payload, user);
+		} else {
+			return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+				status: 401,
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+		}
+	});
+}
+
+export function validateRequestWithAccess<T>(
+	projectId: string,
+	accessLevel: 'READ' | 'WRITE' | 'COMMENT',
+	request: Request,
+	zodObj: z.ZodType<T>,
+	fn: (payload: T, auth: PrismaUser) => Promise<Response>
+): Promise<Response> {
+	return validateRequest(request, zodObj, async (payload) => {
+		let user = await getRequestUser(request);
+		if (user) {
+			let project = await db.project.findUnique({
+				where: {
+					publicId: projectId
+				},
+				include: {
+					grantedAccess: {
+						where: {
+							userId: user.id
+						}
+					}
+				}
+			});
+
+			if (!project) {
+				return new Response(JSON.stringify({ error: 'Project not found' }), {
+					status: 404,
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+			}
+
+			if (project.ownerId === user.id) {
+				return await fn(payload, user);
+			}
+
+			if (project.grantedAccess.length === 0) {
+				return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+					status: 401,
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+			}
+
+			let access = project.grantedAccess[0];
+			let hasAccess = true;
+
+			if (access.status !== 'ACTIVE') {
+				hasAccess = false;
+			}
+
+			if (accessLevel === 'COMMENT') {
+				if (access.level == 'READ') {
+					hasAccess = false;
+				}
+			}
+
+			if (accessLevel === 'WRITE') {
+				if (access.level == 'READ' || access.level == 'COMMENT') {
+					hasAccess = false;
+				}
+			}
+
+			if (hasAccess) {
+				return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+					status: 401,
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+			} else {
+				return await fn(payload, user);
+			}
 		} else {
 			return new Response(JSON.stringify({ error: 'Unauthorized' }), {
 				status: 401,

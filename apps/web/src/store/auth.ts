@@ -140,7 +140,7 @@ if (browser) {
 			let cookies = parseCookie(document.cookie);
 			let session = cookies.session;
 			if (!session) {
-				await createSession({});
+				await createSession({ delete: false });
 			}
 		});
 	})();
