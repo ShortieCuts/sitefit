@@ -1,0 +1,21 @@
+{
+	"name": "CAD Fitter",
+	"id": "/",
+	"start_url": "/",
+	"lang": "en-US",
+	"theme_color": "#1e90ff",
+	"display": "standalone",
+	"background_color": "#1e90ff",
+	"orientation": "any",
+	"short_name": "cadfitter",
+	"dir": "ltr",
+	"description": "cad fitter app",
+	"categories": ["utilities"],
+	"screenshots": [],
+	"icons": [
+		{
+			"src": "/favicon.png",
+			"sizes": "114x114"
+		}
+	]
+}

@@ -132,6 +132,20 @@ export const refreshUserData = async () => {
 	});
 };
 
+export const getSession = async (noCreate: boolean = false): Promise<string> => {
+	let cookies = parseCookie(document.cookie);
+	let session = cookies.session;
+	if (!session) {
+		if (noCreate) return '';
+
+		await createSession({ delete: false });
+
+		return await getSession(true);
+	}
+
+	return session;
+};
+
 if (browser) {
 	(async () => {
 		let { firebaseAuth } = await import('./firebase');

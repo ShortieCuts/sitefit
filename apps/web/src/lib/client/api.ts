@@ -30,13 +30,18 @@ export function createApiEndpointHelper<T, A>(
 				? {
 						headers: {
 							'Content-Type': 'application/json',
-							Authorization: await getAuthHeader()
+							// Authorization: await getAuthHeader()
+							...(endpoint == '/api/user/session'
+								? {
+										Authorization: await getAuthHeader()
+								  }
+								: {})
 						},
 						body: JSON.stringify(payload)
 				  }
 				: {
 						headers: {
-							Authorization: await getAuthHeader()
+							// Authorization: await getAuthHeader()
 						}
 				  })
 		});

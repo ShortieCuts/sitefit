@@ -11,7 +11,7 @@
 		faSearch,
 		faShare
 	} from '@fortawesome/free-solid-svg-icons';
-	import { fade } from 'svelte/transition';
+	import { fade, slide, fly } from 'svelte/transition';
 	import type { AuthState } from 'auth';
 	import { createEditorContext, createProjectBroker, setSvelteContext } from 'src/store/editor';
 
@@ -22,6 +22,7 @@
 	import EditorToolbar from './EditorToolbar.svelte';
 	import { isMobile } from 'src/store/responsive';
 	import EditorNavbar from './EditorNavbar.svelte';
+	import { dialogs } from './dialogs';
 
 	export let auth: AuthState;
 	export let projectId: string;
@@ -33,6 +34,8 @@
 
 	const { name } = broker.metadata;
 	const { loading, error } = broker;
+
+	const { activeDialog } = editorContext;
 </script>
 
 <svelte:head>
@@ -41,7 +44,7 @@
 
 <div class="editor-scaffold h-full flex flex-col select-none">
 	{#if !$isMobile}
-		<div class="editor-bar h-16 bg-white flex flex-row border-b-[1px] border-gray-200">
+		<div class="editor-bar h-16 min-h-[4rem] bg-white flex flex-row border-b-[1px] border-gray-200">
 			<div class="editor-bar-left flex-1 justify-start flex flex-row items-center pl-2">
 				<div class="flex flex-row">
 					<div class="flex flex-row items-center cursor-pointer">
@@ -59,7 +62,11 @@
 							<div
 								class="shadow-xl bg-white border-gray-100 border-2 space-y-2 rounded-lg min-w-[150px] overflow-hidden"
 							>
-								<a href="/" class="flex flex-row items-center px-4 py-1 hover:bg-gray-100 text-sm">
+								<a
+									href="/"
+									data-sveltekit-reload
+									class="flex flex-row items-center px-4 py-1 hover:bg-gray-100 text-sm"
+								>
 									<div class="icon-sm mr-2"><Fa icon={faArrowLeft} /></div>
 									Back to projects
 								</a>
@@ -94,8 +101,18 @@
 			<div
 				class="editor-bar-center flex-1 justify-end flex flex-row items-center my-auto space-x-4 h-8 pr-4"
 			>
-				<button class="btn shadow-style"><Fa icon={faComment} /> Comments</button>
-				<button class="btn shadow-style"><Fa icon={faShare} /> Share</button>
+				<button
+					class="btn shadow-style"
+					on:click={() => editorContext.activateDialog('comments')}
+					class:active={$activeDialog == 'comments'}
+				>
+					<Fa icon={faComment} /> Comments</button
+				>
+				<button
+					class="btn shadow-style"
+					on:click={() => editorContext.activateDialog('share')}
+					class:active={$activeDialog == 'share'}><Fa icon={faShare} /> Share</button
+				>
 
 				<UserDropChip {auth} />
 			</div>
@@ -103,21 +120,75 @@
 	{/if}
 	<div class="editor-main bg-black h-full flex flex-row">
 		{#if !$isMobile}
-			<div class="editor-sidebar bg-white w-16 border-r-[1px] border-gray-200">
+			<div class="editor-sidebar bg-white w-16 border-r-[1px] border-gray-200 z-20">
 				<EditorNavbar />
 			</div>
+			{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'left'}
+				<div
+					transition:fly={{ duration: 200, x: -400, opacity: 0 }}
+					class="dialog-slide bg-white w-[400px] fixed left-16 top-16 bottom-0 z-10 border-gray-200 border-t-[1px]"
+				>
+					<svelte:component this={dialogs[$activeDialog].component} />
+				</div>
+			{/if}
 		{/if}
 		<div class="editor-viewport h-full w-full relative">
 			{#if !$isMobile}
 				<EditorToolbar />
 			{:else}
-				<div class="editor-mobile-sidebar absolute top-0 left-0 right-0 h-8">
+				<div class="editor-mobile-sidebar absolute top-4 left-0 right-0 h-8">
 					<EditorNavbar />
 				</div>
 			{/if}
 		</div>
+		{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'right'}
+			<div
+				transition:fly={{ duration: 200, x: 40, opacity: 0 }}
+				class="dialog-slide bg-white w-[400px] fixed right-0 top-16 bottom-0 z-20 border-gray-200 border-t-[1px]"
+			>
+				<svelte:component this={dialogs[$activeDialog].component} />
+			</div>
+		{/if}
 	</div>
 </div>
+
+{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center'}
+	<div
+		transition:fade={{ duration: 100 }}
+		class="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center"
+		on:click={() => editorContext.activateDialog('')}
+		on:keydown={(e) => {
+			if (e.key === 'Escape') {
+				editorContext.activateDialog('');
+			}
+		}}
+	>
+		<div
+			on:click|stopPropagation={() => {}}
+			on:keydown={() => {}}
+			transition:fly={{
+				y: 20
+			}}
+			class="dialog-slide bg-white w-[450px] h-80 fixed z-30 rounded-lg border-gray-200 border-t-[1px]"
+		>
+			<svelte:component this={dialogs[$activeDialog].component} />
+		</div>
+	</div>
+{/if}
+
+{#if $isMobile && $activeDialog}
+	<div class="dialog-slide fixed top-0 bottom-0 left-0 right-0 z-30 pointer-events-none">
+		<svelte:component this={dialogs[$activeDialog].component} />
+	</div>
+{/if}
+
+<svelte:window
+	on:keyup={() => {
+		if ($activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center') {
+			editorContext.activateDialog('');
+		}
+	}}
+/>
 
 {#if $loading}
 	<div

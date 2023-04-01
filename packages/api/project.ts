@@ -12,24 +12,33 @@ export const CreateProjectSchema = z.object({
 export async function createProject(
   project: z.infer<typeof CreateProjectSchema>
 ): Promise<string | null> {
-  let p = await db.project.create({
-    data: {
-      publicId: nanoid(32),
+  let user = await db()
+    .selectFrom("User")
+    .select("id")
+    .where("publicId", "=", project.owner)
+    .executeTakeFirst();
+  if (!user) return null;
+
+  let publicId = nanoid(32);
+  let newP = await db()
+    .insertInto("Project")
+    .values({
+      publicId,
       name: project.name,
       description: project.description ?? "",
       homeLat: 0,
       homeLong: 0,
       blanketAccess: "READ",
       blanketAccessGranted: false,
-      owner: {
-        connect: {
-          publicId: project.owner,
-        },
-      },
-    },
-  });
-  if (p) {
-    return p.publicId;
+      updatedAt: new Date(),
+      createdAt: new Date(),
+
+      ownerId: user?.id ?? 0,
+    })
+    .execute();
+
+  if (newP.length > 0 && (newP[0].numInsertedOrUpdatedRows ?? 0) > 0) {
+    return publicId;
   }
 
   return null;

@@ -16,22 +16,13 @@ export const POST = (async ({ request }) => {
 			await executeDataViewQuery(
 				'/api/projects',
 				input,
-				db.project,
-				{
-					where: {
-						owner: {
-							publicId: user.publicId
-						}
-					},
-					orderBy: {
-						createdAt: 'desc'
-					},
-					include: {
-						owner: true
-					}
+				'Project',
+				(q) => {
+					return q.where('ownerId', '=', user.id).orderBy('createdAt', 'desc');
 				},
+
 				input,
-				(project) =>
+				(project: any) =>
 					({
 						createdAt: project.createdAt,
 						updatedAt: project.updatedAt,

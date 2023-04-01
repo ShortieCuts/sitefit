@@ -87,18 +87,27 @@ export function validateRequestWithAccess<T>(
 	return validateRequest(request, zodObj, async (payload) => {
 		let user = await getRequestUser(request);
 		if (user) {
-			let project = await db.project.findUnique({
-				where: {
-					publicId: projectId
-				},
-				include: {
-					grantedAccess: {
-						where: {
-							userId: user.id
-						}
+			let project = await db()
+				.selectFrom('Project')
+				.selectAll()
+				.where('publicId', '=', projectId)
+				.executeTakeFirst();
+
+			if (!project) {
+				return new Response(JSON.stringify({ error: 'Project not found' }), {
+					status: 404,
+					headers: {
+						'Content-Type': 'application/json'
 					}
-				}
-			});
+				});
+			}
+			let grantedAccess = await db()
+				.selectFrom('Access')
+				.where('projectId', '=', project.id)
+				.where('Access.userId', '=', user.id)
+
+				.select(['Access.level', 'Access.id', 'status'])
+				.executeTakeFirst();
 
 			if (!project) {
 				return new Response(JSON.stringify({ error: 'Project not found' }), {
@@ -113,7 +122,7 @@ export function validateRequestWithAccess<T>(
 				return await fn(payload, user);
 			}
 
-			if (project.grantedAccess.length === 0) {
+			if (!grantedAccess) {
 				return new Response(JSON.stringify({ error: 'Unauthorized' }), {
 					status: 401,
 					headers: {
@@ -122,7 +131,7 @@ export function validateRequestWithAccess<T>(
 				});
 			}
 
-			let access = project.grantedAccess[0];
+			let access = grantedAccess;
 			let hasAccess = true;
 
 			if (access.status !== 'ACTIVE') {

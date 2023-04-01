@@ -2,14 +2,15 @@ import { createSessionCookie } from 'auth';
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { dev } from '$app/environment';
 
 export const POST = (async ({ request, cookies }) => {
 	let input = (await request.json()) as { delete: boolean };
 	if (input.delete) {
 		cookies.set('session', '', {
 			maxAge: 0,
-			httpOnly: true,
-			secure: true,
+			httpOnly: !dev,
+			secure: !dev,
 			sameSite: true,
 			path: '/'
 		});
@@ -21,8 +22,8 @@ export const POST = (async ({ request, cookies }) => {
 	if (session) {
 		const options = {
 			maxAge: 60 * 60 * 24 * 13.99,
-			httpOnly: true,
-			secure: true,
+			httpOnly: !dev,
+			secure: !dev,
 			sameSite: true,
 			path: '/'
 		};

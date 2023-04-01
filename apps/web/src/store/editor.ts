@@ -1,7 +1,11 @@
-import { writable, readable, type Readable, type Writable } from 'svelte/store';
-import { Project } from 'core';
+import { get, writable, readable, type Readable, type Writable } from 'svelte/store';
+import { Project, SocketMessage } from 'core';
 import { getContext, setContext } from 'svelte';
 import { getProjectMetadata } from '$lib/client/api';
+import { dev } from '$app/environment';
+import { getSession } from './auth';
+
+const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.xyz';
 
 export type ProjectAccessLevel = 'READ' | 'WRITE' | 'COMMENt';
 
@@ -32,6 +36,7 @@ export type ProjectMetadata = {
 };
 
 export class ProjectBroker {
+	projectId: string;
 	metadataDirty: boolean = false;
 	metadata: ProjectMetadata;
 	error: Writable<string | null> = writable(null);
@@ -49,6 +54,7 @@ export class ProjectBroker {
 	private enqueuedMetadataPush: NodeJS.Timeout | null = null;
 
 	constructor(id: string) {
+		this.projectId = id;
 		this.metadata = {
 			name: writable(''),
 			description: writable(''),
@@ -81,11 +87,42 @@ export class ProjectBroker {
 				this.loading.set(true);
 				await this.pullMetadata();
 				this.loading.set(false);
+
+				this.establishConnection();
 			})();
 		}
 	}
 
-	establishConnection() {}
+	sendMessage(message: SocketMessage) {
+		if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+			this.socket.send(JSON.stringify(message));
+		}
+	}
+
+	establishConnection() {
+		const wss = document.location.protocol === 'http:' ? 'ws://' : 'wss://';
+		let ws = new WebSocket(wss + WEBSOCKET_URL + '/' + this.projectId + '/websocket');
+		this.socket = ws;
+
+		ws.addEventListener('open', (event) => {
+			this.connected.set(true);
+			(async () => {
+				this.sendMessage(SocketMessage.login(await getSession()));
+			})();
+		});
+
+		ws.addEventListener('message', (event) => {
+			let data = JSON.parse(event.data);
+			console.log(data);
+		});
+
+		ws.addEventListener('close', (event) => {
+			console.log('WebSocket closed', event.code, event.reason);
+		});
+		ws.addEventListener('error', (event) => {
+			console.log('WebSocket error', event);
+		});
+	}
 
 	addToMetadataWatcher(store: Readable<any>) {
 		store.subscribe((value) => {
@@ -141,7 +178,11 @@ export class EditorContext {
 	zoom: Writable<number> = writable(0);
 
 	activateDialog(key: string) {
-		this.activeDialog.set(key);
+		if (get(this.activeDialog) === key) {
+			this.activeDialog.set('');
+		} else {
+			this.activeDialog.set(key);
+		}
 	}
 }
 

@@ -1,10 +1,73 @@
-import { Project } from "core";
+import { isJoin, isLogin, Project, SocketMessage } from "core";
+
+import { checkRequestAuth, getUserFromFirebaseId } from "auth";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+async function handleErrors(request: Request, func: () => Promise<Response>) {
+  try {
+    return await func();
+  } catch (err: any) {
+    if (request.headers.get("Upgrade") == "websocket") {
+      // Annoyingly, if we return an HTTP error in response to a WebSocket request, Chrome devtools
+      // won't show us the response body! So... let's send a WebSocket response with an error
+      // frame instead.
+      let pair = new WebSocketPair();
+      pair[1].accept();
+      pair[1].send(JSON.stringify({ error: err.stack }));
+      pair[1].close(1011, "Uncaught exception during session setup");
+      return new Response(null, { status: 101, webSocket: pair[0] });
+    } else {
+      return new Response(err.stack, { status: 500 });
+    }
+  }
+}
+
+class Session {
+  uid: string;
+  userId: string | null;
+  socket: WebSocket;
+  quit: boolean = false;
+  color: string = "#000000";
+
+  constructor(socket: WebSocket, uid: string) {
+    this.socket = socket;
+    this.uid = uid;
+    this.userId = null;
+  }
+
+  async handleLogin(msg: SocketMessage): Promise<boolean> {
+    if (isLogin(msg)) {
+      let res = await checkRequestAuth(msg.session);
+      if (res) {
+        let user = await getUserFromFirebaseId(res.uid);
+        if (user) {
+          this.userId = user.publicId;
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  kill() {
+    this.quit = true;
+    this.socket.close();
+  }
+
+  send(msg: SocketMessage) {
+    this.socket.send(JSON.stringify(msg));
+  }
+}
+
 export class EngineInstance {
   state: DurableObjectState;
-
+  uidCounter: number = 0;
   project: Project | null;
 
   dirty: boolean = false;
@@ -14,6 +77,8 @@ export class EngineInstance {
   saveNonce: number = 0;
 
   broken: boolean = false;
+
+  sessions: Session[] = [];
 
   constructor(state: DurableObjectState, env: Env) {
     this.env = env;
@@ -36,6 +101,8 @@ export class EngineInstance {
 
         this.project = new Project(this.key);
         this.project.deserialize(parsedVal);
+      } else {
+        this.project = new Project(this.key);
       }
     });
   }
@@ -65,47 +132,118 @@ export class EngineInstance {
 
   // Handle HTTP requests from clients.
   async fetch(request: Request, env: Env) {
-    // Apply requested action.
-    console.log(await this.env.PROJECTS.get("test.txt"));
+    return await handleErrors(request, async () => {
+      let url = new URL(request.url);
 
-    let url = new URL(request.url);
+      switch (url.pathname.split("/")[2]) {
+        case "websocket": {
+          if (request.headers.get("Upgrade") != "websocket") {
+            return new Response("expected websocket", { status: 400 });
+          }
 
-    // Durable Object storage is automatically cached in-memory, so reading the
-    // same key every request is fast. (That said, you could also store the
-    // value in a class member if you prefer.)
-    switch (url.pathname.split("/")[2]) {
-      case "increment":
-        for (let i = 0; i < this.value.length; i++) {
-          this.value[i] += 1;
+          let ip = request.headers.get("CF-Connecting-IP");
+
+          let pair = new WebSocketPair();
+
+          await this.handleSession(pair[1], ip);
+
+          return new Response(null, { status: 101, webSocket: pair[0] });
         }
-        this.dirty = true;
-        this.enqueueSave();
-        break;
-      case "decrement":
-        for (let i = 0; i < this.value.length; i++) {
-          this.value[i] -= 1;
-        }
-        this.dirty = true;
-        this.enqueueSave();
-        break;
-      case "":
-        // Just serve the current value.
-        break;
-      default:
-        return new Response("Not found", { status: 404 });
-    }
 
-    // We don't have to worry about a concurrent request having modified the
-    // value in storage because "input gates" will automatically protect against
-    // unwanted concurrency. So, read-modify-write is safe. For more details,
-    // see: https://blog.cloudflare.com/durable-objects-easy-fast-correct-choose-three/
-    // await this.state.storage.put("value", value);
+        default:
+          return new Response("Not found", { status: 404 });
+      }
+    });
+  }
 
-    return new Response(
-      this.value
-        .slice(0, 1000)
-        .map((v) => v.toString())
-        .join(",")
+  async syncAll(session: Session) {
+    session.send(
+      SocketMessage.sync(
+        this.sessions
+          .filter((s) => !s.quit && s.userId)
+          .map((s) => ({
+            color: s.color,
+            userId: s.userId ?? "impossible",
+            uid: s.uid,
+          }))
+      )
     );
+  }
+
+  async handleSession(webSocket: WebSocket, ip: string | null) {
+    webSocket.accept();
+
+    let session = new Session(webSocket, "s" + this.uidCounter++);
+    this.sessions.push(session);
+
+    // Set event handlers to receive messages.
+    let loggedIn = false;
+    webSocket.addEventListener("message", async (msg: MessageEvent) => {
+      if (session.quit) {
+        webSocket.close(1011, "WebSocket broken.");
+        return;
+      }
+
+      let data: SocketMessage | null = null;
+      try {
+        data = JSON.parse(msg.data.toString());
+      } catch (e) {
+        console.log("Error parsing message: ", e);
+      }
+
+      try {
+        if (data) {
+          if (isLogin(data)) {
+            if (await session.handleLogin(data)) {
+              loggedIn = true;
+              this.syncAll(session);
+              this.broadcast(
+                SocketMessage.join(
+                  session.uid,
+                  session.userId ?? "",
+                  session.color
+                )
+              );
+            } else {
+              session.kill();
+            }
+          }
+        }
+      } catch (err: any) {
+        webSocket.send(JSON.stringify({ error: err.stack }));
+      }
+    });
+
+    let closeOrErrorHandler = (evt: CloseEvent | ErrorEvent) => {
+      session.quit = true;
+      this.sessions = this.sessions.filter((member) => member !== session);
+      this.broadcast(SocketMessage.leave(session.uid));
+    };
+    webSocket.addEventListener("close", closeOrErrorHandler);
+    webSocket.addEventListener("error", closeOrErrorHandler);
+  }
+
+  broadcast(message: SocketMessage) {
+    let json = JSON.stringify(message);
+
+    let dead: Session[] = [];
+    this.sessions = this.sessions.filter((session) => {
+      if (session.userId) {
+        try {
+          session.socket.send(json);
+          return true;
+        } catch (err) {
+          session.quit = true;
+          dead.push(session);
+          return false;
+        }
+      } else {
+        return true;
+      }
+    });
+
+    dead.forEach((sess) => {
+      this.broadcast(SocketMessage.leave(sess.uid));
+    });
   }
 }

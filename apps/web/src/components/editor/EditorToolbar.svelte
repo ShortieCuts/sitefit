@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 
 	import Fa from 'svelte-fa';
+	import { dialogs } from './dialogs';
 
 	const toolbarItems = [
 		{
@@ -26,7 +27,9 @@
 
 	const { editor } = getSvelteContext();
 
-	let { activeTool } = editor;
+	let { activeTool, activeDialog } = editor;
+
+	$: shiftRight = $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'left';
 
 	function handleKeyDown(event: KeyboardEvent) {
 		let currentEl = event.target as HTMLElement;
@@ -49,7 +52,10 @@
 
 <svelte:window on:keydown={handleKeyDown} />
 
-<div class="editor-toolbar flex flex-col rounded-lg absolute top-4 left-4 space-y-2">
+<div
+	class="editor-toolbar flex flex-col rounded-lg absolute top-4 left-4 space-y-2 transition-all"
+	style={shiftRight ? `left: calc(400px + 1rem);` : ``}
+>
 	{#each toolbarItems as item}
 		<button
 			class="text-white w-10 h-10 flex items-center justify-center rounded-lg hover:bg-blue-400 cursor-default"

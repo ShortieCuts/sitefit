@@ -3,7 +3,7 @@ import { User } from "./user";
 export { User };
 
 import type { User as FirebaseUser } from "firebase/auth";
-import { FIREBASE_WEB_API_KEY, PROJECT_ID } from "$env/static/private";
+import { GET_FIREBASE_WEB_API_KEY, GET_PROJECT_ID } from "secrets";
 import { db } from "db";
 
 import { Prisma, type User as PrismaUser } from "@prisma/client";
@@ -35,7 +35,7 @@ const parseCookie = (str: string) =>
     }, {} as { [key: string]: string });
 
 function getFirebaseAuthUrl(endpoint: string) {
-  return `https://identitytoolkit.googleapis.com/v1/${endpoint}?key=${FIREBASE_WEB_API_KEY}`;
+  return `https://identitytoolkit.googleapis.com/v1/${endpoint}?key=${GET_FIREBASE_WEB_API_KEY()}`;
 }
 
 export async function createSessionCookie(
@@ -48,7 +48,7 @@ export async function createSessionCookie(
     );
 
     let res = (await fetch(
-      getFirebaseAuthUrl(`projects/${PROJECT_ID}:createSessionCookie`),
+      getFirebaseAuthUrl(`projects/${GET_PROJECT_ID()}:createSessionCookie`),
       {
         method: "POST",
         headers: {
@@ -77,98 +77,108 @@ export async function createSessionCookie(
 }
 
 export async function checkRequestAuth(
-  request: Request
+  requestOrSession: Request | string
 ): Promise<FirebaseUser | null> {
-  let auth = request.headers.get("Authorization");
-  if (auth) {
-    auth = auth.split(" ")[1];
+  let auth: string | null = null;
+  if (typeof requestOrSession == "string") {
+    auth = requestOrSession;
+    console.log("Got from string");
   } else {
-    let cookies = parseCookie(request.headers.get("Cookie") ?? "");
-    auth = cookies.session ?? null;
-
+    auth = requestOrSession.headers.get("Authorization");
     if (auth) {
-      let pkey: { [key: string]: string } = await fetch(
-        "https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys"
-      ).then((res) => res.json());
-      try {
-        const protectedHeader = await jose.decodeProtectedHeader(auth);
-        console.log("Cookie: ", protectedHeader);
-
-        if (protectedHeader && protectedHeader.kid && protectedHeader.alg) {
-          let publicKey = pkey[protectedHeader.kid];
-          const { payload } = await jose.compactVerify(
-            auth,
-            await jose.importX509(publicKey, protectedHeader.alg)
-          );
-          let decoded = new TextDecoder().decode(payload);
-          try {
-            let parsed = JSON.parse(decoded);
-
-            if (parsed.exp > Date.now() / 1000) {
-              let user = await getUserFromFirebaseId(parsed.user_id);
-              console.log("User b", user);
-              if (user) {
-                return {
-                  emailVerified: parsed.email_verified,
-                  uid: parsed.user_id,
-                  photoURL: user.photoURL,
-                  isAnonymous:
-                    parsed?.firebase?.identities?.sign_in_provider ===
-                    "anonymous",
-                } as FirebaseUser;
-              } else {
-                return null;
-              }
-            } else {
-              return null;
-            }
-          } catch (e: any) {
-            console.error(e);
-            return null;
-          }
-        }
-      } catch (e: any) {
-        console.error(e);
-        return null;
-      }
+      console.log("Got from auth header");
+      auth = auth.split(" ")[1];
+    } else {
+      let cookies = parseCookie(requestOrSession.headers.get("Cookie") ?? "");
+      auth = cookies.session ?? null;
+      console.log("Got from cookies");
     }
   }
 
   if (auth) {
+    let pkey: { [key: string]: string } = await fetch(
+      "https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys"
+    ).then((res) => res.json());
     try {
-      let res = (await fetch(getFirebaseAuthUrl("accounts:lookup"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          idToken: auth,
-        }),
-      }).then((res) => res.json())) as {
-        error?: { message: string };
-        users?: (FirebaseUser & {
-          localId: string;
-          photoUrl: string;
-        })[];
-      };
+      const protectedHeader = await jose.decodeProtectedHeader(auth);
+      console.log("Cookie: ", protectedHeader);
 
-      if (res.error) {
-        console.error(res.error);
-        return null;
-      } else {
-        let user = res.users?.[0] ?? null;
-        if (user) {
-          return {
-            ...user,
-            uid: user.localId,
-            photoURL: user.photoUrl,
-          } as FirebaseUser;
-        } else {
+      if (protectedHeader && protectedHeader.kid && protectedHeader.alg) {
+        let publicKey = pkey[protectedHeader.kid];
+        const { payload } = await jose.compactVerify(
+          auth,
+          await jose.importX509(publicKey, protectedHeader.alg)
+        );
+        let decoded = new TextDecoder().decode(payload);
+        try {
+          let parsed = JSON.parse(decoded);
+
+          if (parsed.exp > Date.now() / 1000) {
+            let user = await getUserFromFirebaseId(parsed.user_id);
+            console.log("User b", user);
+            if (user) {
+              return {
+                emailVerified: parsed.email_verified,
+                uid: parsed.user_id,
+                photoURL: user.photoURL,
+                isAnonymous:
+                  parsed?.firebase?.identities?.sign_in_provider ===
+                  "anonymous",
+              } as FirebaseUser;
+            } else {
+              return null;
+            }
+          } else {
+            return null;
+          }
+        } catch (e: any) {
+          console.error(e);
           return null;
         }
       }
     } catch (e: any) {
-      console.log(e);
+      console.error(e);
+      return null;
+    }
+
+    if (auth) {
+      try {
+        let res = (await fetch(getFirebaseAuthUrl("accounts:lookup"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            idToken: auth,
+          }),
+        }).then((res) => res.json())) as {
+          error?: { message: string };
+          users?: (FirebaseUser & {
+            localId: string;
+            photoUrl: string;
+          })[];
+        };
+
+        if (res.error) {
+          console.error(res.error);
+          return null;
+        } else {
+          let user = res.users?.[0] ?? null;
+          if (user) {
+            return {
+              ...user,
+              uid: user.localId,
+              photoURL: user.photoUrl,
+            } as FirebaseUser;
+          } else {
+            return null;
+          }
+        }
+      } catch (e: any) {
+        console.log(e);
+        return null;
+      }
+    } else {
       return null;
     }
   } else {
@@ -221,11 +231,11 @@ export async function getRequestUser(
 export async function getUserFromFirebaseId(
   id: string
 ): Promise<PrismaUser | null> {
-  let data = await db.user.findFirst({
-    where: {
-      firebaseId: id,
-    },
-  });
+  let data = await db()
+    .selectFrom("User")
+    .selectAll()
+    .where("User.firebaseId", "=", id)
+    .executeTakeFirst();
 
   if (data) {
     return data;
@@ -238,40 +248,50 @@ export async function updateUserFromFirebase(
   maxAttempts = 10
 ): Promise<PrismaUser | null> {
   try {
-    let data = await db.user.upsert({
-      where: {
-        firebaseId: user.uid,
-      },
-      create: {
-        email: user.email ?? "",
+    let res = await db()
+      .updateTable("User")
+      .set({
         photoURL: user.photoURL ?? "",
-        publicId: nanoid(32),
-        firebaseId: user.uid,
-      },
-      update: {
-        photoURL: user.photoURL ?? "",
-      },
-    });
+      })
+      .where("User.firebaseId", "=", user.uid)
+      .executeTakeFirstOrThrow();
 
-    if (data) {
-      return data;
+    if (res.numUpdatedRows > 0) {
+      let data = await getUserFromFirebaseId(user.uid);
+      if (data) {
+        return data;
+      }
     } else {
       return null;
     }
   } catch (e: any) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      if (e.code === "P2002") {
-        // Unique constraint failed, let's try again with a new random id
-        if (maxAttempts > 0) {
-          return updateUserFromFirebase(user, maxAttempts - 1);
-        } else {
-          console.log("This should never happen... I hope");
-        }
-      }
-    }
+    let vals = {
+      email: user.email ?? "",
+      photoURL: user.photoURL ?? "",
+      publicId: nanoid(32),
+      firebaseId: user.uid,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      firstName: "",
+      lastName: "",
+      lastSeen: new Date(),
+    };
+    let data = await db()
+      .insertInto("User")
 
-    return null;
+      .values([vals])
+      .execute();
+
+    if (data && data[0].insertId) {
+      return {
+        ...vals,
+        id: data[0].insertId,
+      };
+    } else {
+      return null;
+    }
   }
+  return null;
 }
 
 export function prismaUserToClientUser(user: PrismaUser): User {

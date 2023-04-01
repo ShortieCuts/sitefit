@@ -18,14 +18,16 @@ export const POST = (async ({ request }) => {
 		})
 		.parse(input);
 
-	let res = await db.user.update({
-		where: {
-			id: user.id
-		},
-		data: payload
-	});
+	let res = await db()
+		.updateTable('User')
+		.set({
+			firstName: payload.firstName,
+			lastName: payload.lastName
+		})
+		.where('id', '=', user.id)
+		.executeTakeFirst();
 
 	return json({
-		success: !!res
+		success: res.numUpdatedRows > 0
 	});
 }) satisfies RequestHandler;

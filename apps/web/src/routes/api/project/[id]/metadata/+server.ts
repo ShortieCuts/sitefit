@@ -21,22 +21,21 @@ export const POST = (async ({ request, params }) => {
 		request,
 		z.object({}),
 		async (input, user) => {
-			let project = await db.project.findFirst({
-				where: {
-					publicId: params.id
-				},
-				include: {
-					grantedAccess: {
-						include: {
-							user: true
-						}
-					}
-				}
-			});
+			let project = await db()
+				.selectFrom('Project')
+				.selectAll()
+				.where('publicId', '=', params.id)
+				.executeTakeFirst();
 
 			if (!project) {
 				throw error(404, 'Project not found');
 			}
+			let grantedAccess = await db()
+				.selectFrom('Access')
+				.where('projectId', '=', project.id)
+				.innerJoin('User', 'Access.userId', 'User.id')
+				.select(['Access.level', 'Access.id', 'User.publicId'])
+				.execute();
 
 			return json({
 				name: project.name,
@@ -47,11 +46,11 @@ export const POST = (async ({ request, params }) => {
 				updatedAt: project.updatedAt,
 
 				access: {
-					items: project.grantedAccess.map((access) => {
+					items: grantedAccess.map((access) => {
 						return {
 							level: access.level,
 							id: access.id,
-							userId: access.user.publicId
+							userId: access.publicId
 						};
 					}),
 					blanketAccessGranted: project.blanketAccessGranted,
