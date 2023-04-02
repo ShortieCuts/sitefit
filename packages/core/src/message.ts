@@ -9,6 +9,7 @@ type SessionShape = {
 type Sync = {
   type: "sync";
   sessions: SessionShape[];
+  selfUid: string;
 };
 
 export function isSync(message: SocketMessage): message is Sync {
@@ -65,14 +66,19 @@ export namespace SocketMessage {
     };
   }
 
-  export function sync(sessions: SessionShape[]): Sync {
+  export function sync(a: { sessions: SessionShape[]; selfUid: string }): Sync {
     return {
       type: "sync",
-      sessions: sessions.map((s) => ({
+      selfUid: a.selfUid,
+      sessions: a.sessions.map((s) => ({
         uid: s.uid,
         userId: s.userId,
         color: s.color,
       })),
     };
   }
+  export type JoinType = Join;
+  export type LeaveType = Leave;
+  export type LoginType = Login;
+  export type SyncType = Sync;
 }

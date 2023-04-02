@@ -1,5 +1,5 @@
 import { get, writable, readable, type Readable, type Writable } from 'svelte/store';
-import { Project, SocketMessage } from 'core';
+import { isJoin, isLeave, isSync, Project, SocketMessage } from 'core';
 import { getContext, setContext } from 'svelte';
 import { getProjectMetadata } from '$lib/client/api';
 import { dev } from '$app/environment';
@@ -35,6 +35,12 @@ export type ProjectMetadata = {
 	access: Writable<ProjectAccessList>;
 };
 
+export type ProjectSession = {
+	uid: string;
+	userId: string;
+	color: string;
+};
+
 export class ProjectBroker {
 	projectId: string;
 	metadataDirty: boolean = false;
@@ -44,6 +50,9 @@ export class ProjectBroker {
 	loading: Writable<boolean> = writable(true);
 	pushing: Writable<boolean> = writable(false);
 	connected: Writable<boolean> = writable(false);
+
+	sessions: Writable<ProjectSession[]> = writable([]);
+	mySessionUid: Writable<string> = writable('');
 
 	private realMetadata: ProjectMetadata;
 
@@ -114,14 +123,53 @@ export class ProjectBroker {
 		ws.addEventListener('message', (event) => {
 			let data = JSON.parse(event.data);
 			console.log(data);
+			this.handleMessage(data);
 		});
 
 		ws.addEventListener('close', (event) => {
 			console.log('WebSocket closed', event.code, event.reason);
 		});
+
 		ws.addEventListener('error', (event) => {
 			console.log('WebSocket error', event);
 		});
+	}
+
+	handleJoin(session: ProjectSession) {
+		let sessions = get(this.sessions);
+		if (sessions.find((s) => s.uid === session.uid)) {
+			return;
+		}
+		sessions.push(session);
+		this.sessions.set(sessions);
+	}
+
+	handleLeave(uid: string) {
+		let sessions = get(this.sessions);
+		let index = sessions.findIndex((s) => s.uid === uid);
+		if (index === -1) {
+			return;
+		}
+		sessions.splice(index, 1);
+		this.sessions.set(sessions);
+	}
+
+	handleSync(message: SocketMessage.SyncType) {
+		this.mySessionUid.set(message.selfUid);
+
+		for (let s of message.sessions) {
+			this.handleJoin(s);
+		}
+	}
+
+	handleMessage(message: SocketMessage) {
+		if (isJoin(message)) {
+			this.handleJoin(message);
+		} else if (isLeave(message)) {
+			this.handleLeave(message.uid);
+		} else if (isSync(message)) {
+			this.handleSync(message);
+		}
 	}
 
 	addToMetadataWatcher(store: Readable<any>) {

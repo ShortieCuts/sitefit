@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "npx dotenv -- turbo run build",
-    "dev": "npx dotenv -- turbo run dev",
+    "dev": "npx dotenv -- turbo run dev --scope web",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db:generate": "npx dotenv -- turbo run db:generate",

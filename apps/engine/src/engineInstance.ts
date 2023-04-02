@@ -1,6 +1,7 @@
 import { isJoin, isLogin, Project, SocketMessage } from "core";
 
 import { checkRequestAuth, getUserFromFirebaseId } from "auth";
+import { randomNiceColorFromString } from "./color";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -158,15 +159,16 @@ export class EngineInstance {
 
   async syncAll(session: Session) {
     session.send(
-      SocketMessage.sync(
-        this.sessions
+      SocketMessage.sync({
+        selfUid: session.uid,
+        sessions: this.sessions
           .filter((s) => !s.quit && s.userId)
           .map((s) => ({
             color: s.color,
             userId: s.userId ?? "impossible",
             uid: s.uid,
-          }))
-      )
+          })),
+      })
     );
   }
 
@@ -196,6 +198,9 @@ export class EngineInstance {
           if (isLogin(data)) {
             if (await session.handleLogin(data)) {
               loggedIn = true;
+              session.color = randomNiceColorFromString(
+                `${session.userId}.${session.uid}`
+              );
               this.syncAll(session);
               this.broadcast(
                 SocketMessage.join(

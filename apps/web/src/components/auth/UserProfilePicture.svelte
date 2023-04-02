@@ -1,8 +1,11 @@
 <script lang="ts">
+	import type { PublicUserInfo } from '$lib/types/user';
 	import type { User } from 'auth';
 
-	export let user: User;
+	export let user: PublicUserInfo;
 	$: photoURL = user?.photoURL || null;
+
+	export let ringColor: string = '#e5e7eb';
 
 	function hashOfString(str: string) {
 		let hash = 0;
@@ -36,20 +39,24 @@
 		return colors[index];
 	}
 
-	$: bgColor = randomNiceColorFromString(user.firstName + user.lastName);
+	$: bgColor =
+		user.firstName == '' && user.lastName == ''
+			? '#eee'
+			: randomNiceColorFromString(user.firstName + user.lastName);
 </script>
 
 {#if photoURL}
 	<img
 		referrerpolicy="no-referrer"
 		class="w-10 h-10 rounded-full border-[2px] shadow-md"
+		style="border-color: {ringColor};"
 		src={photoURL}
 		alt="User profile"
 	/>
 {:else}
 	<div
 		class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase flex items-center flex-row justify-center"
-		style="background: {bgColor};"
+		style="background: {bgColor}; border-color: {ringColor};"
 	>
 		{user.firstName?.[0] ?? ''}
 		{user.lastName?.[0] ?? ''}

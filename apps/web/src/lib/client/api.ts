@@ -1,4 +1,5 @@
 import type { MetadataProject } from '$lib/types/project';
+import type { PublicUserInfo } from '$lib/types/user';
 import type { User } from 'auth';
 
 export async function getAuthHeader(): Promise<string> {
@@ -65,20 +66,20 @@ export function createApiEndpointHelper<T, A>(
 	};
 }
 
-export function createProjectApiEndpointHelper<T extends undefined, A>(
+export function createIdApiEndpointHelper<T extends undefined, A>(
 	method: string,
 	endpoint: string
-): (projectId: string) => Promise<{ data: A; error: boolean; message: string }>;
-export function createProjectApiEndpointHelper<T, A>(
+): (id: string) => Promise<{ data: A; error: boolean; message: string }>;
+export function createIdApiEndpointHelper<T, A>(
 	method: string,
 	endpoint: string
-): (projectId: string, payload: T) => Promise<{ data: A; error: boolean; message: string }>;
-export function createProjectApiEndpointHelper<T, A>(
+): (id: string, payload: T) => Promise<{ data: A; error: boolean; message: string }>;
+export function createIdApiEndpointHelper<T, A>(
 	method: string,
 	endpoint: string
-): (projectId: string, payload: T) => Promise<{ data: A; error: boolean; message: string }> {
-	return async (projectId: string, payload: T) => {
-		let realEndpoint = endpoint.replace('<projectId>', projectId);
+): (id: string, payload: T) => Promise<{ data: A; error: boolean; message: string }> {
+	return async (id: string, payload: T) => {
+		let realEndpoint = endpoint.replace('<id>', id);
 		return createApiEndpointHelper<T, A>(method, realEndpoint)(payload);
 	};
 }
@@ -114,7 +115,9 @@ export const updateMe = createApiEndpointHelper<
 	}
 >('POST', '/api/user/update');
 
-export const getProjectMetadata = createProjectApiEndpointHelper<{}, MetadataProject>(
+export const getProjectMetadata = createIdApiEndpointHelper<{}, MetadataProject>(
 	'POST',
-	'/api/project/<projectId>/metadata'
+	'/api/project/<id>/metadata'
 );
+
+export const getUserInfo = createIdApiEndpointHelper<{}, PublicUserInfo>('POST', '/api/user/<id>');

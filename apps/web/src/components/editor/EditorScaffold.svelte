@@ -23,6 +23,8 @@
 	import { isMobile } from 'src/store/responsive';
 	import EditorNavbar from './EditorNavbar.svelte';
 	import { dialogs } from './dialogs';
+	import EditorSessions from './EditorSessions.svelte';
+	import EditorMap from './EditorMap.svelte';
 
 	export let auth: AuthState;
 	export let projectId: string;
@@ -113,8 +115,10 @@
 					on:click={() => editorContext.activateDialog('share')}
 					class:active={$activeDialog == 'share'}><Fa icon={faShare} /> Share</button
 				>
-
-				<UserDropChip {auth} />
+				<div class="flex flex-row">
+					<EditorSessions />
+					<UserDropChip {auth} />
+				</div>
 			</div>
 		</div>
 	{/if}
@@ -140,6 +144,8 @@
 					<EditorNavbar />
 				</div>
 			{/if}
+
+			<EditorMap />
 		</div>
 		{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'right'}
 			<div
