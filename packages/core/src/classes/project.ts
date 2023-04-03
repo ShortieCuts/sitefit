@@ -1,8 +1,19 @@
+import { GeoCoordinate } from "./coordinate";
 import { Object2D } from "./object";
 import type { Serializable } from "./serializable";
 
+export type ProjectMapStyle = "google-simple" | "google-satellite";
+
+export type GlobalProjectProperties = {
+  origin?: GeoCoordinate;
+  mapStyle?: ProjectMapStyle;
+};
+
+export type GlobalProjectPropertiesKey = keyof GlobalProjectProperties;
+
 export class Project implements Serializable {
   id: string;
+  globalProperties: GlobalProjectProperties = {};
   objects: Object2D[] = [];
 
   objectsMap: Map<string, Object2D> = new Map();
@@ -14,6 +25,7 @@ export class Project implements Serializable {
   serialize() {
     return {
       objects: this.objects.map((object) => object.serialize()),
+      globalProperties: this.globalProperties,
     };
   }
 
@@ -29,5 +41,7 @@ export class Project implements Serializable {
     this.objects.forEach((object) => {
       this.objectsMap.set(object.id, object);
     });
+
+    this.globalProperties = data.globalProperties ?? {};
   }
 }

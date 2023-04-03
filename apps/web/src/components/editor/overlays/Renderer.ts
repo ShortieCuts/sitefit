@@ -1,93 +1,99 @@
+import { getSvelteContext } from 'src/store/editor';
+import { Overlay } from './Overlay';
 import * as THREE from 'three';
+import { get } from 'svelte/store';
+import { Path, type Object2D } from 'core';
+import { Vector3 } from 'three';
 
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { ThreeJSOverlayView } from '@googlemaps/three';
-import { Vector2 } from 'three';
+interface RenderObject2D {
+	refresh(overlay: Overlay, obj: Object2D): void;
+	destroy(overlay: Overlay): void;
+}
 
-export function initMap(map: google.maps.Map): void {
-	const overlay = new ThreeJSOverlayView({
-		map,
-		upAxis: 'Y',
-		anchor: map.getCenter()
-	});
+class RenderPath implements RenderObject2D {
+	line: THREE.Line;
 
-	// create a box mesh
-	const box = new THREE.Mesh(new THREE.BoxGeometry(10, 50, 10), new THREE.MeshMatcapMaterial());
-	// move the box up so the origin of the box is at the bottom
-	box.geometry.translate(0, 25, 0);
+	constructor(overlay: Overlay) {
+		let geo = new THREE.BufferGeometry();
+		geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(100 * 3), 3));
 
-	const line = new THREE.Mesh(
-		new THREE.TubeGeometry(
-			new THREE.LineCurve3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 100)),
-			100,
-			1,
-			2,
-			false
-		),
-		new THREE.LineBasicMaterial({ color: 0xff0000 })
-	);
+		geo.setDrawRange(0, 0);
 
-	/// line.rotateZ(THREE.MathUtils.degToRad(90));
+		this.line = new THREE.Line(
+			geo,
+			new THREE.MeshBasicMaterial({ color: '#0c8ae5', opacity: 1, transparent: false })
+		);
 
-	line.position.copy(
-		overlay.latLngAltitudeToVector3({
-			lng: map.getCenter()?.lng() ?? 0,
-			lat: map.getCenter()?.lat() ?? 0
-		})
-	);
+		overlay.overlay.scene.add(this.line);
+	}
 
-	// set position at center of map
-	box.position.copy(
-		overlay.latLngAltitudeToVector3({
-			lng: map.getCenter()?.lng() ?? 0,
-			lat: map.getCenter()?.lat() ?? 0
-		})
-	);
-	console.log({
-		lng: map.getCenter()?.lng() ?? 0,
-		lat: map.getCenter()?.lat() ?? 0
-	});
+	refresh(overlay: Overlay, obj: Path): void {
+		let arr = (this.line.geometry.attributes.position as any).array as Float32Array;
+		console.log(this.line.geometry.attributes.position);
 
-	// add box mesh to the scene
-	overlay.scene.add(box);
-	overlay.scene.add(line);
-
-	// rotate the box using requestAnimationFrame
-	const animate = () => {
-		box.rotateY(THREE.MathUtils.degToRad(0.1));
-		overlay.requestRedraw();
-
-		requestAnimationFrame(animate);
-	};
-
-	// start animation loop
-	requestAnimationFrame(animate);
-
-	const mapDiv = map.getDiv();
-	const mousePosition = new Vector2();
-
-	map.addListener('mousemove', (ev: google.maps.MapMouseEvent) => {
-		const domEvent = ev.domEvent as MouseEvent;
-		const { left, top, width, height } = mapDiv.getBoundingClientRect();
-
-		const x = domEvent.clientX - left;
-		const y = domEvent.clientY - top;
-
-		mousePosition.x = 2 * (x / width) - 1;
-		mousePosition.y = 1 - 2 * (y / height);
-
-		// since the actual raycasting is performed when the next frame is
-		// rendered, we have to make sure that it will be called for the next frame.
-		overlay.requestRedraw();
-	});
-
-	overlay.onBeforeDraw = () => {
-		const intersections = overlay.raycast(mousePosition, [box, line]);
-		box.material.color.setHex(0x000000);
-		line.material.color.setHex(0x000000);
-
-		if (intersections.length > 0) {
-			intersections[0].object.material.color.setHex(0xff0000);
+		let i = 0;
+		for (let p of obj.segments) {
+			arr[i++] = p[0];
+			arr[i++] = 0;
+			arr[i++] = p[1];
 		}
-	};
+
+		this.line.geometry.setDrawRange(0, obj.segments.length);
+
+		this.line.geometry.attributes.position.needsUpdate = true;
+
+		this.line.geometry.computeBoundingSphere();
+		this.line.geometry.computeBoundingBox();
+	}
+
+	destroy(overlay: Overlay): void {
+		overlay.overlay.scene.remove(this.line);
+		this.line.geometry.dispose();
+	}
+}
+
+function createRenderObject(overlay: Overlay, obj: Object2D): RenderObject2D {
+	if (obj instanceof Path) {
+		return new RenderPath(overlay);
+	}
+
+	throw new Error('Unsupported object type');
+}
+
+export class RendererOverlay extends Overlay {
+	isDown: boolean = false;
+	stagedObject: RenderObject2D | null = null;
+
+	init(): void {
+		super.init();
+
+		this.addUnsub(
+			this.broker.stagingObject.subscribe((newVal) => {
+				console.log('staging object changed', newVal);
+				if (!newVal) {
+					this.stagedObject?.destroy(this);
+					this.stagedObject = null;
+					this.overlay.requestRedraw();
+				} else {
+					this.stagedObject?.destroy(this);
+					this.stagedObject = createRenderObject(this, newVal);
+					this.stagedObject.refresh(this, newVal);
+					this.overlay.requestRedraw();
+				}
+			})
+		);
+
+		let geo = new THREE.BufferGeometry().setFromPoints([
+			new THREE.Vector3(-0.5, 0, -0.5),
+			new THREE.Vector3(-0.5, 0, 0.5)
+		]);
+		let line = new THREE.Line(
+			geo,
+			new THREE.MeshBasicMaterial({ color: '#0c8ae5', opacity: 1, transparent: false })
+		);
+
+		this.overlay.scene.add(line);
+	}
+
+	refresh(): void {}
 }

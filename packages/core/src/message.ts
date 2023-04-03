@@ -1,4 +1,12 @@
-export type SocketMessage = Join | Leave | Login | Sync;
+import { GlobalProjectPropertiesKey } from "./classes/project";
+
+export type SocketMessage =
+  | Join
+  | Leave
+  | Login
+  | Sync
+  | Batch
+  | WriteGlobalProperty;
 
 type SessionShape = {
   uid: string;
@@ -42,6 +50,27 @@ export function isLogin(message: SocketMessage): message is Login {
   return message.type === "login";
 }
 
+type Batch = {
+  type: "batch";
+  messages: SocketMessage[];
+};
+
+export function isBatch(message: SocketMessage): message is Batch {
+  return message.type === "batch";
+}
+
+type WriteGlobalProperty = {
+  type: "writeGlobalProperty";
+  key: GlobalProjectPropertiesKey;
+  value: any;
+};
+
+export function isWriteGlobalProperty(
+  message: SocketMessage
+): message is WriteGlobalProperty {
+  return message.type === "writeGlobalProperty";
+}
+
 export namespace SocketMessage {
   export function join(uid: string, userId: string, color: string): Join {
     return {
@@ -77,8 +106,29 @@ export namespace SocketMessage {
       })),
     };
   }
+
+  export function batch(messages: SocketMessage[]): Batch {
+    return {
+      type: "batch",
+      messages,
+    };
+  }
+
+  export function writeGlobalProperty(
+    key: GlobalProjectPropertiesKey,
+    value: any
+  ): WriteGlobalProperty {
+    return {
+      type: "writeGlobalProperty",
+      key,
+      value,
+    };
+  }
+
   export type JoinType = Join;
   export type LeaveType = Leave;
   export type LoginType = Login;
   export type SyncType = Sync;
+  export type BatchType = Batch;
+  export type WriteGlobalPropertyType = WriteGlobalProperty;
 }

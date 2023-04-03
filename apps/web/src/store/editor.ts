@@ -1,5 +1,15 @@
 import { get, writable, readable, type Readable, type Writable } from 'svelte/store';
-import { isJoin, isLeave, isSync, Project, SocketMessage } from 'core';
+import {
+	isBatch,
+	isJoin,
+	isLeave,
+	isSync,
+	isWriteGlobalProperty,
+	Object2D,
+	Project,
+	SocketMessage,
+	type GlobalProjectPropertiesKey
+} from 'core';
 import { getContext, setContext } from 'svelte';
 import { getProjectMetadata } from '$lib/client/api';
 import { dev } from '$app/environment';
@@ -62,6 +72,13 @@ export class ProjectBroker {
 
 	private enqueuedMetadataPush: NodeJS.Timeout | null = null;
 
+	globalPropertyStores: Map<string, Writable<any>> = new Map();
+
+	private queuedMessages: SocketMessage[] = [];
+	private messageQueueTimeout: NodeJS.Timeout | null = null;
+
+	stagingObject: Writable<Object2D | null> = writable(null);
+
 	constructor(id: string) {
 		this.projectId = id;
 		this.metadata = {
@@ -100,6 +117,52 @@ export class ProjectBroker {
 				this.establishConnection();
 			})();
 		}
+	}
+
+	commitStagedObject() {
+		if (this.stagingObject) {
+			// this.project.(this.stagingObject);
+			this.stagingObject.set(null);
+		}
+	}
+
+	writableGlobalProperty<T>(key: GlobalProjectPropertiesKey, defaultValue: T): Writable<T> {
+		let internalWritable = this.globalPropertyStores.get(key) as Writable<T>;
+		if (!internalWritable) {
+			internalWritable = writable(defaultValue);
+			this.globalPropertyStores.set(key, internalWritable);
+		}
+
+		return {
+			subscribe: internalWritable.subscribe,
+			set: (value) => {
+				console.log('Change going to server', value);
+				this.enqueueMessage(SocketMessage.writeGlobalProperty(key, value));
+				internalWritable.set(value);
+			},
+			update: (fn) => {
+				internalWritable.update((value) => {
+					let newValue = fn(value);
+					console.log('Change going to server', newValue);
+					this.enqueueMessage(SocketMessage.writeGlobalProperty(key, newValue));
+
+					return newValue;
+				});
+			}
+		};
+	}
+
+	enqueueMessage(message: SocketMessage) {
+		this.queuedMessages.push(message);
+
+		if (this.messageQueueTimeout) {
+			clearTimeout(this.messageQueueTimeout);
+		}
+
+		this.messageQueueTimeout = setTimeout(() => {
+			this.sendMessage(SocketMessage.batch(this.queuedMessages));
+			this.queuedMessages = [];
+		});
 	}
 
 	sendMessage(message: SocketMessage) {
@@ -169,6 +232,16 @@ export class ProjectBroker {
 			this.handleLeave(message.uid);
 		} else if (isSync(message)) {
 			this.handleSync(message);
+		} else if (isWriteGlobalProperty(message)) {
+			this.project.globalProperties[message.key] = message.value;
+			let store = this.globalPropertyStores.get(message.key);
+			if (store) {
+				store.set(message.value);
+			}
+		} else if (isBatch(message)) {
+			for (let m of message.messages) {
+				this.handleMessage(m);
+			}
 		}
 	}
 
@@ -225,12 +298,29 @@ export class EditorContext {
 	latitude: Writable<number> = writable(0);
 	zoom: Writable<number> = writable(0);
 
+	selectionDown: Writable<boolean> = writable(false);
+	selectionStart: Writable<[number, number]> = writable([0, 0]);
+
+	desiredPosition: [number, number] = [0, 0];
+
+	currentToolHandlers: {
+		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
+		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
+		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
+	} | null = null;
+
+	currentMousePosition: Writable<[number, number]> = writable([0, 0]);
+
 	activateDialog(key: string) {
 		if (get(this.activeDialog) === key) {
 			this.activeDialog.set('');
 		} else {
 			this.activeDialog.set(key);
 		}
+	}
+
+	getDesiredPosition(): [number, number] {
+		return this.desiredPosition;
 	}
 }
 

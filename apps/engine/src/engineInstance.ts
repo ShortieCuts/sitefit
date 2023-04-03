@@ -1,4 +1,11 @@
-import { isJoin, isLogin, Project, SocketMessage } from "core";
+import {
+  isBatch,
+  isJoin,
+  isLogin,
+  isWriteGlobalProperty,
+  Project,
+  SocketMessage,
+} from "core";
 
 import { checkRequestAuth, getUserFromFirebaseId } from "auth";
 import { randomNiceColorFromString } from "./color";
@@ -212,6 +219,12 @@ export class EngineInstance {
             } else {
               session.kill();
             }
+          } else if (isBatch(data)) {
+            for (let msg of data.messages) {
+              await this.handleMessage(session, msg);
+            }
+          } else {
+            await this.handleMessage(session, data);
           }
         }
       } catch (err: any) {
@@ -226,6 +239,23 @@ export class EngineInstance {
     };
     webSocket.addEventListener("close", closeOrErrorHandler);
     webSocket.addEventListener("error", closeOrErrorHandler);
+  }
+
+  async handleMessage(session: Session, data: SocketMessage): Promise<void> {
+    console.log(data);
+    if (this.project === null) {
+      return;
+    }
+
+    if (isWriteGlobalProperty(data)) {
+      if (data.key == "mapStyle") {
+        if (["google-satellite", "google-simple"].includes(data.value)) {
+          this.project.globalProperties.mapStyle = data.value;
+          this.broadcast(data);
+          console.log("Broadcast", data);
+        }
+      }
+    }
   }
 
   broadcast(message: SocketMessage) {

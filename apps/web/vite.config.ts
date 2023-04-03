@@ -5,5 +5,8 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	resolve: {
 		preserveSymlinks: true
+	},
+	optimizeDeps: {
+		exclude: ['core', 'ui']
 	}
 });

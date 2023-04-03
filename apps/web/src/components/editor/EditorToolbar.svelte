@@ -1,35 +1,50 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { faArrowPointer, faComment, faHand } from '@fortawesome/free-solid-svg-icons';
-	import { getSvelteContext } from 'src/store/editor';
+	import { EditorContext, getSvelteContext, ProjectBroker } from 'src/store/editor';
 	import { onMount } from 'svelte';
 
 	import Fa from 'svelte-fa';
 	import { dialogs } from './dialogs';
+	import { CommentTool } from './tools/comment';
+	import { PanTool } from './tools/pan';
+	import { PenTool } from './tools/pen';
+	import { SelectTool } from './tools/select';
 
-	const toolbarItems = [
-		{
-			icon: faArrowPointer,
-			key: 'select',
-			shortcut: 'v'
-		},
-		{
-			icon: faHand,
-			key: 'pan',
-			shortcut: 'p'
-		},
-		{
-			icon: faComment,
-			key: 'comment',
-			shortcut: 'c'
-		}
-	];
+	const toolbarItems: {
+		icon: any;
+		key: string;
+		shortcut: string;
+		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
+		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
+		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
+	}[] = [SelectTool, PanTool, CommentTool, PenTool];
 
-	const { editor } = getSvelteContext();
+	const { editor, broker } = getSvelteContext();
 
 	let { activeTool, activeDialog } = editor;
 
 	$: shiftRight = $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'left';
+
+	$: {
+		activeTool;
+
+		let tool = toolbarItems.find((item) => item.key === $activeTool);
+
+		if (tool) {
+			if (editor.currentToolHandlers) {
+				editor.currentToolHandlers.onUp(new MouseEvent('mouseup'), editor, broker);
+			}
+
+			editor.currentToolHandlers = {
+				onDown: tool.onDown,
+				onUp: tool.onUp,
+				onMove: tool.onMove
+			};
+		} else {
+			editor.currentToolHandlers = null;
+		}
+	}
 
 	let lastPanKey = 'select';
 
@@ -86,7 +101,7 @@
 		<button
 			class="text-white w-10 h-10 flex items-center justify-center rounded-lg hover:bg-blue-400 cursor-default bg-black bg-opacity-30"
 			class:bg-blue-500={$activeTool === item.key}
-			class:bg-opacity-100={$activeTool === item.key}
+			style={$activeTool === item.key ? '--tw-bg-opacity: 1' : ''}
 			on:click={() => {
 				editor.activeTool.set(item.key);
 			}}
