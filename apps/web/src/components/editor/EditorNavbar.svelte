@@ -8,6 +8,8 @@
 		faHand,
 		faLayerGroup,
 		faLocationArrow,
+		faPaintBrush,
+		faPallet,
 		faPersonCirclePlus,
 		faProjectDiagram,
 		faSearch,
@@ -41,6 +43,11 @@
 			name: 'Layers'
 		},
 		{
+			icon: faPaintBrush,
+			key: 'style',
+			name: 'Style'
+		},
+		{
 			icon: faBox,
 			key: 'parcels',
 			name: 'Parcels'
@@ -59,10 +66,11 @@
 			key: 'tools',
 			name: 'Tools'
 		},
+
 		{
-			icon: faLayerGroup,
-			key: 'layers',
-			name: 'Layers'
+			icon: faPaintBrush,
+			key: 'style',
+			name: 'Style'
 		},
 
 		{

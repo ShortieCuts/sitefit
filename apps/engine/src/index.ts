@@ -29,9 +29,10 @@ async function handleRequest(request: Request, env: Env) {
   console.log("HIt WS");
   let paths = url.pathname.split("/");
   let id = env.ENGINE_INSTANCE.idFromName(paths[1]);
+
   let obj = env.ENGINE_INSTANCE.get(id);
 
-  return await obj.fetch(request);
+  return obj.fetch(request);
 }
 
 // Durable Object

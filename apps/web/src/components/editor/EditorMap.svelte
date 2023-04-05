@@ -114,12 +114,23 @@
 					anchor: map.getCenter()
 				});
 
+				editor.overlay.set(referenceOverlay);
+
 				map.setTilt(0);
 
 				map.addListener('mousemove', (ev: google.maps.MapMouseEvent) => {
 					const { latLng } = ev;
 
 					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
+
+					let vec = referenceOverlay?.latLngAltitudeToVector3({
+						lat: latLng?.lat() ?? 0,
+						lng: latLng?.lng() ?? 0,
+						altitude: 0
+					});
+
+					editor.currentMousePositionRelative.set([vec?.x ?? 0, vec?.z ?? 0]);
+
 					if (referenceOverlay) {
 						let vectorPos = referenceOverlay.latLngAltitudeToVector3({
 							lat: latLng?.lat() ?? 0,
@@ -141,6 +152,14 @@
 
 					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
 
+					let vec = referenceOverlay?.latLngAltitudeToVector3({
+						lat: latLng?.lat() ?? 0,
+						lng: latLng?.lng() ?? 0,
+						altitude: 0
+					});
+
+					editor.currentMousePositionRelative.set([vec?.x ?? 0, vec?.z ?? 0]);
+
 					let e = ev.domEvent as MouseEvent;
 
 					if (e.button === 0) {
@@ -154,6 +173,14 @@
 					const { latLng } = ev;
 
 					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
+
+					let vec = referenceOverlay?.latLngAltitudeToVector3({
+						lat: latLng?.lat() ?? 0,
+						lng: latLng?.lng() ?? 0,
+						altitude: 0
+					});
+
+					editor.currentMousePositionRelative.set([vec?.x ?? 0, vec?.z ?? 0]);
 
 					let e = ev.domEvent as MouseEvent;
 					if (e.button === 0) {

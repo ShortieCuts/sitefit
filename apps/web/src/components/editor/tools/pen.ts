@@ -10,18 +10,19 @@ export const PenTool = {
 	shortcut: 'v',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		let obj = new Path();
+		obj.name = 'Line';
 		obj.segments.push(editor.getDesiredPosition());
-		console.log(editor.getDesiredPosition());
 		broker.stagingObject.set(obj);
 		isDown = true;
 	},
 	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		isDown = false;
+
+		broker.commitStagedObject();
 	},
 	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		if (isDown) {
 			broker.stagingObject.update((obj) => {
-				console.log(obj, editor.getDesiredPosition());
 				if (obj) {
 					let path = obj as Path;
 					if (path.segments.length <= 1) path.segments.push(editor.getDesiredPosition());

@@ -1,19 +1,25 @@
 import { get, writable, readable, type Readable, type Writable } from 'svelte/store';
 import {
 	isBatch,
+	isCommitTransaction,
 	isJoin,
 	isLeave,
 	isSync,
 	isWriteGlobalProperty,
 	Object2D,
 	Project,
+	ProjectTransaction,
 	SocketMessage,
-	type GlobalProjectPropertiesKey
+	type GlobalProjectPropertiesKey,
+	type ObjectID,
+	type PropertyMutation
 } from 'core';
 import { getContext, setContext } from 'svelte';
 import { getProjectMetadata } from '$lib/client/api';
 import { dev } from '$app/environment';
 import { getSession } from './auth';
+import { nanoid } from 'nanoid';
+import type { ThreeJSOverlayView } from '@googlemaps/three';
 
 const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.xyz';
 
@@ -73,6 +79,12 @@ export class ProjectBroker {
 	private enqueuedMetadataPush: NodeJS.Timeout | null = null;
 
 	globalPropertyStores: Map<string, Writable<any>> = new Map();
+	objectPropertyStores: Map<string, Writable<any>> = new Map();
+
+	objectTreeWatcher: Writable<number> = writable(0);
+
+	rendererDirtyObjects = new Set<string>();
+	needsRender: Writable<boolean> = writable(false);
 
 	private queuedMessages: SocketMessage[] = [];
 	private messageQueueTimeout: NodeJS.Timeout | null = null;
@@ -119,11 +131,71 @@ export class ProjectBroker {
 		}
 	}
 
+	dispose() {
+		this.socket?.close();
+	}
+
 	commitStagedObject() {
-		if (this.stagingObject) {
-			// this.project.(this.stagingObject);
+		let staging = get(this.stagingObject);
+		if (staging) {
+			this.createObject(staging);
 			this.stagingObject.set(null);
 		}
+	}
+
+	allocateId(existing?: string[]) {
+		existing = existing ?? [];
+		let id = '';
+		while (!id || existing.includes(id) || this.project.objectsMap.has(id)) {
+			id = `${get(this.mySessionUid)}${nanoid(6)}`;
+		}
+
+		return id;
+	}
+
+	createObject(obj: Object2D) {
+		let uid = this.allocateId();
+		obj.id = uid;
+
+		let transaction = this.project.createTransaction();
+		transaction.create(obj);
+		this.commitTransaction(transaction);
+	}
+
+	commitTransaction(transaction: ProjectTransaction) {
+		// Todo add an inverse transaction to the undo stack
+		let applied = this.project.applyTransaction(transaction);
+		console.log('chages', applied);
+
+		let didChangeTree = false;
+		let changedObjects = new Set<string>();
+		for (const mutation of applied) {
+			if (mutation.type === 'create') {
+				didChangeTree = true;
+				changedObjects.add(mutation.subject);
+			} else if (mutation.type === 'delete') {
+				didChangeTree = true;
+				changedObjects.add(mutation.subject);
+			} else if (mutation.type === 'update') {
+				if (mutation.data && (mutation.data as PropertyMutation)?.key === 'parent') {
+					didChangeTree = true;
+				}
+				changedObjects.add(mutation.subject);
+			}
+		}
+
+		if (didChangeTree) {
+			this.objectTreeWatcher.update((n) => n + 1);
+		}
+
+		for (const obj of changedObjects) {
+			this.objectPropertyStores.get(obj)?.update((n) => n + 1);
+			this.rendererDirtyObjects.add(obj);
+		}
+
+		this.needsRender.set(true);
+
+		this.enqueueMessage(SocketMessage.commitTransaction(transaction));
 	}
 
 	writableGlobalProperty<T>(key: GlobalProjectPropertiesKey, defaultValue: T): Writable<T> {
@@ -152,6 +224,38 @@ export class ProjectBroker {
 		};
 	}
 
+	writableObjectProperty<T>(obj: Object2D, key: string, defaultValue: T): Writable<T> {
+		let writableKey = `${obj.id}.${key}`;
+
+		let internalWritable = this.objectPropertyStores.get(writableKey) as Writable<T>;
+		if (!internalWritable) {
+			internalWritable = writable(defaultValue);
+			this.objectPropertyStores.set(writableKey, internalWritable);
+		}
+
+		const doTransaction = (value: T) => {
+			let transaction = this.project.createTransaction();
+			transaction.update(obj.id, key, value);
+			this.commitTransaction(transaction);
+		};
+
+		return {
+			subscribe: internalWritable.subscribe,
+			set: (value) => {
+				doTransaction(value);
+				internalWritable.set(value);
+			},
+			update: (fn) => {
+				internalWritable.update((value) => {
+					let newValue = fn(value);
+					doTransaction(newValue);
+
+					return newValue;
+				});
+			}
+		};
+	}
+
 	enqueueMessage(message: SocketMessage) {
 		this.queuedMessages.push(message);
 
@@ -160,8 +264,13 @@ export class ProjectBroker {
 		}
 
 		this.messageQueueTimeout = setTimeout(() => {
-			this.sendMessage(SocketMessage.batch(this.queuedMessages));
-			this.queuedMessages = [];
+			if (this.queuedMessages.length == 1) {
+				this.sendMessage(this.queuedMessages[0]);
+				this.queuedMessages = [];
+			} else if (this.queuedMessages.length > 1) {
+				this.sendMessage(SocketMessage.batch(this.queuedMessages));
+				this.queuedMessages = [];
+			}
 		});
 	}
 
@@ -190,6 +299,11 @@ export class ProjectBroker {
 		});
 
 		ws.addEventListener('close', (event) => {
+			this.connected.set(false);
+			this.sessions.set([]);
+			setTimeout(() => {
+				this.establishConnection();
+			}, 4000);
 			console.log('WebSocket closed', event.code, event.reason);
 		});
 
@@ -223,6 +337,18 @@ export class ProjectBroker {
 		for (let s of message.sessions) {
 			this.handleJoin(s);
 		}
+
+		this.project.deserialize(message.project);
+		this.markAllDirty();
+	}
+
+	markAllDirty() {
+		this.rendererDirtyObjects.clear();
+		for (let obj of this.project.objects) {
+			this.rendererDirtyObjects.add(obj.id);
+		}
+
+		this.needsRender.set(true);
 	}
 
 	handleMessage(message: SocketMessage) {
@@ -238,6 +364,13 @@ export class ProjectBroker {
 			if (store) {
 				store.set(message.value);
 			}
+		} else if (isCommitTransaction(message)) {
+			let mutations = this.project.applyTransaction(message.transaction, false);
+			for (let m of mutations) {
+				this.rendererDirtyObjects.add(m.subject);
+			}
+
+			this.needsRender.set(true);
 		} else if (isBatch(message)) {
 			for (let m of message.messages) {
 				this.handleMessage(m);
@@ -300,6 +433,10 @@ export class EditorContext {
 
 	selectionDown: Writable<boolean> = writable(false);
 	selectionStart: Writable<[number, number]> = writable([0, 0]);
+	hoveringObject: Writable<ObjectID> = writable('');
+
+	selection: Writable<ObjectID[]> = writable([]);
+	overlay: Writable<ThreeJSOverlayView | null> = writable(null);
 
 	desiredPosition: [number, number] = [0, 0];
 
@@ -310,6 +447,7 @@ export class EditorContext {
 	} | null = null;
 
 	currentMousePosition: Writable<[number, number]> = writable([0, 0]);
+	currentMousePositionRelative: Writable<[number, number]> = writable([0, 0]);
 
 	activateDialog(key: string) {
 		if (get(this.activeDialog) === key) {

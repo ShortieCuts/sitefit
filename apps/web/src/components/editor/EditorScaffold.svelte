@@ -25,6 +25,7 @@
 	import { dialogs } from './dialogs';
 	import EditorSessions from './EditorSessions.svelte';
 	import EditorMap from './EditorMap.svelte';
+	import { onDestroy } from 'svelte';
 
 	export let auth: AuthState;
 	export let projectId: string;
@@ -35,9 +36,13 @@
 	setSvelteContext(broker, editorContext);
 
 	const { name } = broker.metadata;
-	const { loading, error } = broker;
+	const { loading, error, connected } = broker;
 
 	const { activeDialog } = editorContext;
+
+	onDestroy(() => {
+		broker.dispose();
+	});
 </script>
 
 <svelte:head>
@@ -195,6 +200,16 @@
 		}
 	}}
 />
+
+{#if !$connected}
+	<div
+		transition:fade={{ duration: 200 }}
+		class="fixed top-0 left-0 right-0 bottom-0 bg-gray-100 bg-opacity-25 flex items-center justify-center flex-col z-50 backdrop-blur-md"
+	>
+		<img src="/logo.svg" alt="logo" class="opacity-20" style="filter: grayscale(1)" />
+		<div class="text-2xl text-gray-400 mt-4">Connecting</div>
+	</div>
+{/if}
 
 {#if $loading}
 	<div

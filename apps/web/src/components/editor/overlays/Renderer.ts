@@ -2,12 +2,23 @@ import { getSvelteContext } from 'src/store/editor';
 import { Overlay } from './Overlay';
 import * as THREE from 'three';
 import { get } from 'svelte/store';
-import { Path, type Object2D } from 'core';
-import { Vector3 } from 'three';
+import { Path, type Object2D, type ObjectID } from 'core';
+import type { Vector3 } from 'three';
 
-interface RenderObject2D {
+export interface RenderObject2D {
 	refresh(overlay: Overlay, obj: Object2D): void;
 	destroy(overlay: Overlay): void;
+	setMaterial(mat: THREE.Material): void;
+	translate(delta: Vector3): void;
+}
+
+function randomColorHEX() {
+	let letters = '0123456789ABCDEF';
+	let color = '#';
+	for (let i = 0; i < 6; i++) {
+		color += letters[Math.floor(Math.random() * 16)];
+	}
+	return color;
 }
 
 class RenderPath implements RenderObject2D {
@@ -21,7 +32,7 @@ class RenderPath implements RenderObject2D {
 
 		this.line = new THREE.Line(
 			geo,
-			new THREE.MeshBasicMaterial({ color: '#0c8ae5', opacity: 1, transparent: false })
+			new THREE.MeshBasicMaterial({ color: randomColorHEX(), opacity: 1, transparent: false })
 		);
 
 		overlay.overlay.scene.add(this.line);
@@ -29,7 +40,6 @@ class RenderPath implements RenderObject2D {
 
 	refresh(overlay: Overlay, obj: Path): void {
 		let arr = (this.line.geometry.attributes.position as any).array as Float32Array;
-		console.log(this.line.geometry.attributes.position);
 
 		let i = 0;
 		for (let p of obj.segments) {
@@ -46,13 +56,22 @@ class RenderPath implements RenderObject2D {
 		this.line.geometry.computeBoundingBox();
 	}
 
+	setMaterial(mat: THREE.Material): void {
+		this.line.material = mat;
+		this.line.material.needsUpdate = true;
+	}
+
+	translate(delta: Vector3): void {
+		this.line.position.add(delta);
+	}
+
 	destroy(overlay: Overlay): void {
 		overlay.overlay.scene.remove(this.line);
 		this.line.geometry.dispose();
 	}
 }
 
-function createRenderObject(overlay: Overlay, obj: Object2D): RenderObject2D {
+export function createRenderObject(overlay: Overlay, obj: Object2D): RenderObject2D {
 	if (obj instanceof Path) {
 		return new RenderPath(overlay);
 	}
@@ -64,12 +83,13 @@ export class RendererOverlay extends Overlay {
 	isDown: boolean = false;
 	stagedObject: RenderObject2D | null = null;
 
+	renderedObjects: Map<ObjectID, RenderObject2D> = new Map();
+
 	init(): void {
 		super.init();
 
 		this.addUnsub(
 			this.broker.stagingObject.subscribe((newVal) => {
-				console.log('staging object changed', newVal);
 				if (!newVal) {
 					this.stagedObject?.destroy(this);
 					this.stagedObject = null;
@@ -78,6 +98,37 @@ export class RendererOverlay extends Overlay {
 					this.stagedObject?.destroy(this);
 					this.stagedObject = createRenderObject(this, newVal);
 					this.stagedObject.refresh(this, newVal);
+					this.overlay.requestRedraw();
+				}
+			})
+		);
+
+		this.addUnsub(
+			this.broker.needsRender.subscribe((newVal) => {
+				if (newVal) {
+					let dirty = this.broker.rendererDirtyObjects;
+
+					for (let obj of dirty) {
+						let doesExist = this.broker.project.objectsMap.has(obj);
+						if (doesExist) {
+							let renderObj = this.renderedObjects.get(obj);
+							if (!renderObj) {
+								renderObj = createRenderObject(this, this.broker.project.objectsMap.get(obj)!);
+								this.renderedObjects.set(obj, renderObj);
+							}
+
+							renderObj.refresh(this, this.broker.project.objectsMap.get(obj)!);
+						} else {
+							if (this.renderedObjects.has(obj)) {
+								this.destroyObject(obj);
+							}
+						}
+					}
+
+					dirty.clear();
+
+					this.broker.needsRender.set(false);
+
 					this.overlay.requestRedraw();
 				}
 			})
@@ -93,6 +144,14 @@ export class RendererOverlay extends Overlay {
 		);
 
 		this.overlay.scene.add(line);
+	}
+
+	destroyObject(id: ObjectID) {
+		let obj = this.renderedObjects.get(id);
+		if (obj) {
+			obj.destroy(this);
+			this.renderedObjects.delete(id);
+		}
 	}
 
 	refresh(): void {}

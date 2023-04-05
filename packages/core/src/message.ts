@@ -1,4 +1,8 @@
-import { GlobalProjectPropertiesKey } from "./classes/project";
+import {
+  GlobalProjectPropertiesKey,
+  Project,
+  ProjectTransaction,
+} from "./classes/project";
 
 export type SocketMessage =
   | Join
@@ -6,7 +10,8 @@ export type SocketMessage =
   | Login
   | Sync
   | Batch
-  | WriteGlobalProperty;
+  | WriteGlobalProperty
+  | CommitTransaction;
 
 type SessionShape = {
   uid: string;
@@ -17,6 +22,7 @@ type SessionShape = {
 type Sync = {
   type: "sync";
   sessions: SessionShape[];
+  project: any;
   selfUid: string;
 };
 
@@ -71,6 +77,17 @@ export function isWriteGlobalProperty(
   return message.type === "writeGlobalProperty";
 }
 
+type CommitTransaction = {
+  type: "commitTransaction";
+  transaction: ProjectTransaction;
+};
+
+export function isCommitTransaction(
+  message: SocketMessage
+): message is CommitTransaction {
+  return message.type === "commitTransaction";
+}
+
 export namespace SocketMessage {
   export function join(uid: string, userId: string, color: string): Join {
     return {
@@ -95,10 +112,15 @@ export namespace SocketMessage {
     };
   }
 
-  export function sync(a: { sessions: SessionShape[]; selfUid: string }): Sync {
+  export function sync(a: {
+    project: any;
+    sessions: SessionShape[];
+    selfUid: string;
+  }): Sync {
     return {
       type: "sync",
       selfUid: a.selfUid,
+      project: a.project,
       sessions: a.sessions.map((s) => ({
         uid: s.uid,
         userId: s.userId,
@@ -125,10 +147,20 @@ export namespace SocketMessage {
     };
   }
 
+  export function commitTransaction(
+    transaction: ProjectTransaction
+  ): CommitTransaction {
+    return {
+      type: "commitTransaction",
+      transaction,
+    };
+  }
+
   export type JoinType = Join;
   export type LeaveType = Leave;
   export type LoginType = Login;
   export type SyncType = Sync;
   export type BatchType = Batch;
   export type WriteGlobalPropertyType = WriteGlobalProperty;
+  export type CommitTransactionType = CommitTransaction;
 }

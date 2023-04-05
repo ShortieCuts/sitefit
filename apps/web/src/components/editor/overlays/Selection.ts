@@ -2,6 +2,11 @@ import { getSvelteContext } from 'src/store/editor';
 import { Overlay } from './Overlay';
 import * as THREE from 'three';
 import { get } from 'svelte/store';
+import type { Object2D } from 'core';
+import { createRenderObject, type RenderObject2D } from './Renderer';
+import { Vector3 } from 'three';
+import Flatten from '@flatten-js/core';
+const { Polygon, point, Circle: FlatCircle, arc, matrix, Box } = Flatten;
 
 class OutlinedBox {
 	box: THREE.Mesh;
@@ -45,9 +50,37 @@ class OutlinedBox {
 	}
 }
 
+class OutlinedGeometry {
+	obj: RenderObject2D;
+
+	constructor(overlay: Overlay, source: Object2D) {
+		this.obj = createRenderObject(overlay, source);
+		this.obj.setMaterial(
+			new THREE.LineBasicMaterial({
+				color: '#0c8ce9',
+				opacity: 1,
+				linewidth: 1,
+				transparent: false,
+				depthTest: false
+			})
+		);
+		this.obj.refresh(overlay, source);
+		this.obj.translate(new Vector3(0, 0, 0));
+
+		overlay.overlay.requestRedraw();
+	}
+
+	destroy(overlay: Overlay): void {
+		this.obj?.destroy(overlay);
+		overlay.overlay.requestRedraw();
+	}
+}
+
 export class SelectionOverlay extends Overlay {
 	isDown: boolean = false;
 	box: OutlinedBox | null = null;
+	selectionBox: OutlinedBox | null = null;
+	hover: OutlinedGeometry | null = null;
 
 	init(): void {
 		super.init();
@@ -58,17 +91,39 @@ export class SelectionOverlay extends Overlay {
 				this.refresh();
 			})
 		);
+
 		this.addUnsub(
 			this.editor.currentMousePosition.subscribe(() => {
 				this.refresh();
 			})
 		);
 
+		this.addUnsub(
+			this.editor.selection.subscribe(() => {
+				this.refresh();
+			})
+		);
+
+		this.addUnsub(
+			this.editor.hoveringObject.subscribe((val) => {
+				if (this.hover) {
+					this.hover.destroy(this);
+					this.hover = null;
+				}
+
+				if (val) {
+					let objMap = this.broker.project.objectsMap.get(val);
+					if (objMap) this.hover = new OutlinedGeometry(this, objMap);
+				}
+			})
+		);
+
 		this.box = new OutlinedBox(this);
+		this.selectionBox = new OutlinedBox(this);
 	}
 
 	refresh(): void {
-		if (!this.box) {
+		if (!this.box || !this.selectionBox) {
 			return;
 		}
 
@@ -95,10 +150,62 @@ export class SelectionOverlay extends Overlay {
 
 			this.box.setVisible(true);
 		} else {
-			console.log('hiding box');
 			this.box.setVisible(false);
+		}
+
+		let sels = get(this.editor.selection);
+		if (sels.length > 0) {
+			let objs = [];
+			for (let id of sels) {
+				let obj = this.broker.project.objectsMap.get(id);
+				if (obj) objs.push(obj);
+			}
+			let box = computeBounds(objs);
+			let startVec = [box.low.x, box.low.y];
+			let endVec = [box.high.x, box.high.y];
+
+			let center = [(startVec[0] + endVec[0]) / 2, (startVec[1] + endVec[1]) / 2];
+
+			this.selectionBox.setPosition(new Vector3(center[0], 0, center[1]));
+
+			this.selectionBox.setScale(
+				new THREE.Vector3(
+					Math.abs(startVec[0] - endVec[0]),
+					Math.abs(1),
+					Math.abs(startVec[1] - endVec[1])
+				)
+			);
+
+			this.selectionBox.setVisible(true);
+		} else {
+			this.selectionBox?.setVisible(false);
 		}
 
 		this.overlay.requestRedraw();
 	}
+}
+
+function computeBounds(objects: Object2D[]): Flatten.Box {
+	let box: Flatten.Box | null = null;
+
+	for (let obj of objects) {
+		if (obj.flatShape) {
+			for (let fl of obj.flatShape) {
+				if (fl instanceof Flatten.Box) {
+					if (!box) box = fl.clone();
+					else box = box.merge(fl);
+				} else {
+					if (fl.box) {
+						let bounds = fl.box;
+						if (bounds) {
+							if (!box) box = bounds.clone();
+							else box = box.merge(bounds);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return box || new Flatten.Box(0, 0, 0, 0);
 }

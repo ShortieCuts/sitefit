@@ -4,6 +4,7 @@ import EditorDialogLayers from './EditorDialogLayers.svelte';
 import EditorDialogParcels from './EditorDialogParcels.svelte';
 import EditorDialogProjects from './EditorDialogProjects.svelte';
 import EditorDialogShare from './EditorDialogShare.svelte';
+import EditorDialogStyle from './EditorDialogStyle.svelte';
 import EditorDialogTools from './EditorDialogTools.svelte';
 
 export const dialogs: {
@@ -38,5 +39,9 @@ export const dialogs: {
 	parcels: {
 		dock: 'left',
 		component: EditorDialogParcels
+	},
+	style: {
+		dock: 'left',
+		component: EditorDialogStyle
 	}
 };

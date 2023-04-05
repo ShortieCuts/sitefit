@@ -3,6 +3,13 @@ name = "engine"
 main = "src/index.ts"
 compatibility_date = "2023-03-29"
 
+[vars]
+FIREBASE_WEB_API_KEY="AIzaSyBg0tTgVKWYZRHRRL53Y2u4wbqh9pebBzs"
+PROJECT_ID="cad-fitter"
+GOOGLE_CLOUD_KEY='{"type": "service_account","project_id": "cad-fitter","private_key_id": "5be0d0e2def296be12b76c6f591069c53b783898","private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCzHubabPnBk9AQ\n27++n50z6aY7epym9e2s3JD8aHz8NC+e5onrFSb2la2viP5aTl6fRZDmypVIpo5t\n1faDyCYK2+9TNSZTMjJhbEBXAPg4vvezgO5d1my3fWBthZkpY2JlQkJrLPgKIif2\nP4DMnPDJ4yIl8FuYDPTxDQxjfHAfHMgGN7YhQehx4HvgyfASA3e2jbTfsUX2q1lh\n0w4BsmvGrbqSUq1luelHPqs5ssSbJtj7jMz8RKbGfCaLgUzfehXYPhirjMLE1MG9\nFbgu7Fos6UCzdb80AZ7I29+m+LK0OGCIEmi6ntRgFta8aWB84kfyYzeXw9nQudc1\naV2dRujrAgMBAAECggEALWT6eoa9sSplw6/9YzEOZRak01QamVGgP3vSnrVYX45W\nNz4T2+kLa9i5INBmLbrIzjKSK3tR5AyZ8goUpIc35O6iM4M3yEPjcr89ew862R7E\npdBaGJv8B3CV3IvMKioOyLzHGmRWJDNNz2F+odxwRanzgIvumpVGCkUVS61AuRFk\npgjw2gYRc/jhqTJzNiMePvTQiucBJ0o0UFaVs6FK841O0BWWzrFUU7C+2JglBZOY\n0rjCwtBL6VOG2So4qLUEeyLWx7cnRbLy2nzCBBslKiSoqV0aOaAegaBCC7EIpmp1\n/+9O/UCwHF+GWnvQsYnRU6aH9XN/5JR8J744lPhQWQKBgQDcf6BLPZ+GpUKiAKOb\nsWJAbAbvwrQQjQuIDF88knHUjwqpMkWNuz5qyclcmxt/53tZLTmabHjST3Y5raXm\naJWjGp8fqcI0ATU7OgotXf29i5ZrtBEk8Rf6Mo3OhTWJRgzcqYNTmcGScre7M+A7\nWBgcm5tpRWCR8tYH36GRRS2VvwKBgQDP9cohD1UTqyI59gjyC/mDVt8gfOHlNmZ4\nh3xTXZqoQF9SFvhw0BLKgiCaQ0xB8ng+ZvwqmX2E4FXu4/mc8589TOIJkVoeHEMF\ngtHjfbp60wTUAsWqqlSvvCIFS5PWcCQkIY5QIyp1EVYgNBVfcmdDl6RYjIEhjEkv\n/RIpm3Tv1QKBgDV8O8ykeQK3KY+UahtFDtkjmxcjenwdSnPI1H0j5Lqzq9lY2WhE\nyCItKkvtT+FZrCD4iGV99FzHa50YEwrtyYZT2c9bZUEqHdhs/rT8fKUyq90aQ6Jb\nXP6SrrUuuMrAlDQeZj2sKTk13H1rWvPqLYca87q4WnFsnyAvzcgoKKOPAoGAO8EF\nLlCognlG4V6nnV0BedKpVD1t7x2dff54I8Aeoz+z4/ODuW6gJ54SXiD+NWjFUjDn\nPhpSba7EIltRKt75n3SK8nLYcRRv0ZKQWoyS253sojqVr383zDMDl3/q38/jIpqd\nuLsSBQdRNvmgNoe50jstVuAwboJPuUE/ScNIa20CgYEAjhmgsxrxHvSgvBlPef1U\nmC3Wn+f7ylxdyUiaLPQwWdRg5l0FMaI1DG/GvRfRXJDSA9bTsKYjv+zGil6B3J4k\nueM3nMmwks+5u3g3yDpp615J+iwPH9VVNsKJGVMeFN0VYYV9NsrkWpQjjj/F19pv\nezLD4gKHde1QsXkzcUNMgXc=\n-----END PRIVATE KEY-----\n","client_email": "firebase-adminsdk-v5ulu@cad-fitter.iam.gserviceaccount.com","client_id": "107170820726037449655","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-v5ulu%40cad-fitter.iam.gserviceaccount.com"}'
+DATABASE_HOST="aws.connect.psdb.cloud"
+DATABASE_USER="gxglqncb5pybzdvreu48"
+
 [durable_objects]
 bindings = [{name = "ENGINE_INSTANCE", class_name = "EngineInstance"}]
 

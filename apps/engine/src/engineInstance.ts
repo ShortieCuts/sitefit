@@ -1,11 +1,22 @@
 import {
   isBatch,
+  isCommitTransaction,
   isJoin,
   isLogin,
   isWriteGlobalProperty,
   Project,
   SocketMessage,
 } from "core";
+
+import {
+  SET_GOOGLE_CLOUD_KEY,
+  SET_FIREBASE_WEB_API_KEY,
+  SET_PROJECT_ID,
+  SET_DATABASE_URL,
+  SET_DATABASE_HOST,
+  SET_DATABASE_USER,
+  SET_DATABASE_PASSWORD,
+} from "secrets";
 
 import { checkRequestAuth, getUserFromFirebaseId } from "auth";
 import { randomNiceColorFromString } from "./color";
@@ -89,23 +100,36 @@ export class EngineInstance {
   sessions: Session[] = [];
 
   constructor(state: DurableObjectState, env: Env) {
+    SET_GOOGLE_CLOUD_KEY(env.GOOGLE_CLOUD_KEY);
+    SET_FIREBASE_WEB_API_KEY(env.FIREBASE_WEB_API_KEY);
+    SET_PROJECT_ID(env.PROJECT_ID);
+    SET_DATABASE_URL(env.DATABASE_URL);
+    SET_DATABASE_HOST(env.DATABASE_HOST);
+    SET_DATABASE_USER(env.DATABASE_USER);
+    SET_DATABASE_PASSWORD(env.DATABASE_PASSWORD);
+
     this.env = env;
     this.state = state;
     this.project = null;
 
-    this.key = state.id.name ?? "unknown";
+    this.key = state.id.toString();
+    console.log("New", this.key);
 
     state.blockConcurrencyWhile(async () => {
       let vals = await env.PROJECTS.get(this.key);
+      console.log("Loading", this.key, vals);
       if (vals) {
         let rawJson = await vals.text();
         let parsedVal = {};
+        console.log("raw", rawJson);
         try {
           parsedVal = JSON.parse(rawJson);
+          console.log("p", parsedVal);
         } catch (e) {
           this.broken = true;
           console.log("Error parsing project: ", e);
         }
+        console.log("Loading", parsedVal);
 
         this.project = new Project(this.key);
         this.project.deserialize(parsedVal);
@@ -128,10 +152,9 @@ export class EngineInstance {
   async save() {
     console.log("Auto saving...");
     if (this.dirty && !this.broken && this.project) {
-      let resp = await this.env.PROJECTS.put(
-        this.key,
-        JSON.stringify(this.project.serialize())
-      );
+      let data = JSON.stringify(this.project.serialize());
+      console.log("Saving", data);
+      let resp = await this.env.PROJECTS.put(this.key, data);
 
       console.log("Auto saved. ", resp);
       this.dirty = false;
@@ -168,6 +191,7 @@ export class EngineInstance {
     session.send(
       SocketMessage.sync({
         selfUid: session.uid,
+        project: this.project?.serialize() ?? {},
         sessions: this.sessions
           .filter((s) => !s.quit && s.userId)
           .map((s) => ({
@@ -253,7 +277,24 @@ export class EngineInstance {
           this.project.globalProperties.mapStyle = data.value;
           this.broadcast(data);
           console.log("Broadcast", data);
+          this.dirty = true;
+          this.enqueueSave();
         }
+      }
+    } else if (isCommitTransaction(data)) {
+      if (this.project) {
+        let appliedMutations = this.project.applyTransaction(
+          data.transaction,
+          false
+        );
+        let newTransaction = this.project.createTransaction();
+
+        for (let mutation of appliedMutations) {
+          newTransaction.mutations.push(mutation);
+        }
+        this.broadcast(SocketMessage.commitTransaction(newTransaction));
+        this.dirty = true;
+        this.enqueueSave();
       }
     }
   }
