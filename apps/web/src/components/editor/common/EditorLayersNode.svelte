@@ -10,6 +10,9 @@
 	import Fa from 'svelte-fa';
 	import type { Writable } from 'svelte/store';
 	import type { EditorLayerNode } from './EditorLayerNode';
+	import { getSvelteContext } from 'src/store/editor';
+
+	const { editor } = getSvelteContext();
 
 	const icons: {
 		[key: string]: any;
@@ -29,14 +32,26 @@
 		$toggleState.set(node.id, !($toggleState.get(node.id) ?? false));
 		$toggleState = $toggleState;
 	}
+
+	const { selection } = editor;
+
+	function select() {
+		$selection = [node.id];
+	}
+
+	$: selected = $selection.includes(node.id);
 </script>
 
 <div class="flex flex-col">
-	<button class="flex flex-row p-2 hover:bg-gray-100 items-center">
+	<button
+		class="layer-item cursor-default flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent"
+		class:selected
+		on:click={select}
+	>
 		{#if node.children && node.children.length > 0}
 			<button
-				class="w-6 h-6 hover:bg-gray-200 flex items-center justify-center rounded-md text-gray-400"
-				on:click={toggle}
+				class="cursor-default w-6 h-6 hover:bg-gray-200 flex items-center justify-center rounded-md text-gray-400"
+				on:click|stopPropagation={toggle}
 			>
 				<Fa icon={isOpen ? faCaretDown : faCaretRight} /></button
 			>
@@ -57,3 +72,9 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.selected {
+		@apply bg-blue-200 border border-blue-500;
+	}
+</style>
