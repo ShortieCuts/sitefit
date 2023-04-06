@@ -10,15 +10,17 @@
 	import type { Overlay } from './overlays/Overlay';
 	import { RendererOverlay } from './overlays/Renderer';
 	import { SelectionOverlay } from './overlays/Selection';
+	import { Cursors } from './cursors';
 
 	const { editor, broker } = getSvelteContext();
 
-	const { activeTool } = editor;
+	const { activeTool, selectToolCursor } = editor;
 	const mapStyle = broker.writableGlobalProperty('mapStyle', 'google-satellite');
 
 	let containerEl: HTMLElement | null = null;
 	let map: google.maps.Map | null = null;
 
+	let leftMouseDown = writable(false);
 	let middleMouseDown = writable(false);
 	let isScrolling = writable(false);
 
@@ -190,6 +192,31 @@
 					}
 				});
 
+				// calculate constant scaling factor for in-map elements to stay the same size on screen
+				function computeScaling() {
+					if (!map) return;
+
+					let bounds = map.getBounds();
+
+					if (!bounds) return;
+
+					let ne = bounds.getNorthEast();
+					let sw = bounds.getSouthWest();
+
+					let scale = Math.abs(ne.lat() - sw.lat()) * 800;
+					editor.screenScale.set(scale);
+				}
+
+				map.addListener('zoom_changed', () => {
+					computeScaling();
+				});
+
+				setTimeout(() => {
+					computeScaling();
+				}, 1000);
+
+				computeScaling();
+
 				rebuildOverlays(map);
 			});
 		}
@@ -202,10 +229,12 @@
 	});
 
 	function handleMouseDown(e: MouseEvent) {
+		if (e.button === 0) $leftMouseDown = true;
 		if (e.button === 1) $middleMouseDown = true;
 	}
 
 	function handleMouseUp(e: MouseEvent) {
+		if (e.button === 0) $leftMouseDown = false;
 		if (e.button === 1) $middleMouseDown = false;
 	}
 
@@ -220,13 +249,44 @@
 			}, 100);
 		}
 	}
+
+	let currentCursor: string = Cursors.default;
+
+	$: {
+		currentCursor = Cursors.default;
+
+		if ($middleMouseDown) {
+			currentCursor = Cursors.grabbing;
+		} else {
+			if ($activeTool == 'select') {
+				currentCursor = $selectToolCursor;
+			} else if ($activeTool == 'pan') {
+				currentCursor = $leftMouseDown ? Cursors.grabbing : Cursors.grab;
+			} else if ($activeTool == 'pen') {
+				currentCursor = Cursors.pen;
+			} else if ($activeTool == 'comment') {
+				currentCursor = Cursors.comment;
+			}
+		}
+	}
+
+	let topLeftCursors = [Cursors.default, Cursors.pen, Cursors.comment];
 </script>
 
 <svelte:window on:mousewheel|capture={handleMouseWheel} />
 <div
-	class="h-full z-0"
+	class="map-container h-full z-0"
+	style="--cursor: url('{currentCursor}') {topLeftCursors.includes(currentCursor)
+		? '0'
+		: '12'} {topLeftCursors.includes(currentCursor) ? '0' : '12'}, auto"
 	bind:this={containerEl}
 	on:mousedown={handleMouseDown}
 	on:mouseup={handleMouseUp}
 	on:mousemove={handleMouseMove}
 />
+
+<style lang="scss">
+	:global(.map-container *) {
+		cursor: var(--cursor) !important;
+	}
+</style>

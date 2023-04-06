@@ -74,18 +74,20 @@ export class Object2D implements Serializable {
   }
 
   deserialize(data: any) {
-    this.id = data.id;
-    this.type = data.type;
-    this.name = data.name;
-    this.transform = data.transform;
-    if (!this.transform) {
-      this.transform = new Transform();
+    if ("id" in data) this.id = data.id;
+    if ("type" in data) this.type = data.type;
+    if ("name" in data) this.name = data.name;
+    if ("transform" in data) {
+      this.transform = data.transform;
+      if (!this.transform) {
+        this.transform = new Transform();
+      }
     }
-    this.visible = data.visible;
-    this.locked = data.locked;
-    this.parent = data.parent;
-    this.originalCad = data.originalCad;
-    this.style = data.style;
+    if ("visible" in data) this.visible = data.visible;
+    if ("locked" in data) this.locked = data.locked;
+    if ("parent" in data) this.parent = data.parent;
+    if ("originalCad" in data) this.originalCad = data.originalCad;
+    if ("style" in data) this.style = data.style;
   }
 }
 
@@ -131,10 +133,10 @@ export class Path extends Object2D implements Serializable {
 
   deserialize(data: any) {
     super.deserialize(data);
-    this.segments = data.segments;
-    this.bezier = data.bezier;
-    this.bezierHandles = data.bezierHandles;
-    this.width = data.width;
+    if ("segments" in data) this.segments = data.segments;
+    if ("bezier" in data) this.bezier = data.bezier;
+    if ("bezierHandles" in data) this.bezierHandles = data.bezierHandles;
+    if ("width" in data) this.width = data.width;
   }
 }
 
@@ -151,7 +153,7 @@ export class Group extends Object2D implements Serializable {
 
   deserialize(data: any) {
     super.deserialize(data);
-    this.iconKind = data.iconKind;
+    if ("iconKind" in data) this.iconKind = data.iconKind;
   }
 }
 
@@ -177,8 +179,8 @@ export class Note extends Object2D implements Serializable {
 
   deserialize(data: any) {
     super.deserialize(data);
-    this.owner = data.owner;
-    this.body = data.body;
+    if ("owner" in data) this.owner = data.owner;
+    if ("body" in data) this.body = data.body;
   }
 }
 
@@ -205,8 +207,8 @@ export class Text extends Object2D implements Serializable {
 
   deserialize(data: any) {
     super.deserialize(data);
-    this.text = data.text;
-    this.size = data.size;
+    if ("text" in data) this.text = data.text;
+    if ("size" in data) this.size = data.size;
   }
 }
 
@@ -239,9 +241,9 @@ export class Arc extends Object2D implements Serializable {
 
   deserialize(data: any) {
     super.deserialize(data);
-    this.radius = data.radius;
-    this.startAngle = data.startAngle;
-    this.endAngle = data.endAngle;
+    if ("radius" in data) this.radius = data.radius;
+    if ("startAngle" in data) this.startAngle = data.startAngle;
+    if ("endAngle" in data) this.endAngle = data.endAngle;
   }
 }
 
@@ -263,7 +265,7 @@ export class Circle extends Object2D implements Serializable {
 
   deserialize(data: any) {
     super.deserialize(data);
-    this.radius = data.radius;
+    if ("radius" in data) this.radius = data.radius;
   }
 }
 
@@ -287,8 +289,8 @@ export class Waypoint extends Object2D implements Serializable {
 
   deserialize(data: any) {
     super.deserialize(data);
-    this.geo = data.geo;
-    this.kind = data.kind;
+    if ("geo" in data) this.geo = data.geo;
+    if ("kind" in data) this.kind = data.kind;
   }
 }
 

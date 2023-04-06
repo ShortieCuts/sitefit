@@ -112,16 +112,10 @@ export class Project implements Serializable {
           if (!object) {
             throw new Error("Object not found");
           }
-          if (typeof mutation.data === "object") {
-            object.deserialize(mutation.data);
-          } else {
-            const propertyMutation = mutation.data as PropertyMutation;
-            if (propertyMutation.key in object) {
-              (object as any)[propertyMutation.key] = propertyMutation.value;
-            } else {
-              throw new Error("Invalid property");
-            }
-          }
+          const propertyMutation = mutation.data as PropertyMutation;
+          object.deserialize({
+            [propertyMutation.key]: propertyMutation.value,
+          });
         } else if (mutation.type === "delete") {
           const object = this.objectsMap.get(mutation.subject);
           if (!object) {

@@ -32,7 +32,7 @@ class RenderPath implements RenderObject2D {
 
 		this.line = new THREE.Line(
 			geo,
-			new THREE.MeshBasicMaterial({ color: randomColorHEX(), opacity: 1, transparent: false })
+			new THREE.MeshBasicMaterial({ color: '#fff', opacity: 1, transparent: false })
 		);
 
 		overlay.overlay.scene.add(this.line);
@@ -54,6 +54,9 @@ class RenderPath implements RenderObject2D {
 
 		this.line.geometry.computeBoundingSphere();
 		this.line.geometry.computeBoundingBox();
+
+		this.line.position.setX(obj.transform.position[0]);
+		this.line.position.setZ(obj.transform.position[1]);
 	}
 
 	setMaterial(mat: THREE.Material): void {

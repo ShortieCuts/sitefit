@@ -271,7 +271,7 @@ export class ProjectBroker {
 				this.sendMessage(SocketMessage.batch(this.queuedMessages));
 				this.queuedMessages = [];
 			}
-		});
+		}, 1);
 	}
 
 	sendMessage(message: SocketMessage) {
@@ -349,6 +349,10 @@ export class ProjectBroker {
 		}
 
 		this.needsRender.set(true);
+	}
+
+	markObjectDirty(id: ObjectID) {
+		this.rendererDirtyObjects.add(id);
 	}
 
 	handleMessage(message: SocketMessage) {
@@ -434,6 +438,15 @@ export class EditorContext {
 	selectionDown: Writable<boolean> = writable(false);
 	selectionStart: Writable<[number, number]> = writable([0, 0]);
 	hoveringObject: Writable<ObjectID> = writable('');
+
+	translating: Writable<boolean> = writable(false);
+	rotating: Writable<boolean> = writable(false);
+	scaling: Writable<boolean> = writable(false);
+	transformOrigin: Writable<[number, number]> = writable([0, 0]);
+
+	selectToolCursor: Writable<string> = writable('default');
+
+	screenScale: Writable<number> = writable(1);
 
 	selection: Writable<ObjectID[]> = writable([]);
 	overlay: Writable<ThreeJSOverlayView | null> = writable(null);

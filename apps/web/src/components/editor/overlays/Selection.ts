@@ -12,10 +12,20 @@ class OutlinedBox {
 	box: THREE.Mesh;
 	line: THREE.Line;
 
-	constructor(overlay: Overlay) {
+	constructor(
+		overlay: Overlay,
+		innerColor = '#1a64ac',
+		innerOpacity = 0.1,
+		outerColor = '#0c8ae5',
+		outerOpacity = 1
+	) {
 		this.box = new THREE.Mesh(
 			new THREE.BoxGeometry(1, 0.1, 1),
-			new THREE.MeshBasicMaterial({ color: '#1a64ac', opacity: 0.1, transparent: true })
+			new THREE.MeshBasicMaterial({
+				color: innerColor as THREE.ColorRepresentation,
+				opacity: innerOpacity,
+				transparent: true
+			})
 		);
 		let geo = new THREE.BufferGeometry().setFromPoints([
 			new THREE.Vector3(-0.5, 0, -0.5),
@@ -27,7 +37,11 @@ class OutlinedBox {
 
 		this.line = new THREE.Line(
 			geo,
-			new THREE.MeshBasicMaterial({ color: '#0c8ae5', opacity: 1, transparent: false })
+			new THREE.MeshBasicMaterial({
+				color: outerColor as THREE.ColorRepresentation,
+				opacity: outerOpacity,
+				transparent: false
+			})
 		);
 
 		overlay.overlay.scene.add(this.box);
@@ -47,6 +61,104 @@ class OutlinedBox {
 	setScale(max: THREE.Vector3): void {
 		this.box.scale.copy(max);
 		this.line.scale.copy(max);
+	}
+}
+
+class SelectionBox {
+	main: OutlinedBox;
+	topLeft: OutlinedBox;
+	topRight: OutlinedBox;
+	bottomLeft: OutlinedBox;
+	bottomRight: OutlinedBox;
+	overlay: Overlay;
+
+	constructor(overlay: Overlay) {
+		this.overlay = overlay;
+		let grabInnerColor = '#fff';
+		let grabInnerOpacity = 1;
+		let grabOuterColor = '#1a64ac';
+		let grabOuterOpacity = 1;
+
+		let mainInnerColor = '#fff';
+		let mainInnerOpacity = 0;
+		let mainOuterColor = '#0c8ae5';
+		let mainOuterOpacity = 1;
+
+		this.main = new OutlinedBox(
+			overlay,
+			mainInnerColor,
+			mainInnerOpacity,
+			mainOuterColor,
+			mainOuterOpacity
+		);
+		this.topLeft = new OutlinedBox(
+			overlay,
+			grabInnerColor,
+			grabInnerOpacity,
+			grabOuterColor,
+			grabOuterOpacity
+		);
+		this.topRight = new OutlinedBox(
+			overlay,
+			grabInnerColor,
+			grabInnerOpacity,
+			grabOuterColor,
+			grabOuterOpacity
+		);
+		this.bottomLeft = new OutlinedBox(
+			overlay,
+			grabInnerColor,
+			grabInnerOpacity,
+			grabOuterColor,
+			grabOuterOpacity
+		);
+		this.bottomRight = new OutlinedBox(
+			overlay,
+			grabInnerColor,
+			grabInnerOpacity,
+			grabOuterColor,
+			grabOuterOpacity
+		);
+	}
+
+	setVisible(visible: boolean): void {
+		this.main.setVisible(visible);
+		this.topLeft.setVisible(visible);
+		this.topRight.setVisible(visible);
+		this.bottomLeft.setVisible(visible);
+		this.bottomRight.setVisible(visible);
+	}
+
+	updateSize() {
+		let grabSize = this.overlay.map.getZoom() ?? 1;
+		grabSize = 21 - grabSize;
+
+		grabSize = Math.max(1, grabSize);
+		grabSize ** 2;
+		grabSize /= 2;
+		grabSize = get(this.overlay.editor.screenScale);
+		this.topLeft.setScale(new THREE.Vector3(grabSize, 1, grabSize));
+		this.topRight.setScale(new THREE.Vector3(grabSize, 1, grabSize));
+		this.bottomLeft.setScale(new THREE.Vector3(grabSize, 1, grabSize));
+		this.bottomRight.setScale(new THREE.Vector3(grabSize, 1, grabSize));
+		this.overlay.overlay.requestRedraw();
+	}
+
+	setPositionAndScale(pos: THREE.Vector3, scale: THREE.Vector3): void {
+		this.main.setPosition(pos);
+		this.main.setScale(scale);
+
+		this.topLeft.setPosition(new THREE.Vector3(pos.x - scale.x / 2, pos.y, pos.z + scale.z / 2));
+
+		this.topRight.setPosition(new THREE.Vector3(pos.x + scale.x / 2, pos.y, pos.z + scale.z / 2));
+
+		this.bottomLeft.setPosition(new THREE.Vector3(pos.x - scale.x / 2, pos.y, pos.z - scale.z / 2));
+
+		this.bottomRight.setPosition(
+			new THREE.Vector3(pos.x + scale.x / 2, pos.y, pos.z - scale.z / 2)
+		);
+
+		this.updateSize();
 	}
 }
 
@@ -79,7 +191,7 @@ class OutlinedGeometry {
 export class SelectionOverlay extends Overlay {
 	isDown: boolean = false;
 	box: OutlinedBox | null = null;
-	selectionBox: OutlinedBox | null = null;
+	selectionBox: SelectionBox | null = null;
 	hover: OutlinedGeometry | null = null;
 
 	init(): void {
@@ -106,20 +218,39 @@ export class SelectionOverlay extends Overlay {
 
 		this.addUnsub(
 			this.editor.hoveringObject.subscribe((val) => {
-				if (this.hover) {
-					this.hover.destroy(this);
-					this.hover = null;
-				}
-
-				if (val) {
-					let objMap = this.broker.project.objectsMap.get(val);
-					if (objMap) this.hover = new OutlinedGeometry(this, objMap);
-				}
+				this.refreshHover();
 			})
 		);
 
+		this.addUnsub(
+			this.broker.needsRender.subscribe((newVal) => {
+				if (newVal) {
+					this.refreshHover();
+					this.refresh();
+				}
+			})
+		);
+		let remove = this.map.addListener('zoom_changed', () => {
+			this.selectionBox?.updateSize();
+		}).remove;
+		this.addUnsub(remove);
+
 		this.box = new OutlinedBox(this);
-		this.selectionBox = new OutlinedBox(this);
+		this.selectionBox = new SelectionBox(this);
+	}
+
+	refreshHover() {
+		if (this.hover) {
+			this.hover.destroy(this);
+			this.hover = null;
+		}
+
+		let val = get(this.editor.hoveringObject);
+
+		if (val) {
+			let objMap = this.broker.project.objectsMap.get(val);
+			if (objMap) this.hover = new OutlinedGeometry(this, objMap);
+		}
 	}
 
 	refresh(): void {
@@ -166,9 +297,8 @@ export class SelectionOverlay extends Overlay {
 
 			let center = [(startVec[0] + endVec[0]) / 2, (startVec[1] + endVec[1]) / 2];
 
-			this.selectionBox.setPosition(new Vector3(center[0], 0, center[1]));
-
-			this.selectionBox.setScale(
+			this.selectionBox.setPositionAndScale(
+				new Vector3(center[0], 0, center[1]),
 				new THREE.Vector3(
 					Math.abs(startVec[0] - endVec[0]),
 					Math.abs(1),
@@ -185,7 +315,7 @@ export class SelectionOverlay extends Overlay {
 	}
 }
 
-function computeBounds(objects: Object2D[]): Flatten.Box {
+export function computeBounds(objects: Object2D[]): Flatten.Box {
 	let box: Flatten.Box | null = null;
 
 	for (let obj of objects) {

@@ -99,6 +99,9 @@ export class EngineInstance {
 
   sessions: Session[] = [];
 
+  private queuedMessages: SocketMessage[] = [];
+  private messageQueueTimeout: number | null = null;
+
   constructor(state: DurableObjectState, env: Env) {
     SET_GOOGLE_CLOUD_KEY(env.GOOGLE_CLOUD_KEY);
     SET_FIREBASE_WEB_API_KEY(env.FIREBASE_WEB_API_KEY);
@@ -275,7 +278,7 @@ export class EngineInstance {
       if (data.key == "mapStyle") {
         if (["google-satellite", "google-simple"].includes(data.value)) {
           this.project.globalProperties.mapStyle = data.value;
-          this.broadcast(data);
+          this.enqueueBroadcast(data);
           console.log("Broadcast", data);
           this.dirty = true;
           this.enqueueSave();
@@ -292,11 +295,29 @@ export class EngineInstance {
         for (let mutation of appliedMutations) {
           newTransaction.mutations.push(mutation);
         }
-        this.broadcast(SocketMessage.commitTransaction(newTransaction));
+        this.enqueueBroadcast(SocketMessage.commitTransaction(newTransaction));
         this.dirty = true;
         this.enqueueSave();
       }
     }
+  }
+
+  enqueueBroadcast(message: SocketMessage) {
+    this.queuedMessages.push(message);
+
+    if (this.messageQueueTimeout) {
+      clearTimeout(this.messageQueueTimeout);
+    }
+
+    this.messageQueueTimeout = setTimeout(() => {
+      if (this.queuedMessages.length == 1) {
+        this.broadcast(this.queuedMessages[0]);
+        this.queuedMessages = [];
+      } else if (this.queuedMessages.length > 1) {
+        this.broadcast(SocketMessage.batch(this.queuedMessages));
+        this.queuedMessages = [];
+      }
+    }, 1);
   }
 
   broadcast(message: SocketMessage) {
