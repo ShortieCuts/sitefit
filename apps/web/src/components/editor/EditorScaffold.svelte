@@ -55,8 +55,7 @@
 			<div class="editor-bar-left flex-1 justify-start flex flex-row items-center pl-2">
 				<div class="flex flex-row">
 					<div class="flex flex-row items-center cursor-pointer">
-						<img src="/logo.svg" class="w-10 h-10" alt="logo" />
-						<b class="text-lg pl-2">LotFitter</b>
+						<img src="/logo.svg" class=" h-10" alt="logo" />
 						<Popover
 							showOnClick={true}
 							hideOnExternalClick

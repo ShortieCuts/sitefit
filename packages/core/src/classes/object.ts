@@ -124,7 +124,7 @@ export class Path extends Object2D implements Serializable {
   serialize() {
     return {
       ...super.serialize(),
-      segments: this.segments,
+      segments: this.segments.map((s) => [...s]),
       bezier: this.bezier,
       bezierHandles: this.bezierHandles,
       width: this.width,

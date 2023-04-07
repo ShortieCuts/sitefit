@@ -57,6 +57,10 @@ class RenderPath implements RenderObject2D {
 
 		this.line.position.setX(obj.transform.position[0]);
 		this.line.position.setZ(obj.transform.position[1]);
+		this.line.scale.setX(obj.transform.size[0]);
+		this.line.scale.setZ(obj.transform.size[1]);
+
+		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 	}
 
 	setMaterial(mat: THREE.Material): void {

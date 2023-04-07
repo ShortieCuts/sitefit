@@ -442,6 +442,11 @@ export class EditorContext {
 	translating: Writable<boolean> = writable(false);
 	rotating: Writable<boolean> = writable(false);
 	scaling: Writable<boolean> = writable(false);
+
+	canScale: Writable<boolean> = writable(false);
+	scaleDirection: Writable<[number, number]> = writable([0, 0]);
+	canRotate: Writable<boolean> = writable(false);
+
 	transformOrigin: Writable<[number, number]> = writable([0, 0]);
 
 	selectToolCursor: Writable<string> = writable('default');

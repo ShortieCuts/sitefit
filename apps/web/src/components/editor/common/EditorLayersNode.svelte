@@ -46,7 +46,7 @@
 	<button
 		class="layer-item cursor-default flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent"
 		class:selected
-		on:click={select}
+		on:mousedown={select}
 	>
 		{#if node.children && node.children.length > 0}
 			<button

@@ -37,7 +37,8 @@
 		$activeTool;
 		if (map)
 			map.setOptions({
-				draggable: canDrag,
+				gestureHandling: canDrag ? 'greedy' : 'none',
+				keyboardShortcuts: canDrag,
 				draggableCursor: $activeTool == 'pan' ? 'grab' : 'default'
 			});
 	}
@@ -98,16 +99,15 @@
 					center: origin,
 					zoom: 18,
 					disableDefaultUI: true,
+
 					mapId: getMapId(),
 					mapTypeId: getMapTypeId(),
 					streetViewControl: false,
 					draggableCursor: 'default',
-					draggable: canDrag,
-					gestureHandling: 'greedy',
+					gestureHandling: canDrag ? 'greedy' : 'none',
+					keyboardShortcuts: canDrag,
 					scrollwheel: true,
-					isFractionalZoomEnabled: true,
-
-					keyboardShortcuts: false
+					isFractionalZoomEnabled: true
 				});
 
 				referenceOverlay = new ThreeJSOverlayView({
@@ -122,6 +122,10 @@
 
 				map.addListener('mousemove', (ev: google.maps.MapMouseEvent) => {
 					const { latLng } = ev;
+					let mevent = ev.domEvent as MouseEvent;
+					if (mevent.shiftKey && mevent.button == 0 && mevent.buttons == 1) {
+						map?.setTilt(0);
+					}
 
 					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
 
@@ -238,7 +242,12 @@
 		if (e.button === 1) $middleMouseDown = false;
 	}
 
-	function handleMouseMove(e: MouseEvent) {}
+	function handleMouseMove(e: MouseEvent) {
+		if (!canDrag && e.shiftKey) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	}
 
 	function handleMouseWheel(e: WheelEvent) {
 		if (map && !canDrag) {
@@ -251,6 +260,16 @@
 	}
 
 	let currentCursor: string = Cursors.default;
+
+	// $: {
+	// 	if (typeof window !== 'undefined') {
+	// 		if (!canDrag) {
+	// 			window.addEventListener('mousemove', handleMouseMove, { capture: true });
+	// 		} else {
+	// 			window.removeEventListener('mousemove', handleMouseMove, { capture: true });
+	// 		}
+	// 	}
+	// }
 
 	$: {
 		currentCursor = Cursors.default;
@@ -274,6 +293,7 @@
 </script>
 
 <svelte:window on:mousewheel|capture={handleMouseWheel} />
+
 <div
 	class="map-container h-full z-0"
 	style="--cursor: url('{currentCursor}') {topLeftCursors.includes(currentCursor)
@@ -282,7 +302,6 @@
 	bind:this={containerEl}
 	on:mousedown={handleMouseDown}
 	on:mouseup={handleMouseUp}
-	on:mousemove={handleMouseMove}
 />
 
 <style lang="scss">
