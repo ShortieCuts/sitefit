@@ -1,0 +1,93 @@
+<script lang="ts">
+	import { setContext } from 'svelte';
+	import { writable } from 'svelte/store';
+	import EditorCadNode from '../common/EditorCadNode.svelte';
+	import { getCadsStore, refreshData } from 'src/store/cads';
+	import ContextMenu from '../common/ContextMenu.svelte';
+	import Fa from 'svelte-fa';
+	import { faFolderPlus, faPlus, faRefresh } from '@fortawesome/free-solid-svg-icons';
+	import { createCadFolder, updateCadFile, updateCadFolder } from '$lib/client/api';
+	import Draggable from '../common/Draggable.svelte';
+	import type { CadTreeNode } from '$lib/types/cad';
+
+	let toggleState = writable(new Map<string, boolean>());
+
+	setContext('toggle', toggleState);
+
+	let newEditId = writable('');
+
+	setContext('newEditId', newEditId);
+
+	const cadStore = getCadsStore();
+
+	let containerEl: HTMLElement;
+
+	function findChild(id: string, children: CadTreeNode[]): CadTreeNode | null {
+		for (let child of children) {
+			if (child.id === id) {
+				return child;
+			}
+
+			let found = findChild(id, child.children);
+			if (found) {
+				return found;
+			}
+		}
+
+		return null;
+	}
+</script>
+
+<div class="overflow-y-auto max-h-full h-full flex flex-col" bind:this={containerEl}>
+	{#each $cadStore.children as node}
+		<EditorCadNode {node} />
+	{/each}
+
+	<Draggable
+		canSelect={false}
+		allowReorder={false}
+		draggableKey="files"
+		payload=""
+		commit={async (from, to, bias) => {
+			if (!from) return;
+
+			let node = findChild(from, $cadStore.children);
+			if (!node) return;
+
+			if (node.type == 'folder') {
+				await updateCadFolder(node.id, {
+					parentId: ''
+				});
+			} else {
+				await updateCadFile(node.id, {
+					parentId: ''
+				});
+			}
+			await refreshData();
+		}}
+	>
+		<div class="flex-1 min-h-[30px]" />
+	</Draggable>
+
+	<ContextMenu el={containerEl}>
+		<button
+			on:click={async (e) => {
+				let res = await createCadFolder({
+					parentId: ''
+				});
+
+				let folderId = res.data.folderId;
+
+				await refreshData();
+				setTimeout(() => {
+					newEditId.set(folderId.toString());
+				}, 10);
+			}}><Fa icon={faFolderPlus} /> New folder</button
+		>
+		<button
+			on:click={(e) => {
+				refreshData();
+			}}><Fa icon={faRefresh} /> Refresh</button
+		>
+	</ContextMenu>
+</div>

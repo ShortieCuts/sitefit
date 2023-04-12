@@ -45,6 +45,7 @@ export class Object2D implements Serializable {
   parent?: ObjectID;
   originalCad?: CadID;
   style: Material;
+  order: number = 0;
 
   flatShape: Object2DShape[] | null = null;
 
@@ -70,6 +71,7 @@ export class Object2D implements Serializable {
       parent: this.parent,
       originalCad: this.originalCad,
       style: this.style,
+      order: this.order ?? 0,
     };
   }
 
@@ -78,7 +80,7 @@ export class Object2D implements Serializable {
     if ("type" in data) this.type = data.type;
     if ("name" in data) this.name = data.name;
     if ("transform" in data) {
-      this.transform = data.transform;
+      this.transform = structuredClone(data.transform);
       if (!this.transform) {
         this.transform = new Transform();
       }
@@ -88,6 +90,7 @@ export class Object2D implements Serializable {
     if ("parent" in data) this.parent = data.parent;
     if ("originalCad" in data) this.originalCad = data.originalCad;
     if ("style" in data) this.style = data.style;
+    if ("order" in data) this.order = data.order;
   }
 }
 
@@ -101,11 +104,14 @@ export class Path extends Object2D implements Serializable {
   segments: RelativeCoordinate[] = [];
   bezier: boolean = false;
   bezierHandles: BezierHandle[] = [];
+  closed: boolean = false;
   width: number = 1;
 
   computeShape() {
     const m = this.getMatrix();
     let segs = [];
+    let points: Flatten.Point[] = [];
+
     for (let i = 0; i < this.segments.length; i++) {
       if (i == 0) continue;
 
@@ -115,9 +121,30 @@ export class Path extends Object2D implements Serializable {
       ).transform(m);
       let p2 = point(this.segments[i][0], this.segments[i][1]).transform(m);
 
+      if (i == 1) {
+        points.push(p1);
+      }
+
+      points.push(p2);
       segs.push(new Flatten.Segment(p1, p2));
     }
 
+    if (this.closed) {
+      let p1 = point(
+        this.segments[this.segments.length - 1][0],
+        this.segments[this.segments.length - 1][1]
+      ).transform(m);
+
+      let p2 = point(this.segments[0][0], this.segments[0][1]).transform(m);
+
+      segs.push(new Flatten.Segment(p1, p2));
+
+      points.push(p2);
+    }
+    if (this.style && this.style.filled) {
+      let poly = new Flatten.Polygon(points);
+      segs.push(poly);
+    }
     this.flatShape = segs;
   }
 
@@ -128,6 +155,7 @@ export class Path extends Object2D implements Serializable {
       bezier: this.bezier,
       bezierHandles: this.bezierHandles,
       width: this.width,
+      closed: this.closed,
     };
   }
 
@@ -137,6 +165,7 @@ export class Path extends Object2D implements Serializable {
     if ("bezier" in data) this.bezier = data.bezier;
     if ("bezierHandles" in data) this.bezierHandles = data.bezierHandles;
     if ("width" in data) this.width = data.width;
+    if ("closed" in data) this.closed = data.closed;
   }
 }
 

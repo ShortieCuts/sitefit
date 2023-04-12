@@ -1,0 +1,5 @@
+account_id = "d4ea528a4398361b4055258d1634ad6d"
+name = "dwg2dxf"
+main = "src/index.js"
+compatibility_date = "2022-10-30"
+node_compat = true

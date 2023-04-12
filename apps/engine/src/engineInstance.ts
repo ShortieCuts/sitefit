@@ -116,23 +116,18 @@ export class EngineInstance {
     this.project = null;
 
     this.key = state.id.toString();
-    console.log("New", this.key);
 
     state.blockConcurrencyWhile(async () => {
       let vals = await env.PROJECTS.get(this.key);
-      console.log("Loading", this.key, vals);
       if (vals) {
         let rawJson = await vals.text();
         let parsedVal = {};
-        console.log("raw", rawJson);
         try {
           parsedVal = JSON.parse(rawJson);
-          console.log("p", parsedVal);
         } catch (e) {
           this.broken = true;
           console.log("Error parsing project: ", e);
         }
-        console.log("Loading", parsedVal);
 
         this.project = new Project(this.key);
         this.project.deserialize(parsedVal);
@@ -156,10 +151,10 @@ export class EngineInstance {
     console.log("Auto saving...");
     if (this.dirty && !this.broken && this.project) {
       let data = JSON.stringify(this.project.serialize());
-      console.log("Saving", data);
+      console.log("Saving");
       let resp = await this.env.PROJECTS.put(this.key, data);
 
-      console.log("Auto saved. ", resp);
+      console.log("Auto saved.");
       this.dirty = false;
     }
   }
@@ -269,7 +264,6 @@ export class EngineInstance {
   }
 
   async handleMessage(session: Session, data: SocketMessage): Promise<void> {
-    console.log(data);
     if (this.project === null) {
       return;
     }
@@ -279,7 +273,6 @@ export class EngineInstance {
         if (["google-satellite", "google-simple"].includes(data.value)) {
           this.project.globalProperties.mapStyle = data.value;
           this.enqueueBroadcast(data);
-          console.log("Broadcast", data);
           this.dirty = true;
           this.enqueueSave();
         }

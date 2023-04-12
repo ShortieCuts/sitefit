@@ -211,7 +211,7 @@ export class SelectionOverlay extends Overlay {
 		);
 
 		this.addUnsub(
-			this.editor.selection.subscribe(() => {
+			this.editor.effectiveSelection.subscribe(() => {
 				this.refresh();
 			})
 		);
@@ -284,7 +284,7 @@ export class SelectionOverlay extends Overlay {
 			this.box.setVisible(false);
 		}
 
-		let sels = get(this.editor.selection);
+		let sels = get(this.editor.effectiveSelection);
 		if (sels.length > 0) {
 			let objs = [];
 			for (let id of sels) {

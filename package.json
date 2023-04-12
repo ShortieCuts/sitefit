@@ -15,14 +15,16 @@
     "db:push": "npx dotenv -- turbo run db:push"
   },
   "devDependencies": {
+    "dotenv-cli": "latest",
     "eslint-config-custom": "*",
     "prettier": "latest",
-    "turbo": "latest",
-    "dotenv-cli": "latest"
+    "turbo": "latest"
   },
   "engines": {
     "node": ">=14.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "autocad-colors-index": "^1.0.3"
+  },
   "packageManager": "npm@8.15.0"
 }

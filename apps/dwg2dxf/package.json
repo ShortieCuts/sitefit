@@ -1,0 +1,16 @@
+{
+  "name": "dwg2dxf",
+  "version": "0.0.0",
+  "devDependencies": {
+    "wrangler": "2.1.13"
+  },
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler publish"
+  },
+  "dependencies": {
+    "@cloudflare/workers-wasi": "^0.0.5",
+    "busboy": "^1.6.0"
+  }
+}

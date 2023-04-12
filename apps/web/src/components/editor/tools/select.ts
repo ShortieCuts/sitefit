@@ -31,7 +31,7 @@ function startTransform(editor: EditorContext, broker: ProjectBroker) {
 	let overlay = get(editor.overlay);
 	if (!overlay) return;
 
-	let sels = get(editor.selection);
+	let sels = get(editor.effectiveSelection);
 	let objs = [];
 	for (let id of sels) {
 		let obj = broker.project.objectsMap.get(id);
@@ -48,7 +48,7 @@ let transformStartBox: Flatten.Box | null = null;
 let transformStartObjects = new Map<ObjectID, Object2D>();
 function computeStartBox(editor: EditorContext, broker: ProjectBroker) {
 	transformStartObjects.clear();
-	let sels = get(editor.selection);
+	let sels = get(editor.effectiveSelection);
 	let objs = [];
 	for (let id of sels) {
 		let obj = broker.project.objectsMap.get(id);
@@ -98,7 +98,7 @@ export const SelectTool = {
 		let canChangeSelection = true;
 
 		if (hover) {
-			let sels = get(editor.selection);
+			let sels = get(editor.effectiveSelection);
 
 			if (sels.includes(hover)) {
 				canChangeSelection = false;
@@ -114,15 +114,19 @@ export const SelectTool = {
 			if (!ev.shiftKey) {
 				if (hover) {
 					editor.selection.set([hover]);
+					editor.computeEffectiveSelection(broker);
 				} else {
 					editor.selection.set([]);
+					editor.computeEffectiveSelection(broker);
 				}
 			} else {
 				if (hover) {
 					editor.selection.set([...get(editor.selection), hover]);
+					editor.computeEffectiveSelection(broker);
 				}
 			}
 		}
+		computeStartBox(editor, broker);
 	},
 	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		editor.selectionDown.set(false);
@@ -137,40 +141,49 @@ export const SelectTool = {
 			editor.rotating.set(false);
 			editor.scaling.set(false);
 			if (isTranslating) {
-				let sels = get(editor.selection);
+				let transaction = broker.project.createTransaction();
+				let sels = get(editor.effectiveSelection);
 				for (let id of sels) {
 					let obj = broker.project.objectsMap.get(id);
-					if (obj) {
-						let transaction = broker.project.createTransaction();
-						transaction.update(id, 'transform', obj.transform);
-						broker.commitTransaction(transaction);
+					let objOrig = transformStartObjects.get(id);
+					if (obj && objOrig) {
+						transaction.update(id, 'transform', structuredClone(obj.transform));
+						obj.transform = objOrig.transform;
 					}
 				}
+				broker.commitTransaction(transaction);
 			} else if (isScaling) {
-				let sels = get(editor.selection);
+				let sels = get(editor.effectiveSelection);
+				let transaction = broker.project.createTransaction();
 				for (let id of sels) {
 					let obj = broker.project.objectsMap.get(id);
-					if (obj) {
-						let transaction = broker.project.createTransaction();
-						transaction.update(id, 'transform', obj.transform);
+					let objOrig = transformStartObjects.get(id);
+					if (obj && objOrig) {
+						transaction.update(id, 'transform', structuredClone(obj.transform));
 						if (obj.type == ObjectType.Path) {
-							transaction.update(id, 'segments', (obj as Path).segments);
+							transaction.update(id, 'segments', structuredClone((obj as Path).segments));
 						}
-						broker.commitTransaction(transaction);
+
+						obj.transform = objOrig.transform;
+						if (obj.type == ObjectType.Path) {
+							(obj as Path).segments = (objOrig as Path).segments;
+						}
 					}
 				}
+				broker.commitTransaction(transaction);
 			} else if (isRotating) {
-				let sels = get(editor.selection);
+				let sels = get(editor.effectiveSelection);
+				let transaction = broker.project.createTransaction();
 				for (let id of sels) {
 					let obj = broker.project.objectsMap.get(id);
-					if (obj) {
-						if (obj.type == ObjectType.Path) {
-							let transaction = broker.project.createTransaction();
-							transaction.update(id, 'transform', obj.transform);
-							broker.commitTransaction(transaction);
-						}
+					let objOrig = transformStartObjects.get(id);
+					if (obj && objOrig) {
+						transaction.update(id, 'transform', structuredClone(obj.transform));
+
+						obj.transform = objOrig.transform;
 					}
 				}
+				broker.commitTransaction(transaction);
 			}
 		}
 	},
@@ -187,7 +200,7 @@ export const SelectTool = {
 
 			let deltaX = currentMousePosition[0] - lastPosition[0];
 			let deltaY = currentMousePosition[1] - lastPosition[1];
-			let sels = get(editor.selection);
+			let sels = get(editor.effectiveSelection);
 
 			if (isTranslating) {
 				lastPosition = [...currentMousePosition];
@@ -203,7 +216,7 @@ export const SelectTool = {
 
 				broker.needsRender.set(true);
 			} else if (isScaling) {
-				let sels = get(editor.selection);
+				let sels = get(editor.effectiveSelection);
 				let objs = [];
 				let didApply = false;
 				for (let id of sels) {
@@ -381,9 +394,8 @@ export const SelectTool = {
 
 				lastPosition = [...currentMousePosition];
 				if (isNaN(deltaAngle)) return;
-				console.log(deltaAngle);
 
-				let sels = get(editor.selection);
+				let sels = get(editor.effectiveSelection);
 
 				for (let id of sels) {
 					let obj = broker.project.objectsMap.get(id);
@@ -411,7 +423,7 @@ export const SelectTool = {
 			let cursor = get(editor.currentMousePositionRelative);
 
 			// Corner grabbing cursor
-			let sels = get(editor.selection);
+			let sels = get(editor.effectiveSelection);
 			let objs = [];
 			for (let id of sels) {
 				let obj = broker.project.objectsMap.get(id);
@@ -574,17 +586,22 @@ function computeSelectionBox(
 	let selection = [];
 	for (let obj of broker.project.objects) {
 		if (!obj.flatShape) continue;
+		if (obj.type == 'group') continue;
+
 		for (let fl of obj.flatShape) {
 			// let relate = Relations.relate(box, fl);
-			let inters = poly.intersect(fl);
-			let to = poly.contains(fl) || inters.length > 0;
-			if (to) {
-				selection.push(obj.id);
-			}
+			try {
+				let inters = poly.intersect(fl);
+				let to = poly.contains(fl) || inters.length > 0;
+				if (to) {
+					selection.push(obj.id);
+				}
+			} catch (e) {}
 		}
 	}
 
 	editor.selection.set(selection);
+	editor.computeEffectiveSelection(broker);
 }
 
 function computeSelectionCenter(editor: EditorContext, broker: ProjectBroker): [number, number] {}
@@ -600,6 +617,10 @@ function getObjectAtCursor(
 			let [dist, seg] = distanceTo(fl, point(cursor[0], cursor[1]));
 			if (dist < get(editor.screenScale) / 2) {
 				return obj.id;
+			}
+
+			if (fl instanceof Flatten.Polygon) {
+				if (fl.contains(point(cursor[0], cursor[1]))) return obj.id;
 			}
 		}
 	}

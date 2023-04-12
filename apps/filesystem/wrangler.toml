@@ -1,0 +1,12 @@
+account_id = "d4ea528a4398361b4055258d1634ad6d"
+name = "filesystem"
+main = "src/index.ts"
+compatibility_date = "2023-03-29"
+
+[vars]
+AUTH_TOKEN="44bc8e68-8f9c-4ba1-ac3a-e3876627d107"
+
+[[r2_buckets]]
+binding = 'CADS'
+bucket_name = 'cads'
+preview_bucket_name = 'cads-dev'

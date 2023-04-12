@@ -15,11 +15,14 @@ import {
 	type PropertyMutation
 } from 'core';
 import { getContext, setContext } from 'svelte';
-import { getProjectMetadata } from '$lib/client/api';
+import { getAuthHeader, getCads, getProjectMetadata } from '$lib/client/api';
 import { dev } from '$app/environment';
 import { getSession } from './auth';
 import { nanoid } from 'nanoid';
 import type { ThreeJSOverlayView } from '@googlemaps/three';
+import { translateDXF } from '$lib/util/dxf';
+import { getCadsStore } from './cads';
+import type { CadTreeNode } from '$lib/types/cad';
 
 const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.xyz';
 
@@ -86,6 +89,9 @@ export class ProjectBroker {
 	rendererDirtyObjects = new Set<string>();
 	needsRender: Writable<boolean> = writable(false);
 
+	undo: Writable<ProjectTransaction[]> = writable([]);
+	redo: Writable<ProjectTransaction[]> = writable([]);
+
 	private queuedMessages: SocketMessage[] = [];
 	private messageQueueTimeout: NodeJS.Timeout | null = null;
 
@@ -127,6 +133,12 @@ export class ProjectBroker {
 				this.loading.set(false);
 
 				this.establishConnection();
+
+				setInterval(() => {
+					// Ping every 30 seconds
+					console.log('Pinging server...');
+					this.socket?.send(JSON.stringify({ type: 'ping' }));
+				}, 30000);
 			})();
 		}
 	}
@@ -153,6 +165,54 @@ export class ProjectBroker {
 		return id;
 	}
 
+	async placeCad(id: string) {
+		let cads = await getCads({});
+
+		function findCad(id: string, children: CadTreeNode[]): CadTreeNode | null {
+			for (const child of children) {
+				if (child.id == id) {
+					return child;
+				}
+
+				if (child.children) {
+					let found = findCad(id, child.children);
+					if (found) {
+						return found;
+					}
+				}
+			}
+
+			return null;
+		}
+
+		let cadInfo = findCad(id, cads.data.children);
+		if (!cadInfo) {
+			return;
+		}
+		let rawDXF = await fetch('/api/cad/' + id).then((res) => res.text());
+
+		let objects = translateDXF(rawDXF);
+		if (!objects) {
+			return;
+		}
+
+		let prefixId = this.allocateId();
+		let transaction = this.project.createTransaction();
+		for (const obj of objects) {
+			if (obj.id == 'root') {
+				obj.name = cadInfo.name;
+				obj.originalCad = id;
+			}
+			obj.id = prefixId + obj.id;
+			if (obj.parent) {
+				obj.parent = prefixId + obj.parent;
+			}
+			transaction.create(obj);
+		}
+
+		this.commitTransaction(transaction);
+	}
+
 	createObject(obj: Object2D) {
 		let uid = this.allocateId();
 		obj.id = uid;
@@ -162,10 +222,41 @@ export class ProjectBroker {
 		this.commitTransaction(transaction);
 	}
 
-	commitTransaction(transaction: ProjectTransaction) {
+	commitUndo() {
+		let undo = get(this.undo);
+		if (undo.length === 0) {
+			return;
+		}
+
+		let transaction = undo[undo.length - 1];
+		this.undo.update((u) => u.slice(0, u.length - 1));
+		let redoTransaction = this.project.computeInverseTransaction(transaction);
+		this.redo.update((r) => [...r, redoTransaction]);
+
+		this.commitTransaction(transaction, true);
+	}
+
+	commitRedo() {
+		let redo = get(this.redo);
+		if (redo.length === 0) {
+			return;
+		}
+
+		let transaction = redo[redo.length - 1];
+		this.redo.update((r) => r.slice(0, r.length - 1));
+		let undoTransaction = this.project.computeInverseTransaction(transaction);
+		this.undo.update((u) => [...u, undoTransaction]);
+		this.commitTransaction(transaction, true);
+	}
+
+	commitTransaction(transaction: ProjectTransaction, skipUndo: boolean = false) {
 		// Todo add an inverse transaction to the undo stack
+		if (!skipUndo) {
+			let undoTransaction = this.project.computeInverseTransaction(transaction);
+			this.undo.update((u) => [...u, undoTransaction]);
+			this.redo.set([]);
+		}
 		let applied = this.project.applyTransaction(transaction);
-		console.log('chages', applied);
 
 		let didChangeTree = false;
 		let changedObjects = new Set<string>();
@@ -224,8 +315,8 @@ export class ProjectBroker {
 		};
 	}
 
-	writableObjectProperty<T>(obj: Object2D, key: string, defaultValue: T): Writable<T> {
-		let writableKey = `${obj.id}.${key}`;
+	writableObjectProperty<T>(id: ObjectID, key: string, defaultValue: T): Writable<T> {
+		let writableKey = `${id}.${key}`;
 
 		let internalWritable = this.objectPropertyStores.get(writableKey) as Writable<T>;
 		if (!internalWritable) {
@@ -233,9 +324,16 @@ export class ProjectBroker {
 			this.objectPropertyStores.set(writableKey, internalWritable);
 		}
 
+		if (this.project.objectsMap.has(id)) {
+			let obj = this.project.objectsMap.get(id);
+			if (obj) {
+				internalWritable.set((obj as any)[key] as T);
+			}
+		}
+
 		const doTransaction = (value: T) => {
 			let transaction = this.project.createTransaction();
-			transaction.update(obj.id, key, value);
+			transaction.update(id, key, value);
 			this.commitTransaction(transaction);
 		};
 
@@ -372,6 +470,17 @@ export class ProjectBroker {
 			let mutations = this.project.applyTransaction(message.transaction, false);
 			for (let m of mutations) {
 				this.rendererDirtyObjects.add(m.subject);
+				if (m.type == 'update') {
+					let store = this.objectPropertyStores.get(
+						`${m.subject}.${(m.data as PropertyMutation).key}`
+					);
+
+					if (store) {
+						store.set(
+							(this.project.objectsMap.get(m.subject) as any)[(m.data as PropertyMutation).key]
+						);
+					}
+				}
 			}
 
 			this.needsRender.set(true);
@@ -454,6 +563,8 @@ export class EditorContext {
 	screenScale: Writable<number> = writable(1);
 
 	selection: Writable<ObjectID[]> = writable([]);
+	/** Includes the children of selected groups */
+	effectiveSelection: Writable<ObjectID[]> = writable([]);
 	overlay: Writable<ThreeJSOverlayView | null> = writable(null);
 
 	desiredPosition: [number, number] = [0, 0];
@@ -477,6 +588,41 @@ export class EditorContext {
 
 	getDesiredPosition(): [number, number] {
 		return this.desiredPosition;
+	}
+
+	computeEffectiveSelection(broker: ProjectBroker) {
+		let selection = get(this.selection);
+		let effectiveSelection = new Set(selection);
+
+		function addGroup(id: ObjectID) {
+			let obj = broker.project.objectsMap.get(id);
+			if (obj && obj.type === 'group') {
+				let children = broker.project.objectsMapChildren.get(id);
+				if (children) {
+					for (let child of children) {
+						effectiveSelection.add(child.id);
+						addGroup(child.id);
+					}
+				}
+			}
+		}
+
+		for (let id of selection) {
+			addGroup(id);
+		}
+
+		this.effectiveSelection.set(Array.from(effectiveSelection));
+	}
+
+	deleteSelection(broker: ProjectBroker) {
+		let selection = get(this.effectiveSelection);
+
+		let transaction = broker.project.createTransaction();
+		for (let id of selection) {
+			transaction.delete(id);
+		}
+
+		broker.commitTransaction(transaction);
 	}
 }
 

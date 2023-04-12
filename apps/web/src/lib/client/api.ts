@@ -1,3 +1,4 @@
+import type { CadTreeNode } from '$lib/types/cad';
 import type { MetadataProject } from '$lib/types/project';
 import type { PublicUserInfo } from '$lib/types/user';
 import type { User } from 'auth';
@@ -121,3 +122,94 @@ export const getProjectMetadata = createIdApiEndpointHelper<{}, MetadataProject>
 );
 
 export const getUserInfo = createIdApiEndpointHelper<{}, PublicUserInfo>('POST', '/api/user/<id>');
+
+export const createCad = createApiEndpointHelper<
+	{
+		name: string;
+		description: string;
+		filename: string;
+		long: number;
+		lat: number;
+		data: string;
+	},
+	{
+		cadId: string;
+	}
+>('POST', '/api/cad');
+
+export const getCads = createApiEndpointHelper<{}, CadTreeNode>('POST', '/api/cads');
+
+export const createCadFolder = createApiEndpointHelper<
+	{
+		parentId: string;
+	},
+	{
+		folderId: string;
+	}
+>('POST', '/api/cad/folder');
+
+export const updateCadFolder = createIdApiEndpointHelper<
+	{
+		name?: string;
+		parentId?: string;
+	},
+	{
+		success: boolean;
+	}
+>('POST', '/api/cad/folder/<id>');
+
+export const updateCadFile = createIdApiEndpointHelper<
+	{
+		name?: string;
+		parentId?: string;
+	},
+	{
+		success: boolean;
+	}
+>('POST', '/api/cad/<id>');
+
+async function convertDwgToDxf(dwg: any): Promise<any> {
+	let endpoint = 'https://dwg2dxf.server-a.workers.dev';
+	const formData = new FormData();
+	formData.append('file', dwg);
+	let res = fetch(endpoint, {
+		method: 'POST',
+		body: formData
+	});
+
+	return await res.then((res) => res.text());
+}
+
+export async function processCadUploads(files: FileList): Promise<string[]> {
+	let promises: Promise<string>[] = [];
+	for (let f of files) {
+		if (f.name.endsWith('.dwg')) {
+			promises.push(
+				new Promise((resolve, reject) => {
+					let reader = new FileReader();
+					reader.onload = async (e) => {
+						let data = e.target?.result;
+						if (data) {
+							let dxf = await convertDwgToDxf(f);
+							let cad = await createCad({
+								data: dxf,
+								description: '',
+								filename: f.name,
+								lat: 0,
+								long: 0,
+								name: f.name
+							});
+
+							resolve(cad.data.cadId);
+						} else {
+							reject();
+						}
+					};
+					reader.readAsText(f);
+				})
+			);
+		}
+	}
+
+	return Promise.all(promises);
+}

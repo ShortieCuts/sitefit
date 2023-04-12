@@ -5,4 +5,5 @@ export class Material {
   color: Color;
   pattern: "hatch" | "diamonds";
   accent: Color;
+  filled: boolean;
 }

@@ -2,7 +2,7 @@ import { getSvelteContext } from 'src/store/editor';
 import { Overlay } from './Overlay';
 import * as THREE from 'three';
 import { get } from 'svelte/store';
-import { Path, type Object2D, type ObjectID } from 'core';
+import { Group, Path, type Object2D, type ObjectID } from 'core';
 import type { Vector3 } from 'three';
 
 export interface RenderObject2D {
@@ -20,9 +20,13 @@ function randomColorHEX() {
 	}
 	return color;
 }
+function colorArrayToThreeColor(arr: [number, number, number, number]): THREE.Color {
+	return new THREE.Color(arr[0], arr[1], arr[2]);
+}
 
 class RenderPath implements RenderObject2D {
 	line: THREE.Line;
+	filled: THREE.Mesh;
 
 	constructor(overlay: Overlay) {
 		let geo = new THREE.BufferGeometry();
@@ -30,15 +34,35 @@ class RenderPath implements RenderObject2D {
 
 		geo.setDrawRange(0, 0);
 
+		let geo2 = new THREE.ShapeGeometry(new THREE.Shape());
+
 		this.line = new THREE.Line(
 			geo,
-			new THREE.MeshBasicMaterial({ color: '#fff', opacity: 1, transparent: false })
+			new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+		);
+
+		this.filled = new THREE.Mesh(
+			geo2,
+			new THREE.MeshBasicMaterial({ color: '#ff0000', side: THREE.DoubleSide })
 		);
 
 		overlay.overlay.scene.add(this.line);
+		overlay.overlay.scene.add(this.filled);
 	}
 
 	refresh(overlay: Overlay, obj: Path): void {
+		let mat = this.line.material as THREE.MeshBasicMaterial;
+		let mat2 = this.filled.material as THREE.MeshBasicMaterial;
+		if (obj.style && obj.style.color) {
+			mat.color.set(colorArrayToThreeColor(obj.style.color));
+			mat2.color.set(colorArrayToThreeColor(obj.style.color));
+
+			mat.transparent = obj.style.color[3] < 1;
+			mat.opacity = obj.style.color[3];
+			mat2.transparent = obj.style.color[3] < 1;
+			mat2.opacity = obj.style.color[3];
+		}
+
 		let arr = (this.line.geometry.attributes.position as any).array as Float32Array;
 
 		let i = 0;
@@ -48,7 +72,13 @@ class RenderPath implements RenderObject2D {
 			arr[i++] = p[1];
 		}
 
-		this.line.geometry.setDrawRange(0, obj.segments.length);
+		if (obj.closed) {
+			arr[i++] = obj.segments[0][0];
+			arr[i++] = 0;
+			arr[i++] = obj.segments[0][1];
+		}
+
+		this.line.geometry.setDrawRange(0, obj.segments.length + (obj.closed ? 1 : 0));
 
 		this.line.geometry.attributes.position.needsUpdate = true;
 
@@ -61,26 +91,76 @@ class RenderPath implements RenderObject2D {
 		this.line.scale.setZ(obj.transform.size[1]);
 
 		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
+
+		if (obj.style && obj.style.filled) {
+			this.line.visible = false;
+			let shape = new THREE.Shape();
+
+			shape.moveTo(obj.segments[0][0], obj.segments[0][1]);
+
+			for (let i = 1; i < obj.segments.length; i++) {
+				shape.lineTo(obj.segments[i][0], obj.segments[i][1]);
+			}
+
+			if (obj.closed) {
+				shape.lineTo(obj.segments[0][0], obj.segments[0][1]);
+			}
+
+			this.filled.geometry.dispose();
+
+			let geo = new THREE.ShapeGeometry(shape);
+			geo.rotateX(Math.PI * 0.5);
+			this.filled.geometry = geo;
+
+			this.filled.position.setX(obj.transform.position[0]);
+			this.filled.position.setZ(obj.transform.position[1]);
+			this.filled.scale.setX(obj.transform.size[0]);
+			this.filled.scale.setZ(obj.transform.size[1]);
+
+			this.filled.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
+		}
 	}
 
 	setMaterial(mat: THREE.Material): void {
 		this.line.material = mat;
 		this.line.material.needsUpdate = true;
+
+		this.filled.material = mat;
+		this.filled.material.needsUpdate = true;
 	}
 
 	translate(delta: Vector3): void {
 		this.line.position.add(delta);
+
+		this.filled.position.add(delta);
 	}
 
 	destroy(overlay: Overlay): void {
 		overlay.overlay.scene.remove(this.line);
 		this.line.geometry.dispose();
+
+		overlay.overlay.scene.remove(this.filled);
+		this.filled.geometry.dispose();
 	}
+}
+
+class RenderGroup implements RenderObject2D {
+	constructor(overlay: Overlay) {}
+
+	refresh(overlay: Overlay, obj: Group): void {}
+
+	setMaterial(mat: THREE.Material): void {}
+
+	translate(delta: Vector3): void {}
+
+	destroy(overlay: Overlay): void {}
 }
 
 export function createRenderObject(overlay: Overlay, obj: Object2D): RenderObject2D {
 	if (obj instanceof Path) {
 		return new RenderPath(overlay);
+	} else if (obj instanceof Group) {
+		return new RenderGroup(overlay);
 	}
 
 	throw new Error('Unsupported object type');

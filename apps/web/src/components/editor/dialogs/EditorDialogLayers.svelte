@@ -2,7 +2,7 @@
 	import DialogSlideUp from 'src/components/common/DialogSlideUp.svelte';
 	import ResponsiveGroup from 'src/components/common/ResponsiveGroup.svelte';
 	import { getSvelteContext } from 'src/store/editor';
-	import type { ProjectMapStyle } from 'core';
+	import type { Object2D, ProjectMapStyle } from 'core';
 	import type { EditorLayerNode } from '../common/EditorLayerNode';
 	import EditorLayersNode from '../common/EditorLayersNode.svelte';
 	import { setContext } from 'svelte';
@@ -27,6 +27,7 @@
 				id: obj.id,
 				name: obj.name,
 				visible: obj.visible,
+				order: obj.order,
 				children: []
 			} as EditorLayerNode;
 
@@ -46,6 +47,8 @@
 				for (const child of rep.children) {
 					resolveChildren(child);
 				}
+
+				rep.children.sort(sortItems);
 			}
 		}
 
@@ -54,10 +57,19 @@
 		}
 	}
 
+	function sortItems(a: EditorLayerNode, b: EditorLayerNode) {
+		if (a.order === b.order) {
+			return a.id.localeCompare(b.id);
+		}
+		return a.order - b.order;
+	}
+
 	const { objectTreeWatcher } = broker;
 	$: {
 		let dummy = $objectTreeWatcher;
 		buildObjectTree();
+
+		objectTree.sort(sortItems);
 
 		console.log('objectTree', objectTree);
 	}

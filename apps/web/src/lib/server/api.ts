@@ -76,6 +76,22 @@ export function validateRequestWithAuth<T>(
 		}
 	});
 }
+export async function validateRequestOnlyAuth(
+	request: Request,
+	fn: (auth: PrismaUser) => Promise<Response>
+): Promise<Response> {
+	let user = await getRequestUser(request);
+	if (user) {
+		return await fn(user);
+	} else {
+		return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+			status: 401,
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+	}
+}
 
 export function validateRequestWithAccess<T>(
 	projectId: string,

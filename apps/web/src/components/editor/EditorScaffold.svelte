@@ -6,6 +6,7 @@
 		faCog,
 		faComment,
 		faDirections,
+		faFileImport,
 		faLocationArrow,
 		faPlus,
 		faSearch,
@@ -26,6 +27,8 @@
 	import EditorSessions from './EditorSessions.svelte';
 	import EditorMap from './EditorMap.svelte';
 	import { onDestroy } from 'svelte';
+	import { processCadUploads } from '$lib/client/api';
+	import { refreshData } from 'src/store/cads';
 
 	export let auth: AuthState;
 	export let projectId: string;
@@ -39,6 +42,27 @@
 	const { loading, error, connected } = broker;
 
 	const { activeDialog } = editorContext;
+
+	let fileDragging = false;
+	let fileEl: HTMLInputElement | null = null;
+
+	function handleKeyboardShortcut(e: KeyboardEvent) {
+		if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+			return;
+		}
+
+		if (e.code == 'KeyZ' && e.ctrlKey) {
+			if (e.shiftKey) {
+				broker.commitRedo();
+			} else {
+				broker.commitUndo();
+			}
+		}
+
+		if (e.code == 'Delete') {
+			editorContext.deleteSelection(broker);
+		}
+	}
 
 	onDestroy(() => {
 		broker.dispose();
@@ -144,12 +168,50 @@
 			{#if !$isMobile}
 				<EditorToolbar />
 			{:else}
-				<div class="editor-mobile-sidebar absolute top-4 left-0 right-0 h-8">
+				<div class="editor-mobile-sidebar absolute top-4 left-0 right-0 h-8 z-10">
 					<EditorNavbar />
 				</div>
 			{/if}
 
-			<EditorMap />
+			<div
+				class="h-full"
+				on:dragenter={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					fileDragging = true;
+					console.log('Enter');
+				}}
+				on:dragover={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					fileDragging = true;
+					console.log('over');
+				}}
+				on:drop={async (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					fileDragging = false;
+
+					if (e.dataTransfer && fileEl) {
+						const files = e.dataTransfer.files;
+
+						fileEl.files = files;
+
+						await processCadUploads(fileEl.files);
+
+						await refreshData();
+					}
+					console.log('drop');
+				}}
+				on:dragleave={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					fileDragging = false;
+					console.log('leave');
+				}}
+			>
+				<EditorMap />
+			</div>
 		</div>
 		{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'right'}
 			<div
@@ -193,9 +255,13 @@
 {/if}
 
 <svelte:window
-	on:keyup={() => {
-		if ($activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center') {
-			editorContext.activateDialog('');
+	on:keyup={(e) => {
+		if (e.key === 'Escape') {
+			if ($activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center') {
+				editorContext.activateDialog('');
+			}
+		} else {
+			handleKeyboardShortcut(e);
 		}
 	}}
 />
@@ -231,5 +297,17 @@
 		<div class="absolute top-4 right-4">
 			<UserDropChip {auth} />
 		</div>
+	</div>
+{/if}
+
+<input type="file" accept=".dwg" bind:this={fileEl} style="display: none" on:change={() => {}} />
+
+{#if fileDragging}
+	<div
+		transition:fade={{ duration: 200 }}
+		class="fixed top-0 left-0 right-0 bottom-0 bg-gray-100 bg-opacity-20 flex items-center justify-center flex-col z-50 pointer-events-none"
+	>
+		<Fa class="text-black text-opacity-50 text-4xl" icon={faFileImport} />
+		<div class="text-2xl text-black text-opacity-50 mt-4">Drop file to import</div>
 	</div>
 {/if}

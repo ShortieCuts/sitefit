@@ -25,3 +25,38 @@ export function db() {
 }
 
 export type SelectQueryBuilderDB = SelectQueryBuilder<DB, keyof DB, {}>;
+
+const AUTH_TOKEN = "44bc8e68-8f9c-4ba1-ac3a-e3876627d107";
+const FS_WORKER = "https://filesystem.cad-mapper.workers.dev";
+
+export function fs() {
+  return {
+    async get(path: string) {
+      return await fetch(`${FS_WORKER}/${path}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+      });
+    },
+
+    async put(path: string, body: string) {
+      return await fetch(`${FS_WORKER}/${path}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+        body,
+      });
+    },
+
+    async delete(path: string) {
+      return await fetch(`${FS_WORKER}/${path}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+      });
+    },
+  };
+}
