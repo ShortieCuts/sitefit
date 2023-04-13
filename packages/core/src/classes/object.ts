@@ -33,6 +33,7 @@ export enum ObjectType {
   Arc = "arc",
   Circle = "circle",
   Waypoint = "waypoint",
+  Cornerstone = "cornerstone",
 }
 
 export class Object2D implements Serializable {
@@ -171,7 +172,7 @@ export class Path extends Object2D implements Serializable {
 
 export class Group extends Object2D implements Serializable {
   type: ObjectType.Group = ObjectType.Group;
-  iconKind: "cad" | "folder" | "file" | "map";
+  iconKind: "cad" | "folder" | "file" | "map" | "layer";
 
   serialize() {
     return {
@@ -249,13 +250,37 @@ export class Arc extends Object2D implements Serializable {
 
   computeShape() {
     const m = this.getMatrix();
+    let clockwise = true;
+
+    const twoPi = Math.PI * 2;
+    let deltaAngle = this.endAngle - this.startAngle;
+    const samePoints = Math.abs(deltaAngle) < Number.EPSILON;
+
+    while (deltaAngle < 0) deltaAngle += twoPi;
+    while (deltaAngle > twoPi) deltaAngle -= twoPi;
+
+    if (deltaAngle < Number.EPSILON) {
+      if (samePoints) {
+        deltaAngle = 0;
+      } else {
+        deltaAngle = twoPi;
+      }
+    }
+
+    if (clockwise === true && !samePoints) {
+      if (deltaAngle === twoPi) {
+        deltaAngle = -twoPi;
+      } else {
+        deltaAngle = deltaAngle - twoPi;
+      }
+    }
+
     this.flatShape = [
-      arc(
-        point(0, 0).transform(m),
-        this.radius,
-        this.startAngle,
-        this.endAngle
-      ),
+      arc(point(0, 0), this.radius, this.startAngle, this.endAngle, true)
+        // Swap x and y coordinates
+        .rotate(Math.PI / 2, point(0, 0))
+        .scale(-1, 1)
+        .transform(m),
     ];
   }
 
@@ -323,6 +348,31 @@ export class Waypoint extends Object2D implements Serializable {
   }
 }
 
+export class Cornerstone extends Object2D implements Serializable {
+  type: ObjectType.Cornerstone = ObjectType.Cornerstone;
+  geo: GeoCoordinate;
+  heading: number;
+
+  computeShape() {
+    const m = this.getMatrix();
+    this.flatShape = [new FlatCircle(point(0, 0).transform(m), 2)];
+  }
+
+  serialize() {
+    return {
+      ...super.serialize(),
+      geo: [...this.geo],
+      heading: this.heading,
+    };
+  }
+
+  deserialize(data: any) {
+    super.deserialize(data);
+    if ("geo" in data) this.geo = data.geo;
+    if ("heading" in data) this.heading = data.heading;
+  }
+}
+
 export function makeObject(data: any) {
   let obj = new Object2D();
   if (data.type == "path") {
@@ -339,6 +389,8 @@ export function makeObject(data: any) {
     obj = new Circle();
   } else if (data.type == "waypoint") {
     obj = new Waypoint();
+  } else if (data.type == "cornerstone") {
+    obj = new Cornerstone();
   }
   return obj;
 }

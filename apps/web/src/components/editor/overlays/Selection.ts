@@ -262,13 +262,19 @@ export class SelectionOverlay extends Overlay {
 			const start = get(this.editor.selectionStart);
 			const end = get(this.editor.currentMousePosition);
 
-			let startVec = this.overlay.latLngAltitudeToVector3({ lat: start[0], lng: start[1] });
-			let endVec = this.overlay.latLngAltitudeToVector3({ lat: end[0], lng: end[1] });
+			let startVec = this.broker.normalizeVector(
+				this.overlay.latLngAltitudeToVector3({ lat: start[0], lng: start[1] })
+			);
+			let endVec = this.broker.normalizeVector(
+				this.overlay.latLngAltitudeToVector3({ lat: end[0], lng: end[1] })
+			);
 
 			let center = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
 
 			this.box.setPosition(
-				this.overlay.latLngAltitudeToVector3({ lat: center[0], lng: center[1] })
+				this.broker.normalizeVector(
+					this.overlay.latLngAltitudeToVector3({ lat: center[0], lng: center[1] })
+				)
 			);
 
 			this.box.setScale(

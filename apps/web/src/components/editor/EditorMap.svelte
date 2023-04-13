@@ -11,8 +11,10 @@
 	import { RendererOverlay } from './overlays/Renderer';
 	import { SelectionOverlay } from './overlays/Selection';
 	import { Cursors } from './cursors';
+	import * as THREE from 'three';
 
 	const { editor, broker } = getSvelteContext();
+	const { geo, heading } = broker.watchCornerstone();
 
 	const { activeTool, selectToolCursor } = editor;
 	const mapStyle = broker.writableGlobalProperty('mapStyle', 'google-satellite');
@@ -28,7 +30,7 @@
 	const overlayTypes: (typeof Overlay)[] = [SelectionOverlay, RendererOverlay];
 	let referenceOverlay: ThreeJSOverlayView | null = null;
 
-	let origin = { lat: -34.397, lng: 150.644 };
+	let origin = { lat: 0, lng: 0 };
 
 	$: canDrag = $isMobile || $activeTool == 'pan' || $isScrolling ? true : $middleMouseDown;
 
@@ -73,7 +75,6 @@
 
 	$: {
 		$mapStyle;
-		console.log('map style changed', $mapStyle, getMapId());
 
 		if (map) {
 			map.setOptions({
@@ -81,6 +82,35 @@
 				mapId: getMapId(),
 				tilt: 0
 			});
+		}
+	}
+
+	$: {
+		$heading;
+		$geo;
+		if (map && referenceOverlay) {
+			map.setHeading($heading);
+
+			map.setCenter({
+				lat: $geo[1],
+				lng: $geo[0]
+			});
+
+			if ($geo[1] != 0 || $geo[0] != 0) {
+				map.setZoom(18);
+			} else {
+				map.setZoom(1);
+			}
+
+			referenceOverlay.setAnchor({
+				lat: $geo[1],
+				lng: $geo[0]
+			});
+
+			let deg = -$heading;
+			let rad = (deg / 180) * Math.PI;
+
+			referenceOverlay.scene.rotateY(rad);
 		}
 	}
 
@@ -96,8 +126,12 @@
 
 				const { Map } = (await google.maps.importLibrary('maps')) as google.maps.MapsLibrary;
 				map = new Map(containerEl, {
-					center: origin,
-					zoom: 18,
+					center: {
+						lat: $geo[1],
+						lng: $geo[0]
+					},
+					zoom: $geo[1] != 0 || $geo[0] != 0 ? 18 : 1,
+					heading: $heading,
 					disableDefaultUI: true,
 
 					mapId: getMapId(),
@@ -110,8 +144,17 @@
 					isFractionalZoomEnabled: true
 				});
 
+				(window as any).editorMap = map;
+
+				let scene = new THREE.Scene();
+				let deg = -$heading;
+				let rad = (deg / 180) * Math.PI;
+
+				scene.rotateY(rad);
+
 				referenceOverlay = new ThreeJSOverlayView({
 					map,
+					scene,
 					upAxis: 'Y',
 					anchor: map.getCenter()
 				});
@@ -127,6 +170,9 @@
 						map?.setTilt(0);
 					}
 
+					let deg = -$heading;
+					let rad = (deg / 180) * Math.PI;
+
 					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
 
 					let vec = referenceOverlay?.latLngAltitudeToVector3({
@@ -135,7 +181,9 @@
 						altitude: 0
 					});
 
-					editor.currentMousePositionRelative.set([vec?.x ?? 0, vec?.z ?? 0]);
+					editor.currentMousePositionRelative.set(
+						broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
+					);
 
 					if (referenceOverlay) {
 						let vectorPos = referenceOverlay.latLngAltitudeToVector3({
@@ -143,7 +191,7 @@
 							lng: latLng?.lng() ?? 0,
 							altitude: 0
 						});
-						editor.desiredPosition = [vectorPos.x, vectorPos.z];
+						editor.desiredPosition = broker.normalizeVector([vectorPos.x, vectorPos.z]);
 					}
 
 					let e = ev.domEvent as MouseEvent;
@@ -156,6 +204,9 @@
 				map.addListener('mousedown', (ev: google.maps.MapMouseEvent) => {
 					const { latLng } = ev;
 
+					let deg = -$heading;
+					let rad = (deg / 180) * Math.PI;
+
 					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
 
 					let vec = referenceOverlay?.latLngAltitudeToVector3({
@@ -164,7 +215,9 @@
 						altitude: 0
 					});
 
-					editor.currentMousePositionRelative.set([vec?.x ?? 0, vec?.z ?? 0]);
+					editor.currentMousePositionRelative.set(
+						broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
+					);
 
 					let e = ev.domEvent as MouseEvent;
 
@@ -186,7 +239,12 @@
 						altitude: 0
 					});
 
-					editor.currentMousePositionRelative.set([vec?.x ?? 0, vec?.z ?? 0]);
+					let deg = -$heading;
+					let rad = (deg / 180) * Math.PI;
+
+					editor.currentMousePositionRelative.set(
+						broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
+					);
 
 					let e = ev.domEvent as MouseEvent;
 					if (e.button === 0) {

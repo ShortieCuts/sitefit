@@ -1,5 +1,15 @@
 export type EditorLayerNode = {
-	icon: 'folder' | 'object' | 'group' | 'layer';
+	icon:
+		| 'cad'
+		| 'folder'
+		| 'object'
+		| 'group'
+		| 'layer'
+		| 'cornerstone'
+		| 'circle'
+		| 'arc'
+		| 'path'
+		| 'solid';
 	id: string;
 	name: string;
 	order: number;

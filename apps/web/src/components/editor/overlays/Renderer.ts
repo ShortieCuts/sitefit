@@ -2,7 +2,7 @@ import { getSvelteContext } from 'src/store/editor';
 import { Overlay } from './Overlay';
 import * as THREE from 'three';
 import { get } from 'svelte/store';
-import { Group, Path, type Object2D, type ObjectID } from 'core';
+import { Arc, Circle, Cornerstone, Group, Path, type Object2D, type ObjectID } from 'core';
 import type { Vector3 } from 'three';
 
 export interface RenderObject2D {
@@ -144,7 +144,78 @@ class RenderPath implements RenderObject2D {
 	}
 }
 
+class RenderArc implements RenderObject2D {
+	line: THREE.Line;
+
+	constructor(overlay: Overlay) {
+		this.line = new THREE.Line(
+			new THREE.BufferGeometry(),
+			new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+		);
+
+		overlay.overlay.scene.add(this.line);
+	}
+
+	refresh(overlay: Overlay, obj: Arc | Circle): void {
+		let startAngle = 0;
+		let endAngle = Math.PI * 2;
+		if (obj instanceof Arc) {
+			startAngle = obj.startAngle;
+			endAngle = obj.endAngle;
+		}
+		const curve = new THREE.EllipseCurve(
+			0,
+			0,
+			obj.radius,
+			obj.radius,
+			startAngle,
+			endAngle,
+			false,
+			0
+		);
+		const points = curve.getPoints(50);
+		const geometry = new THREE.BufferGeometry().setFromPoints(
+			points.map((p) => new THREE.Vector3(p.y, 0, p.x))
+		);
+
+		this.line.geometry.dispose();
+		this.line.geometry = geometry;
+
+		this.line.position.setX(obj.transform.position[0]);
+		this.line.position.setZ(obj.transform.position[1]);
+		this.line.scale.setX(obj.transform.size[0]);
+		this.line.scale.setZ(obj.transform.size[1]);
+
+		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
+	}
+
+	setMaterial(mat: THREE.Material): void {
+		this.line.material = mat;
+		this.line.material.needsUpdate = true;
+	}
+
+	translate(delta: Vector3): void {
+		this.line.position.add(delta);
+	}
+
+	destroy(overlay: Overlay): void {
+		overlay.overlay.scene.remove(this.line);
+		this.line.geometry.dispose();
+	}
+}
+
 class RenderGroup implements RenderObject2D {
+	constructor(overlay: Overlay) {}
+
+	refresh(overlay: Overlay, obj: Group): void {}
+
+	setMaterial(mat: THREE.Material): void {}
+
+	translate(delta: Vector3): void {}
+
+	destroy(overlay: Overlay): void {}
+}
+class RenderCornerstone implements RenderObject2D {
 	constructor(overlay: Overlay) {}
 
 	refresh(overlay: Overlay, obj: Group): void {}
@@ -161,6 +232,10 @@ export function createRenderObject(overlay: Overlay, obj: Object2D): RenderObjec
 		return new RenderPath(overlay);
 	} else if (obj instanceof Group) {
 		return new RenderGroup(overlay);
+	} else if (obj instanceof Arc || obj instanceof Circle) {
+		return new RenderArc(overlay);
+	} else if (obj instanceof Cornerstone) {
+		return new RenderCornerstone(overlay);
 	}
 
 	throw new Error('Unsupported object type');
@@ -220,17 +295,6 @@ export class RendererOverlay extends Overlay {
 				}
 			})
 		);
-
-		let geo = new THREE.BufferGeometry().setFromPoints([
-			new THREE.Vector3(-0.5, 0, -0.5),
-			new THREE.Vector3(-0.5, 0, 0.5)
-		]);
-		let line = new THREE.Line(
-			geo,
-			new THREE.MeshBasicMaterial({ color: '#0c8ae5', opacity: 1, transparent: false })
-		);
-
-		this.overlay.scene.add(line);
 	}
 
 	destroyObject(id: ObjectID) {

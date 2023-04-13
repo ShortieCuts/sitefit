@@ -6,7 +6,12 @@ import type { Serializable } from "./serializable";
 export type ProjectMapStyle = "google-simple" | "google-satellite";
 
 export type GlobalProjectProperties = {
+  /** Origin of the map, in geo coordinates */
   origin?: GeoCoordinate;
+
+  /** Up angle relative to the map */
+  heading?: number;
+
   mapStyle?: ProjectMapStyle;
 };
 

@@ -91,3 +91,7 @@ body {
 .icon-sm > svg {
 	@apply w-4 h-4;
 }
+
+*:focus {
+	outline: none;
+}

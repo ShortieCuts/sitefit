@@ -2,7 +2,7 @@
 	import DialogSlideUp from 'src/components/common/DialogSlideUp.svelte';
 	import ResponsiveGroup from 'src/components/common/ResponsiveGroup.svelte';
 	import { getSvelteContext } from 'src/store/editor';
-	import type { Object2D, ProjectMapStyle } from 'core';
+	import { Path, type Object2D, type ProjectMapStyle, Arc, Circle, Group, Cornerstone } from 'core';
 	import type { EditorLayerNode } from '../common/EditorLayerNode';
 	import EditorLayersNode from '../common/EditorLayersNode.svelte';
 	import { setContext } from 'svelte';
@@ -22,8 +22,28 @@
 		const objects = broker.project.objects;
 
 		for (const obj of objects) {
+			let icon = 'object';
+			if (obj instanceof Path) {
+				icon = 'path';
+			} else if (obj instanceof Arc) {
+				icon = 'arc';
+			} else if (obj instanceof Circle) {
+				icon = 'circle';
+			} else if (obj instanceof Cornerstone) {
+				icon = 'cornerstone';
+			} else if (obj instanceof Group) {
+				if (obj.iconKind == 'cad') {
+					icon = 'cad';
+				} else if (obj.iconKind == 'folder') {
+					icon = 'folder';
+				} else if (obj.iconKind == 'layer') {
+					icon = 'layer';
+				} else {
+					icon = 'group';
+				}
+			}
 			let rep = {
-				icon: 'object',
+				icon: icon,
 				id: obj.id,
 				name: obj.name,
 				visible: obj.visible,

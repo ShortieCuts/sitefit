@@ -1,5 +1,6 @@
 import { get, writable, readable, type Readable, type Writable } from 'svelte/store';
 import {
+	Cornerstone,
 	isBatch,
 	isCommitTransaction,
 	isJoin,
@@ -23,6 +24,7 @@ import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { translateDXF } from '$lib/util/dxf';
 import { getCadsStore } from './cads';
 import type { CadTreeNode } from '$lib/types/cad';
+import * as THREE from 'three';
 
 const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.xyz';
 
@@ -60,6 +62,19 @@ export type ProjectSession = {
 	color: string;
 };
 
+function rotateAboutOrigin(p: [number, number], angle: number): [number, number] {
+	let x = p[0];
+	let y = p[1];
+
+	let cos = Math.cos(angle);
+	let sin = Math.sin(angle);
+
+	let nx = x * cos - y * sin;
+	let ny = x * sin + y * cos;
+
+	return [nx, ny];
+}
+
 export class ProjectBroker {
 	projectId: string;
 	metadataDirty: boolean = false;
@@ -94,6 +109,8 @@ export class ProjectBroker {
 
 	private queuedMessages: SocketMessage[] = [];
 	private messageQueueTimeout: NodeJS.Timeout | null = null;
+
+	synced: Writable<boolean> = writable(false);
 
 	stagingObject: Writable<Object2D | null> = writable(null);
 
@@ -315,6 +332,39 @@ export class ProjectBroker {
 		};
 	}
 
+	watchCornerstone(): {
+		geo: Readable<[number, number]>;
+		heading: Readable<number>;
+	} {
+		return {
+			geo: this.writableObjectProperty('_cornerstone', 'geo', [0, 0]),
+			heading: this.writableObjectProperty('_cornerstone', 'heading', 0)
+		};
+	}
+
+	normalizeVector(vector: THREE.Vector3): THREE.Vector3;
+	normalizeVector(vector: [number, number]): [number, number];
+	normalizeVector(vector: [number, number] | THREE.Vector3): [number, number] | THREE.Vector3 {
+		let heading = 0;
+		if (this.project.objectsMap.has('_cornerstone')) {
+			let cornerstone = this.project.objectsMap.get('_cornerstone');
+			if (cornerstone instanceof Cornerstone) {
+				heading = cornerstone.heading;
+			}
+		}
+		let rad = -(heading * Math.PI) / 180;
+
+		if (vector instanceof THREE.Vector3) {
+			let x = vector.x * Math.cos(rad) - vector.z * Math.sin(rad);
+			let y = vector.x * Math.sin(rad) + vector.z * Math.cos(rad);
+			return new THREE.Vector3(x, vector.y, y);
+		} else {
+			let x = vector[0] * Math.cos(rad) - vector[1] * Math.sin(rad);
+			let y = vector[0] * Math.sin(rad) + vector[1] * Math.cos(rad);
+			return [x, y];
+		}
+	}
+
 	writableObjectProperty<T>(id: ObjectID, key: string, defaultValue: T): Writable<T> {
 		let writableKey = `${id}.${key}`;
 
@@ -438,6 +488,8 @@ export class ProjectBroker {
 
 		this.project.deserialize(message.project);
 		this.markAllDirty();
+		this.synced.set(true);
+		this.objectTreeWatcher.update((n) => n + 1);
 	}
 
 	markAllDirty() {
@@ -446,11 +498,29 @@ export class ProjectBroker {
 			this.rendererDirtyObjects.add(obj.id);
 		}
 
+		for (let [key, store] of this.objectPropertyStores) {
+			let [id, prop] = key.split('.');
+			let obj = this.project.objectsMap.get(id);
+			if (obj) {
+				store.set((obj as any)[prop]);
+			}
+		}
+
 		this.needsRender.set(true);
 	}
 
 	markObjectDirty(id: ObjectID) {
 		this.rendererDirtyObjects.add(id);
+
+		for (let [key, store] of this.objectPropertyStores) {
+			let [objId, prop] = key.split('.');
+			if (objId === id) {
+				let obj = this.project.objectsMap.get(id);
+				if (obj) {
+					store.set((obj as any)[prop]);
+				}
+			}
+		}
 	}
 
 	handleMessage(message: SocketMessage) {

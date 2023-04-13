@@ -3,7 +3,16 @@ import type { EditorContext, ProjectBroker } from 'src/store/editor';
 import { get } from 'svelte/store';
 import Flatten from '@flatten-js/core';
 const { Polygon, point, Circle: FlatCircle, arc, matrix, Box, Relations } = Flatten;
-import { makeObject, Object2D, ObjectType, Path, type Object2DShape, type ObjectID } from 'core';
+import {
+	Arc,
+	Circle,
+	makeObject,
+	Object2D,
+	ObjectType,
+	Path,
+	type Object2DShape,
+	type ObjectID
+} from 'core';
 import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { computeBounds } from '../overlays/Selection';
 import { Cursors } from '../cursors';
@@ -60,6 +69,48 @@ function computeStartBox(editor: EditorContext, broker: ProjectBroker) {
 	}
 
 	transformStartBox = computeBounds(objs);
+}
+
+function transformPoint(
+	left: number,
+	right: number,
+	top: number,
+	bottom: number,
+	scaleDirectionX: number,
+	scaleDirectionY: number,
+	scaleFactorX: number,
+	scaleFactorY: number,
+	point: [number, number]
+): [number, number] {
+	// Calculate the width and height of the bounding box
+	const width = right - left;
+	const height = bottom - top;
+
+	// Calculate the center point of the bounding box
+	const cx = left + 0.5 * width;
+	const cy = top + 0.5 * height;
+
+	// Calculate the distance between the center point and the given point
+	let dx = point[0] - cx;
+	let dy = point[1] - cy;
+
+	// Scale the distances in the x-direction and y-direction
+	if (scaleDirectionX == -1) {
+		dx *= scaleFactorX;
+	} else if (scaleDirectionX == 1) {
+		dx *= -scaleFactorX;
+	}
+	if (scaleDirectionY == -1) {
+		dy *= scaleFactorY;
+	} else if (scaleDirectionY == 1) {
+		dy *= -scaleFactorY;
+	}
+
+	// Add the scaled distances to the center point to obtain the transformed point
+	const tx = cx + dx;
+	const ty = cy + dy;
+
+	return [tx, ty];
 }
 
 export const SelectTool = {
@@ -162,6 +213,13 @@ export const SelectTool = {
 						transaction.update(id, 'transform', structuredClone(obj.transform));
 						if (obj.type == ObjectType.Path) {
 							transaction.update(id, 'segments', structuredClone((obj as Path).segments));
+						} else if (obj.type == ObjectType.Arc) {
+							transaction.update(id, 'radius', structuredClone((obj as Arc).radius));
+							transaction.update(id, 'startAngle', structuredClone((obj as Arc).startAngle));
+							transaction.update(id, 'endAngle', structuredClone((obj as Arc).endAngle));
+							(obj as Arc).radius = (objOrig as Arc).radius;
+							(obj as Arc).startAngle = (objOrig as Arc).startAngle;
+							(obj as Arc).endAngle = (objOrig as Arc).endAngle;
 						}
 
 						obj.transform = objOrig.transform;
@@ -184,6 +242,13 @@ export const SelectTool = {
 					}
 				}
 				broker.commitTransaction(transaction);
+			}
+		}
+
+		for (let id of get(editor.effectiveSelection)) {
+			let obj = broker.project.objectsMap.get(id);
+			if (obj) {
+				console.log(obj);
 			}
 		}
 	},
@@ -240,10 +305,21 @@ export const SelectTool = {
 									seg[0] = p.x;
 									seg[1] = p.y;
 								}
+								obj.transform.position[0] = 0;
+								obj.transform.position[1] = 0;
+							} else if (obj.type == ObjectType.Arc) {
+								let arc = obj as Arc;
+
+								// Apply start/end angles
+								let startAngle = arc.startAngle;
+								let endAngle = arc.endAngle;
+								let center = point(arc.transform.position[0], arc.transform.position[1]);
+								let radius = arc.radius;
+
+								arc.startAngle = startAngle - rotation;
+								arc.endAngle = endAngle - rotation;
 							}
 
-							obj.transform.position[0] = 0;
-							obj.transform.position[1] = 0;
 							obj.transform.rotation = 0;
 							obj.computeShape();
 
@@ -307,7 +383,7 @@ export const SelectTool = {
 				for (let id of sels) {
 					let obj = broker.project.objectsMap.get(id);
 					let originalObj = transformStartObjects.get(id);
-					if (obj) {
+					if (obj && originalObj) {
 						function normalizeX(x: number) {
 							if (!obj) return 0;
 							return x - obj.transform.position[0];
@@ -317,6 +393,32 @@ export const SelectTool = {
 							if (!obj) return 0;
 							return y - obj.transform.position[1];
 						}
+						let width = transformStartBox.width;
+						let height = transformStartBox.height;
+						let relativeX = (originalObj.transform.position[0] - transformStartBox.low.x) / width;
+						let relativeY = (originalObj.transform.position[1] - transformStartBox.low.y) / height;
+
+						let newBoxWidth = width + currentMousePosition[0] - transformStartBox.high.x;
+						let newBoxHeight = height + currentMousePosition[1] - transformStartBox.high.y;
+
+						let newBoxLeft = transformStartBox.low.x;
+						if (direction[0] == -1) {
+							newBoxLeft = currentMousePosition[0];
+							newBoxWidth = width - currentMousePosition[0] + transformStartBox.low.x;
+						}
+
+						let newBoxTop = transformStartBox.low.y;
+						if (direction[1] == -1) {
+							newBoxTop = currentMousePosition[1];
+							newBoxHeight = height - currentMousePosition[1] + transformStartBox.low.y;
+						}
+
+						let scaleX = Math.abs(newBoxWidth / width);
+						let scaleY = Math.abs(newBoxHeight / height);
+
+						let newRelativeX = relativeX * newBoxWidth;
+						let newRelativeY = relativeY * newBoxHeight;
+
 						if (obj.type == ObjectType.Path) {
 							let path = obj as Path;
 							let originalPath = originalObj as Path;
@@ -357,6 +459,25 @@ export const SelectTool = {
 											deltaScaleY * transformStartBox.height
 									);
 								}
+							}
+						} else if (obj.type == ObjectType.Arc || obj.type == ObjectType.Circle) {
+							let arc = obj as Arc | Circle;
+							let originalArc = originalObj as Arc | Circle;
+
+							arc.radius = originalArc.radius * Math.max(scaleX, scaleY);
+							if (direction[0] == 0) {
+								arc.radius = originalArc.radius * scaleY;
+							}
+							if (direction[1] == 0) {
+								arc.radius = originalArc.radius * scaleX;
+							}
+
+							if (direction[0] != 0) {
+								arc.transform.position[0] = newBoxLeft + newRelativeX;
+							}
+
+							if (direction[1] != 0) {
+								arc.transform.position[1] = newBoxTop + newRelativeY;
 							}
 						}
 
@@ -572,8 +693,12 @@ function computeSelectionBox(
 	const start = get(editor.selectionStart);
 	const end = get(editor.currentMousePosition);
 
-	let startVec = overlay.latLngAltitudeToVector3({ lat: start[0], lng: start[1] });
-	let endVec = overlay.latLngAltitudeToVector3({ lat: end[0], lng: end[1] });
+	let startVec = broker.normalizeVector(
+		overlay.latLngAltitudeToVector3({ lat: start[0], lng: start[1] })
+	);
+	let endVec = broker.normalizeVector(
+		overlay.latLngAltitudeToVector3({ lat: end[0], lng: end[1] })
+	);
 
 	let box = new Box(
 		Math.min(startVec.x, endVec.x),

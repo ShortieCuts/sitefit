@@ -1,14 +1,21 @@
 <script lang="ts">
 	import {
+		faAnchor,
+		faBezierCurve,
 		faCaretDown,
 		faCaretRight,
+		faCircle,
+		faDraftingCompass,
+		faFile,
+		faFolder,
 		faFolderPlus,
 		faLayerGroup,
 		faMapPin,
 		faObjectGroup,
 		faPenToSquare,
 		faQuestion,
-		faTrash
+		faTrash,
+		faVectorSquare
 	} from '@fortawesome/free-solid-svg-icons';
 	import { getContext } from 'svelte';
 	import Fa from 'svelte-fa';
@@ -24,9 +31,15 @@
 	const icons: {
 		[key: string]: any;
 	} = {
-		group: faLayerGroup,
-		object: faObjectGroup,
-		layer: faLayerGroup
+		group: faObjectGroup,
+		object: faVectorSquare,
+		layer: faLayerGroup,
+		cornerstone: faDraftingCompass,
+		folder: faFolder,
+		cad: faFile,
+		path: faVectorSquare,
+		circle: faCircle,
+		arc: faBezierCurve
 	};
 
 	export let node: EditorLayerNode;
@@ -176,7 +189,7 @@
 	</Draggable>
 
 	<ContextMenu el={nodeElement}>
-		<button><Fa icon={faMapPin} /> Locate</button>
+		<button on:click={(e) => {}}><Fa icon={faMapPin} /> Locate</button>
 		<button
 			on:click={(e) => {
 				setTimeout(() => {

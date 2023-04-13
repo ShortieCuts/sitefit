@@ -29,6 +29,10 @@
 	import { onDestroy } from 'svelte';
 	import { processCadUploads } from '$lib/client/api';
 	import { refreshData } from 'src/store/cads';
+	import LocationInput from './common/LocationInput.svelte';
+	import LocationMap from './common/LocationMap.svelte';
+	import { Cornerstone } from 'core';
+	import { get } from 'svelte/store';
 
 	export let auth: AuthState;
 	export let projectId: string;
@@ -43,8 +47,30 @@
 
 	const { activeDialog } = editorContext;
 
+	let needsCornerstone = false;
+
+	function checkCornerstone() {
+		if (!broker.connected || !get(broker.synced)) {
+			needsCornerstone = false;
+			return;
+		}
+		needsCornerstone = !broker.project.objectsMap.has('_cornerstone');
+	}
+
+	checkCornerstone();
+
+	broker.objectTreeWatcher.subscribe(() => {
+		checkCornerstone();
+	});
+
+	broker.connected.subscribe((connected) => {
+		checkCornerstone();
+	});
+
 	let fileDragging = false;
 	let fileEl: HTMLInputElement | null = null;
+
+	let location: [number, number, number] = [0, 0, 0];
 
 	function handleKeyboardShortcut(e: KeyboardEvent) {
 		if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -62,6 +88,17 @@
 		if (e.code == 'Delete') {
 			editorContext.deleteSelection(broker);
 		}
+	}
+
+	function createCornerstone() {
+		let transaction = broker.project.createTransaction();
+		let obj = new Cornerstone();
+		obj.id = '_cornerstone';
+		obj.name = 'Cornerstone';
+		obj.geo = [location[0], location[1]];
+		obj.heading = location[2];
+		transaction.create(obj);
+		broker.commitTransaction(transaction);
 	}
 
 	onDestroy(() => {
@@ -309,5 +346,39 @@
 	>
 		<Fa class="text-black text-opacity-50 text-4xl" icon={faFileImport} />
 		<div class="text-2xl text-black text-opacity-50 mt-4">Drop file to import</div>
+	</div>
+{/if}
+
+{#if needsCornerstone}
+	<div
+		transition:fade={{ duration: 100 }}
+		class="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center
+		"
+	>
+		<div
+			on:click|stopPropagation={() => {}}
+			on:keydown={() => {}}
+			transition:fly={{
+				y: 20
+			}}
+			class="dialog-slide bg-white fixed z-30 rounded-lg flex flex-col lg:flex-row min-h-[400px] w-full h-full sm:w-auto sm:h-auto"
+		>
+			<div class="flex-1 flex flex-col px-4">
+				<h2 class="flex mx-auto p-6 text-lg">Let's choose a site location.</h2>
+				<LocationInput bind:value={location} />
+				<button class="btn btn-primary mt-auto mb-4" on:click={createCornerstone}>
+					Continue
+				</button>
+			</div>
+			<div class="flex-1 h-[400px] overflow-hidden rounded-r-lg aspect-square relative">
+				<div
+					class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-20 origin-center"
+				>
+					<div class="w-[1000px] border-b-black border-b absolute" />
+					<div class="h-[1000px] border-r-black border-r absolute" />
+				</div>
+				<LocationMap bind:location />
+			</div>
+		</div>
 	</div>
 {/if}

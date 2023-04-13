@@ -17,7 +17,17 @@ import DxfParser, {
 	type ITextEntity,
 	type IVertexEntity
 } from 'dxf-parser';
-import { Group, Material, Path, Transform, type Object2D, type RelativeCoordinate } from 'core';
+import {
+	Arc,
+	Circle,
+	Group,
+	Material,
+	Path,
+	Text,
+	Transform,
+	type Object2D,
+	type RelativeCoordinate
+} from 'core';
 import colorsMapper from 'autocad-colors-index';
 function parseHexColor(hex: string): [number, number, number, number] {
 	let r = parseInt(hex.slice(1, 3), 16);
@@ -87,7 +97,7 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 
 		for (let layer of Object.keys(dxf.tables.layer.layers)) {
 			let obj = new Group();
-			obj.iconKind = 'folder';
+			obj.iconKind = 'layer';
 			obj.style = new Material();
 			let color = colorsMapper.getByACI(dxf.tables.layer.layers[layer].colorIndex);
 
@@ -309,6 +319,48 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 				path.closed = true;
 				obj = path;
 				rebasePath(path);
+			} else if (ent.type == 'ARC') {
+				let arcEnt = ent as IArcEntity;
+				let arc = new Arc();
+
+				arc.transform = new Transform();
+				let trans = transformCoords(ent, arcEnt.center);
+
+				arc.transform.position = [trans.x, trans.z];
+				arc.transform.size = [1, 1];
+				arc.transform.rotation = 0;
+
+				arc.radius = arcEnt.radius;
+				arc.startAngle = arcEnt.startAngle;
+				arc.endAngle = arcEnt.endAngle;
+
+				obj = arc;
+			} else if (ent.type == 'CIRCLE') {
+				let circleEnt = ent as ICircleEntity;
+				let circle = new Circle();
+
+				circle.transform = new Transform();
+				let trans = transformCoords(ent, circleEnt.center);
+
+				circle.transform.position = [trans.x, trans.z];
+				circle.transform.size = [1, 1];
+				circle.transform.rotation = 0;
+
+				circle.radius = circleEnt.radius;
+
+				obj = circle;
+			} else if (ent.type == 'TEXT') {
+				let textEnt = ent as ITextEntity;
+				let text = new Text();
+
+				text.transform = new Transform();
+				text.transform.position = [textEnt.startPoint.x, textEnt.startPoint.y];
+				text.transform.size = [1, 1];
+				text.transform.rotation = 0;
+
+				text.text = textEnt.text;
+
+				obj = text;
 			}
 
 			if (!obj) obj = new Group();
