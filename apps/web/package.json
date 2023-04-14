@@ -9,14 +9,17 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --plugin-search-dir . --check .",
-		"format": "prettier --plugin-search-dir . --write ."
+		"format": "prettier --plugin-search-dir . --write .",
+		"deploy": "env-cmd -f ../../.env npx wrangler pages publish --project-name cad-mapper-web --branch main .svelte-kit/cloudflare/"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",
+		"@sveltejs/adapter-cloudflare": "^2.2.0",
 		"@sveltejs/kit": "^1.5.0",
 		"@types/google.maps": "^3.52.4",
 		"@types/three": "^0.150.0",
 		"autoprefixer": "^10.4.14",
+		"env-cmd": "^10.1.0",
 		"postcss": "^8.4.21",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.8.1",

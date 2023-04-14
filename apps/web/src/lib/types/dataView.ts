@@ -38,7 +38,6 @@ export async function fetchDataView<T>(
 	fetchFn: fetchSignature = fetch
 ): Promise<APIDataView<T>> {
 	const resp = await fetchFn(url, {
-		credentials: 'include',
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'

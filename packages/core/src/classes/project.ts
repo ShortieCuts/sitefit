@@ -118,57 +118,60 @@ export class Project implements Serializable {
       try {
         if (mutation.type === "create") {
           if (this.objectsMap.has(mutation.subject)) {
-            throw new Error("Object already exists");
-          }
-          const object = makeObject(mutation.data);
-          object.deserialize(mutation.data);
-          this.objects.push(object);
-          this.objectsMap.set(object.id, object);
-          if (object.parent) {
-            let children = this.objectsMapChildren.get(object.parent);
-            if (!children) {
-              children = [];
-              this.objectsMapChildren.set(object.parent, children);
-            }
-            children.push(object);
-          }
-        } else if (mutation.type === "update") {
-          const object = this.objectsMap.get(mutation.subject);
-          if (!object) {
-            throw new Error("Object not found");
-          }
-          const propertyMutation = mutation.data as PropertyMutation;
-          if (propertyMutation.key === "parent") {
-            let children = this.objectsMapChildren.get(object.parent);
-            if (children) {
-              children = children.filter((o) => o.id !== object.id);
-              this.objectsMapChildren.set(object.parent, children);
-            }
-            if (propertyMutation.value) {
-              children = this.objectsMapChildren.get(propertyMutation.value);
+            // throw new Error("Object already exists");
+          } else {
+            const object = makeObject(mutation.data);
+            object.deserialize(mutation.data);
+            this.objects.push(object);
+            this.objectsMap.set(object.id, object);
+            if (object.parent) {
+              let children = this.objectsMapChildren.get(object.parent);
               if (!children) {
                 children = [];
-                this.objectsMapChildren.set(propertyMutation.value, children);
+                this.objectsMapChildren.set(object.parent, children);
               }
               children.push(object);
             }
           }
+        } else if (mutation.type === "update") {
+          const object = this.objectsMap.get(mutation.subject);
+          if (!object) {
+            // throw new Error("Object not found");
+          } else {
+            const propertyMutation = mutation.data as PropertyMutation;
+            if (propertyMutation.key === "parent") {
+              let children = this.objectsMapChildren.get(object.parent);
+              if (children) {
+                children = children.filter((o) => o.id !== object.id);
+                this.objectsMapChildren.set(object.parent, children);
+              }
+              if (propertyMutation.value) {
+                children = this.objectsMapChildren.get(propertyMutation.value);
+                if (!children) {
+                  children = [];
+                  this.objectsMapChildren.set(propertyMutation.value, children);
+                }
+                children.push(object);
+              }
+            }
 
-          object.deserialize({
-            [propertyMutation.key]: propertyMutation.value,
-          });
+            object.deserialize({
+              [propertyMutation.key]: propertyMutation.value,
+            });
+          }
         } else if (mutation.type === "delete") {
           const object = this.objectsMap.get(mutation.subject);
           if (!object) {
-            throw new Error("Object not found");
-          }
-          this.objects = this.objects.filter((o) => o.id !== object.id);
-          this.objectsMap.delete(object.id);
-          if (object.parent) {
-            let children = this.objectsMapChildren.get(object.parent);
-            if (children) {
-              children = children.filter((o) => o.id !== object.id);
-              this.objectsMapChildren.set(object.parent, children);
+            // throw new Error("Object not found");
+          } else {
+            this.objects = this.objects.filter((o) => o.id !== object.id);
+            this.objectsMap.delete(object.id);
+            if (object.parent) {
+              let children = this.objectsMapChildren.get(object.parent);
+              if (children) {
+                children = children.filter((o) => o.id !== object.id);
+                this.objectsMapChildren.set(object.parent, children);
+              }
             }
           }
         }

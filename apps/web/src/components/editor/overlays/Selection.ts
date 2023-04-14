@@ -6,6 +6,7 @@ import type { Object2D } from 'core';
 import { createRenderObject, type RenderObject2D } from './Renderer';
 import { Vector3 } from 'three';
 import Flatten from '@flatten-js/core';
+import { IGNORED_OBJECTS } from '../tools/select';
 const { Polygon, point, Circle: FlatCircle, arc, matrix, Box } = Flatten;
 
 class OutlinedBox {
@@ -298,21 +299,25 @@ export class SelectionOverlay extends Overlay {
 				if (obj) objs.push(obj);
 			}
 			let box = computeBounds(objs);
-			let startVec = [box.low.x, box.low.y];
-			let endVec = [box.high.x, box.high.y];
+			if (box.height > 0 || box.width > 0) {
+				let startVec = [box.low.x, box.low.y];
+				let endVec = [box.high.x, box.high.y];
 
-			let center = [(startVec[0] + endVec[0]) / 2, (startVec[1] + endVec[1]) / 2];
+				let center = [(startVec[0] + endVec[0]) / 2, (startVec[1] + endVec[1]) / 2];
 
-			this.selectionBox.setPositionAndScale(
-				new Vector3(center[0], 0, center[1]),
-				new THREE.Vector3(
-					Math.abs(startVec[0] - endVec[0]),
-					Math.abs(1),
-					Math.abs(startVec[1] - endVec[1])
-				)
-			);
+				this.selectionBox.setPositionAndScale(
+					new Vector3(center[0], 0, center[1]),
+					new THREE.Vector3(
+						Math.abs(startVec[0] - endVec[0]),
+						Math.abs(1),
+						Math.abs(startVec[1] - endVec[1])
+					)
+				);
 
-			this.selectionBox.setVisible(true);
+				this.selectionBox.setVisible(true);
+			} else {
+				this.selectionBox?.setVisible(false);
+			}
 		} else {
 			this.selectionBox?.setVisible(false);
 		}
@@ -325,6 +330,8 @@ export function computeBounds(objects: Object2D[]): Flatten.Box {
 	let box: Flatten.Box | null = null;
 
 	for (let obj of objects) {
+		if (IGNORED_OBJECTS.includes(obj.type)) continue;
+
 		if (obj.flatShape) {
 			for (let fl of obj.flatShape) {
 				if (fl instanceof Flatten.Box) {

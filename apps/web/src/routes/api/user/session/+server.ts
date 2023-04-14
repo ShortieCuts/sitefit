@@ -9,7 +9,7 @@ export const POST = (async ({ request, cookies }) => {
 	if (input.delete) {
 		cookies.set('session', '', {
 			maxAge: 0,
-			httpOnly: !dev,
+			httpOnly: false,
 			secure: !dev,
 			sameSite: true,
 			path: '/'
@@ -22,7 +22,7 @@ export const POST = (async ({ request, cookies }) => {
 	if (session) {
 		const options = {
 			maxAge: 60 * 60 * 24 * 13.99,
-			httpOnly: !dev,
+			httpOnly: false,
 			secure: !dev,
 			sameSite: true,
 			path: '/'

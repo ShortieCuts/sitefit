@@ -88,6 +88,7 @@
 	$: {
 		$heading;
 		$geo;
+
 		if (map && referenceOverlay) {
 			map.setHeading($heading);
 
@@ -97,7 +98,7 @@
 			});
 
 			if ($geo[1] != 0 || $geo[0] != 0) {
-				map.setZoom(18);
+				map.setZoom(25);
 			} else {
 				map.setZoom(1);
 			}
@@ -124,7 +125,10 @@
 			loader.load().then(async () => {
 				if (!containerEl) return;
 
-				const { Map } = (await google.maps.importLibrary('maps')) as google.maps.MapsLibrary;
+				const { Map, MaxZoomService } = (await google.maps.importLibrary(
+					'maps'
+				)) as google.maps.MapsLibrary;
+
 				map = new Map(containerEl, {
 					center: {
 						lat: $geo[1],
@@ -141,7 +145,8 @@
 					gestureHandling: canDrag ? 'greedy' : 'none',
 					keyboardShortcuts: canDrag,
 					scrollwheel: true,
-					isFractionalZoomEnabled: true
+					isFractionalZoomEnabled: true,
+					maxZoom: 30
 				});
 
 				(window as any).editorMap = map;

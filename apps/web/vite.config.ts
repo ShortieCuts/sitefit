@@ -7,6 +7,6 @@ export default defineConfig({
 		preserveSymlinks: true
 	},
 	optimizeDeps: {
-		exclude: ['core', 'ui']
+		exclude: ['core', 'ui', 'auth']
 	}
 });

@@ -17,6 +17,8 @@ import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { computeBounds } from '../overlays/Selection';
 import { Cursors } from '../cursors';
 
+export const IGNORED_OBJECTS = ['cornerstone', 'group'];
+
 function distanceTo(obj: Object2DShape, p: Flatten.Point): [number, Flatten.Segment] {
 	if (obj instanceof Flatten.Box) {
 		let segs = obj.toSegments();
@@ -551,112 +553,113 @@ export const SelectTool = {
 				if (obj) objs.push(obj);
 			}
 			let box = computeBounds(objs);
-			let cursorPoint = point(cursor[0], cursor[1]);
+			if (box.width > 0 || box.height > 0) {
+				let cursorPoint = point(cursor[0], cursor[1]);
 
-			let setCursor = false;
-			let canScale = false;
-			let canRotate = false;
-			let scaleDirection: [number, number] = [0, 0];
+				let setCursor = false;
+				let canScale = false;
+				let canRotate = false;
+				let scaleDirection: [number, number] = [0, 0];
 
-			let dist = get(editor.screenScale);
+				let dist = get(editor.screenScale);
 
-			let topLeft = point(box.low.x, box.low.y);
-			let topRight = point(box.high.x, box.low.y);
-			let bottomLeft = point(box.low.x, box.high.y);
-			let bottomRight = point(box.high.x, box.high.y);
+				let topLeft = point(box.low.x, box.low.y);
+				let topRight = point(box.high.x, box.low.y);
+				let bottomLeft = point(box.low.x, box.high.y);
+				let bottomRight = point(box.high.x, box.high.y);
 
-			let rotateDistance = dist;
-			let topLeftRotate = point(box.low.x - rotateDistance, box.low.y - rotateDistance);
-			let topRightRotate = point(box.high.x + rotateDistance, box.low.y - rotateDistance);
-			let bottomRightRotate = point(box.high.x + rotateDistance, box.high.y + rotateDistance);
-			let bottomLeftRotate = point(box.low.x - rotateDistance, box.high.y + rotateDistance);
-			if (
-				(Math.abs(box.low.x - cursor[0]) < dist || Math.abs(box.high.x - cursor[0]) < dist) &&
-				cursor[1] > box.low.y &&
-				cursor[1] < box.high.y
-			) {
-				editor.selectToolCursor.set(Cursors.ew);
-				canScale = true;
-				scaleDirection = [Math.abs(box.low.x - cursor[0]) < dist ? -1 : 1, 0];
-				setCursor = true;
+				let rotateDistance = dist;
+				let topLeftRotate = point(box.low.x - rotateDistance, box.low.y - rotateDistance);
+				let topRightRotate = point(box.high.x + rotateDistance, box.low.y - rotateDistance);
+				let bottomRightRotate = point(box.high.x + rotateDistance, box.high.y + rotateDistance);
+				let bottomLeftRotate = point(box.low.x - rotateDistance, box.high.y + rotateDistance);
+				if (
+					(Math.abs(box.low.x - cursor[0]) < dist || Math.abs(box.high.x - cursor[0]) < dist) &&
+					cursor[1] > box.low.y &&
+					cursor[1] < box.high.y
+				) {
+					editor.selectToolCursor.set(Cursors.ew);
+					canScale = true;
+					scaleDirection = [Math.abs(box.low.x - cursor[0]) < dist ? -1 : 1, 0];
+					setCursor = true;
+				}
+
+				if (
+					(Math.abs(box.low.y - cursor[1]) < dist || Math.abs(box.high.y - cursor[1]) < dist) &&
+					cursor[0] > box.low.x &&
+					cursor[0] < box.high.x
+				) {
+					editor.selectToolCursor.set(Cursors.ns);
+					canScale = true;
+					scaleDirection = [0, Math.abs(box.low.y - cursor[1]) < dist ? -1 : 1];
+					setCursor = true;
+				}
+
+				if (topLeft.distanceTo(cursorPoint)[0] < dist) {
+					editor.selectToolCursor.set(Cursors.nwse);
+					canScale = true;
+					scaleDirection = [-1, -1];
+					setCursor = true;
+				}
+
+				if (topRight.distanceTo(cursorPoint)[0] < dist) {
+					editor.selectToolCursor.set(Cursors.nesw);
+					canScale = true;
+					scaleDirection = [1, -1];
+					setCursor = true;
+				}
+
+				if (bottomLeft.distanceTo(cursorPoint)[0] < dist) {
+					editor.selectToolCursor.set(Cursors.nesw);
+					canScale = true;
+					scaleDirection = [-1, 1];
+					setCursor = true;
+				}
+
+				if (bottomRight.distanceTo(cursorPoint)[0] < dist) {
+					editor.selectToolCursor.set(Cursors.nwse);
+					canScale = true;
+					scaleDirection = [1, 1];
+					setCursor = true;
+				}
+
+				if (topLeftRotate.distanceTo(cursorPoint)[0] < dist) {
+					editor.selectToolCursor.set(Cursors.rtl);
+					canRotate = true;
+					setCursor = true;
+				}
+
+				if (topRightRotate.distanceTo(cursorPoint)[0] < dist) {
+					editor.selectToolCursor.set(Cursors.rtr);
+					canRotate = true;
+					setCursor = true;
+				}
+
+				if (bottomLeftRotate.distanceTo(cursorPoint)[0] < dist) {
+					editor.selectToolCursor.set(Cursors.rbl);
+					canRotate = true;
+					setCursor = true;
+				}
+
+				if (bottomRightRotate.distanceTo(cursorPoint)[0] < dist) {
+					editor.selectToolCursor.set(Cursors.rbr);
+					canRotate = true;
+					setCursor = true;
+				}
+
+				if (!setCursor) {
+					editor.selectToolCursor.set(Cursors.default);
+				}
+
+				if (canRotate) {
+					editor.canRotate.set(canRotate);
+					editor.canScale.set(false);
+				} else {
+					editor.canScale.set(canScale);
+					editor.canRotate.set(false);
+				}
+				editor.scaleDirection.set(scaleDirection);
 			}
-
-			if (
-				(Math.abs(box.low.y - cursor[1]) < dist || Math.abs(box.high.y - cursor[1]) < dist) &&
-				cursor[0] > box.low.x &&
-				cursor[0] < box.high.x
-			) {
-				editor.selectToolCursor.set(Cursors.ns);
-				canScale = true;
-				scaleDirection = [0, Math.abs(box.low.y - cursor[1]) < dist ? -1 : 1];
-				setCursor = true;
-			}
-
-			if (topLeft.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.nwse);
-				canScale = true;
-				scaleDirection = [-1, -1];
-				setCursor = true;
-			}
-
-			if (topRight.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.nesw);
-				canScale = true;
-				scaleDirection = [1, -1];
-				setCursor = true;
-			}
-
-			if (bottomLeft.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.nesw);
-				canScale = true;
-				scaleDirection = [-1, 1];
-				setCursor = true;
-			}
-
-			if (bottomRight.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.nwse);
-				canScale = true;
-				scaleDirection = [1, 1];
-				setCursor = true;
-			}
-
-			if (topLeftRotate.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.rtl);
-				canRotate = true;
-				setCursor = true;
-			}
-
-			if (topRightRotate.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.rtr);
-				canRotate = true;
-				setCursor = true;
-			}
-
-			if (bottomLeftRotate.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.rbl);
-				canRotate = true;
-				setCursor = true;
-			}
-
-			if (bottomRightRotate.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.rbr);
-				canRotate = true;
-				setCursor = true;
-			}
-
-			if (!setCursor) {
-				editor.selectToolCursor.set(Cursors.default);
-			}
-
-			if (canRotate) {
-				editor.canRotate.set(canRotate);
-				editor.canScale.set(false);
-			} else {
-				editor.canScale.set(canScale);
-				editor.canRotate.set(false);
-			}
-			editor.scaleDirection.set(scaleDirection);
-
 			// Hover object highlight
 			let hover = getObjectAtCursor(editor, broker, cursor);
 			if (hover) {
@@ -711,7 +714,8 @@ function computeSelectionBox(
 	let selection = [];
 	for (let obj of broker.project.objects) {
 		if (!obj.flatShape) continue;
-		if (obj.type == 'group') continue;
+		console.log(obj.type);
+		if (IGNORED_OBJECTS.includes(obj.type)) continue;
 
 		for (let fl of obj.flatShape) {
 			// let relate = Relations.relate(box, fl);

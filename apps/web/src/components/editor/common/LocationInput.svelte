@@ -18,6 +18,8 @@
 
 	let timer: NodeJS.Timeout | null = null;
 
+	let searchEl: HTMLInputElement;
+
 	$: {
 		search;
 		if (timer) clearTimeout(timer);
@@ -32,22 +34,36 @@
 			});
 
 			loader.load().then(async () => {
-				const { Geocoder } = (await google.maps.importLibrary(
-					'geocoding'
-				)) as google.maps.GeocodingLibrary;
-				let service = new Geocoder();
-				searchLocation = () => {
-					if (!search) return;
+				const { Autocomplete } = (await google.maps.importLibrary(
+					'places'
+				)) as google.maps.PlacesLibrary;
+				let autocomplete = new Autocomplete(searchEl, {
+					componentRestrictions: { country: ['us', 'ca'] },
+					fields: ['address_components', 'geometry'],
+					types: ['address']
+				});
 
-					service.geocode(
-						{
-							address: search
-						},
-						function (results, status) {
-							console.log(results);
-						}
-					);
-				};
+				autocomplete.addListener('place_changed', () => {
+					let place = autocomplete.getPlace();
+					if (!place.geometry || !place.geometry.location) {
+						return;
+					}
+
+					value = [place.geometry.location.lng(), place.geometry.location.lat(), 0];
+				});
+				// searchLocation = () => {
+				// 	if (!search) return;
+
+				// 	service.geocode(
+				// 		{
+				// 			address: search,
+
+				// 		},
+				// 		function (results, status) {
+				// 			console.log(results);
+				// 		}
+				// 	);
+				// };
 			});
 		}
 	});
@@ -58,6 +74,7 @@
 		class="search-bar relative h-10 w-full shadow-style rounded-lg border-[1px] border-gray-300 flex flex-row items-center"
 	>
 		<input
+			bind:this={searchEl}
 			class="absolute top-0 left-0 right-0 bottom-0 pl-8 rounded-lg outline-none"
 			placeholder="Search for a location"
 			bind:value={search}

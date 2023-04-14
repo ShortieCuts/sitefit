@@ -22,7 +22,7 @@
 			</div>
 			<div
 				slot="empty"
-				class="bg-gray-100 h-80 w-full rounded-lg flex flex-col items-center justify-center"
+				class="bg-gray-100 h-80 w-96 rounded-lg flex flex-col items-center justify-center"
 			>
 				<div class="opacity-10">
 					<Fa class="text-8xl" icon={faFolderOpen} />

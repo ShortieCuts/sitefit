@@ -26,7 +26,7 @@ import { getCadsStore } from './cads';
 import type { CadTreeNode } from '$lib/types/cad';
 import * as THREE from 'three';
 
-const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.xyz';
+const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
 export type ProjectAccessLevel = 'READ' | 'WRITE' | 'COMMENt';
 
@@ -550,6 +550,13 @@ export class ProjectBroker {
 							(this.project.objectsMap.get(m.subject) as any)[(m.data as PropertyMutation).key]
 						);
 					}
+				} else if (m.type == 'create') {
+					this.objectTreeWatcher.update((n) => n + 1);
+					this.markObjectDirty(m.subject);
+					console.log('Create', m.subject, m);
+				} else if (m.type == 'delete') {
+					this.objectTreeWatcher.update((n) => n + 1);
+					this.markObjectDirty(m.subject);
 				}
 			}
 

@@ -114,6 +114,7 @@ export async function checkRequestAuth(
           let parsed = JSON.parse(decoded);
 
           if (parsed.exp > Date.now() / 1000) {
+            console.log(parsed.user_id);
             let user = await getUserFromFirebaseId(parsed.user_id);
             console.log("User b", user);
             if (user) {
@@ -126,7 +127,15 @@ export async function checkRequestAuth(
                   "anonymous",
               } as FirebaseUser;
             } else {
-              return null;
+              return {
+                ...parsed,
+                emailVerified: parsed.email_verified,
+                uid: parsed.user_id,
+                email: parsed.email,
+
+                photoURL: parsed.picture,
+                isAnonymous: false,
+              } as FirebaseUser;
             }
           } else {
             return null;
@@ -210,12 +219,14 @@ export async function getRequestUser(
   request: Request
 ): Promise<PrismaUser | null> {
   let auth = await checkRequestAuth(request);
+  console.log("Get", auth);
 
   if (auth) {
     let user = await getUserFromFirebaseId(auth.uid);
     if (user) {
       return user;
     } else {
+      console.log("Update");
       let newUser = await updateUserFromFirebase(auth);
       if (newUser) {
         return newUser;
@@ -247,9 +258,12 @@ export async function updateUserFromFirebase(
   user: FirebaseUser,
   maxAttempts = 10
 ): Promise<PrismaUser | null> {
-  try {
+  let exists = await getUserFromFirebaseId(user.uid);
+
+  if (exists) {
     let res = await db()
       .updateTable("User")
+
       .set({
         photoURL: user.photoURL ?? "",
       })
@@ -264,7 +278,7 @@ export async function updateUserFromFirebase(
     } else {
       return null;
     }
-  } catch (e: any) {
+  } else {
     let vals = {
       email: user.email ?? "",
       photoURL: user.photoURL ?? "",
@@ -281,6 +295,7 @@ export async function updateUserFromFirebase(
 
       .values([vals])
       .execute();
+    console.log("insert", data);
 
     if (data && data[0].insertId) {
       return {
