@@ -73,7 +73,9 @@ export const auth = writable(
 export const signIn = async (email: string, password: string) => {
 	let { firebaseAuth } = await import('./firebase');
 
-	return await signInWithEmailAndPassword(firebaseAuth, email, password);
+	let res = await signInWithEmailAndPassword(firebaseAuth, email, password);
+	await createSession({ delete: false });
+	return res;
 };
 
 export const signUp = async (
@@ -90,6 +92,8 @@ export const signUp = async (
 		lastName
 	});
 
+	await createSession({ delete: false });
+
 	return newUser;
 };
 
@@ -99,7 +103,10 @@ export const signInWithOAuth = async (provider: string) => {
 	if (provider === 'github') providerInstance = new GithubAuthProvider();
 	if (provider == 'google') providerInstance = new GoogleAuthProvider();
 
-	return await signInWithPopup(firebaseAuth, providerInstance);
+	let res = await signInWithPopup(firebaseAuth, providerInstance);
+	await createSession({ delete: false });
+
+	return res;
 };
 
 export const signOut = async () => {
@@ -146,16 +153,16 @@ export const getSession = async (noCreate: boolean = false): Promise<string> => 
 	return session;
 };
 
-if (browser) {
-	(async () => {
-		let { firebaseAuth } = await import('./firebase');
+// if (browser) {
+// 	(async () => {
+// 		let { firebaseAuth } = await import('./firebase');
 
-		firebaseAuth.onAuthStateChanged(async (firebaseUser) => {
-			let cookies = parseCookie(document.cookie);
-			let session = cookies.session;
-			if (!session) {
-				await createSession({ delete: false });
-			}
-		});
-	})();
-}
+// 		firebaseAuth.onAuthStateChanged(async (firebaseUser) => {
+// 			let cookies = parseCookie(document.cookie);
+// 			let session = cookies.session;
+// 			if (!session || session) {
+// 				await createSession({ delete: false });
+// 			}
+// 		});
+// 	})();
+// }

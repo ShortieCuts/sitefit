@@ -70,13 +70,6 @@
 		try {
 			await signInWithOAuth(provider);
 			$signInModalActive = false;
-			setTimeout(() => {
-				if (redirectTo) {
-					location.href = redirectTo;
-				} else {
-					location.href = '/';
-				}
-			}, 1000);
 		} catch (error) {
 			if (error instanceof FirebaseError) {
 				let fbError = error as FirebaseError;
