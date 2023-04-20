@@ -12,5 +12,8 @@
   },
   "dependencies": {
     "@flatten-js/core": "^1.3.5"
+  },
+  "devDependencies": {
+    "@timohausmann/quadtree-ts": "^2.0.0-beta.1"
   }
 }

@@ -193,7 +193,6 @@ export class SelectionOverlay extends Overlay {
 	isDown: boolean = false;
 	box: OutlinedBox | null = null;
 	selectionBox: SelectionBox | null = null;
-	hover: OutlinedGeometry | null = null;
 
 	init(): void {
 		super.init();
@@ -218,15 +217,8 @@ export class SelectionOverlay extends Overlay {
 		);
 
 		this.addUnsub(
-			this.editor.hoveringObject.subscribe((val) => {
-				this.refreshHover();
-			})
-		);
-
-		this.addUnsub(
 			this.broker.needsRender.subscribe((newVal) => {
 				if (newVal) {
-					this.refreshHover();
 					this.refresh();
 				}
 			})
@@ -238,20 +230,6 @@ export class SelectionOverlay extends Overlay {
 
 		this.box = new OutlinedBox(this);
 		this.selectionBox = new SelectionBox(this);
-	}
-
-	refreshHover() {
-		if (this.hover) {
-			this.hover.destroy(this);
-			this.hover = null;
-		}
-
-		let val = get(this.editor.hoveringObject);
-
-		if (val) {
-			let objMap = this.broker.project.objectsMap.get(val);
-			if (objMap) this.hover = new OutlinedGeometry(this, objMap);
-		}
 	}
 
 	refresh(): void {

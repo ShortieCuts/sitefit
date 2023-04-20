@@ -5,7 +5,10 @@ import { get } from 'svelte/store';
 import { Arc, Circle, Cornerstone, Group, Path, type Object2D, type ObjectID } from 'core';
 import type { Vector3 } from 'three';
 
+const ACTIVE_COLOR = '#0c8ae5';
+
 export interface RenderObject2D {
+	active: boolean;
 	refresh(overlay: Overlay, obj: Object2D): void;
 	destroy(overlay: Overlay): void;
 	setMaterial(mat: THREE.Material): void;
@@ -25,6 +28,7 @@ function colorArrayToThreeColor(arr: [number, number, number, number]): THREE.Co
 }
 
 class RenderPath implements RenderObject2D {
+	active: boolean = false;
 	line: THREE.Line;
 	filled: THREE.Mesh;
 
@@ -61,6 +65,10 @@ class RenderPath implements RenderObject2D {
 			mat.opacity = obj.style.color[3];
 			mat2.transparent = obj.style.color[3] < 1;
 			mat2.opacity = obj.style.color[3];
+
+			if (this.active) {
+				mat.color.set(ACTIVE_COLOR);
+			}
 		}
 
 		let arr = (this.line.geometry.attributes.position as any).array as Float32Array;
@@ -145,6 +153,7 @@ class RenderPath implements RenderObject2D {
 }
 
 class RenderArc implements RenderObject2D {
+	active: boolean = false;
 	line: THREE.Line;
 
 	constructor(overlay: Overlay) {
@@ -163,6 +172,20 @@ class RenderArc implements RenderObject2D {
 			startAngle = obj.startAngle;
 			endAngle = obj.endAngle;
 		}
+
+		let mat = this.line.material as THREE.MeshBasicMaterial;
+
+		if (obj.style && obj.style.color) {
+			mat.color.set(colorArrayToThreeColor(obj.style.color));
+
+			mat.transparent = obj.style.color[3] < 1;
+			mat.opacity = obj.style.color[3];
+
+			if (this.active) {
+				mat.color.set(ACTIVE_COLOR);
+			}
+		}
+
 		const curve = new THREE.EllipseCurve(
 			0,
 			0,
@@ -205,6 +228,7 @@ class RenderArc implements RenderObject2D {
 }
 
 class RenderGroup implements RenderObject2D {
+	active: boolean = false;
 	constructor(overlay: Overlay) {}
 
 	refresh(overlay: Overlay, obj: Group): void {}
@@ -215,7 +239,9 @@ class RenderGroup implements RenderObject2D {
 
 	destroy(overlay: Overlay): void {}
 }
+
 class RenderCornerstone implements RenderObject2D {
+	active: boolean = false;
 	constructor(overlay: Overlay) {}
 
 	refresh(overlay: Overlay, obj: Group): void {}
@@ -249,6 +275,36 @@ export class RendererOverlay extends Overlay {
 
 	init(): void {
 		super.init();
+
+		const refreshActive = () => {
+			let sel = get(this.editor.effectiveSelection);
+			let hover = get(this.editor.hoveringObject);
+
+			for (let [key, obj] of this.renderedObjects) {
+				let realObj = this.broker.project.objectsMap.get(key);
+				let shouldBeActive = sel.includes(key) || hover === key;
+				if (obj.active !== shouldBeActive) {
+					obj.active = shouldBeActive;
+					if (realObj) {
+						obj.refresh(this, realObj);
+					}
+				}
+			}
+
+			this.overlay.requestRedraw();
+		};
+
+		this.addUnsub(
+			this.editor.effectiveSelection.subscribe(() => {
+				refreshActive();
+			})
+		);
+
+		this.addUnsub(
+			this.editor.hoveringObject.subscribe((val) => {
+				refreshActive();
+			})
+		);
 
 		this.addUnsub(
 			this.broker.stagingObject.subscribe((newVal) => {

@@ -151,6 +151,7 @@ export class EngineInstance {
     console.log("Auto saving...");
     if (this.dirty && !this.broken && this.project) {
       let data = JSON.stringify(this.project.serialize());
+
       console.log("Saving");
       let resp = await this.env.PROJECTS.put(this.key, data);
 

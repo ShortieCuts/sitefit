@@ -2,14 +2,16 @@
   "name": "engine",
   "version": "0.0.0",
   "devDependencies": {
-    "wrangler": "2.12.3",
-    
-    "@cloudflare/workers-types": "*"
+    "@cloudflare/workers-types": "*",
+    "wrangler": "2.12.3"
   },
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler publish"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@timohausmann/quadtree-ts": "^2.0.0-beta.1"
+  }
 }

@@ -132,7 +132,6 @@ export const SelectTool = {
 
 			return;
 		} else if (get(editor.canRotate)) {
-			console.log('start rotate');
 			// Do rotate
 			editor.canRotate.set(false);
 			editor.rotating.set(true);
@@ -222,6 +221,9 @@ export const SelectTool = {
 							(obj as Arc).radius = (objOrig as Arc).radius;
 							(obj as Arc).startAngle = (objOrig as Arc).startAngle;
 							(obj as Arc).endAngle = (objOrig as Arc).endAngle;
+						} else if (obj.type == ObjectType.Circle) {
+							transaction.update(id, 'radius', structuredClone((obj as Circle).radius));
+							(obj as Circle).radius = (objOrig as Circle).radius;
 						}
 
 						obj.transform = objOrig.transform;
@@ -244,13 +246,6 @@ export const SelectTool = {
 					}
 				}
 				broker.commitTransaction(transaction);
-			}
-		}
-
-		for (let id of get(editor.effectiveSelection)) {
-			let obj = broker.project.objectsMap.get(id);
-			if (obj) {
-				console.log(obj);
 			}
 		}
 	},
@@ -659,6 +654,8 @@ export const SelectTool = {
 					editor.canRotate.set(false);
 				}
 				editor.scaleDirection.set(scaleDirection);
+			} else {
+				editor.selectToolCursor.set(Cursors.default);
 			}
 			// Hover object highlight
 			let hover = getObjectAtCursor(editor, broker, cursor);
@@ -712,21 +709,53 @@ function computeSelectionBox(
 
 	let poly = boxToPoly(box);
 	let selection = [];
-	for (let obj of broker.project.objects) {
+	let quadObjects = broker.project.getObjectsInBounds({
+		minX: box.low.x,
+		minY: box.low.y,
+		maxX: box.high.x,
+		maxY: box.high.y
+	});
+	for (let obj of quadObjects) {
 		if (!obj.flatShape) continue;
-		console.log(obj.type);
 		if (IGNORED_OBJECTS.includes(obj.type)) continue;
-
+		let doesIntersect = false;
 		for (let fl of obj.flatShape) {
+			if (doesIntersect) continue;
 			// let relate = Relations.relate(box, fl);
+			let box: Flatten.Box;
+			if (fl instanceof Flatten.Box) {
+				box = fl;
+			} else {
+				box = fl.box;
+			}
+
+			// Cheap bounding box check
+			if (box.high.x < poly.box.low.x) continue;
+			if (box.low.x > poly.box.high.x) continue;
+			if (box.high.y < poly.box.low.y) continue;
+			if (box.low.y > poly.box.high.y) continue;
+
+			// If the box is completely inside the polygon, we can just add it
+			if (
+				box.high.x <= poly.box.high.x &&
+				box.low.x >= poly.box.low.x &&
+				box.high.y <= poly.box.high.y &&
+				box.low.y >= poly.box.low.y
+			) {
+				doesIntersect = true;
+				continue;
+			}
+
 			try {
 				let inters = poly.intersect(fl);
 				let to = poly.contains(fl) || inters.length > 0;
 				if (to) {
-					selection.push(obj.id);
+					doesIntersect = true;
 				}
 			} catch (e) {}
 		}
+
+		if (doesIntersect) selection.push(obj.id);
 	}
 
 	editor.selection.set(selection);
@@ -740,19 +769,36 @@ function getObjectAtCursor(
 	broker: ProjectBroker,
 	cursor: [number, number]
 ): ObjectID | null {
-	for (let obj of broker.project.objects) {
+	let topObject = null;
+	let topZ = -Infinity;
+	let quadObjects = broker.project.getObjectsInBounds({
+		minX: cursor[0] - 0.0001,
+		minY: cursor[1] - 0.0001,
+		maxX: cursor[0] + 0.0001,
+		maxY: cursor[1] + 0.0001
+	});
+
+	for (let obj of quadObjects) {
 		if (!obj.flatShape) continue;
 		for (let fl of obj.flatShape) {
 			let [dist, seg] = distanceTo(fl, point(cursor[0], cursor[1]));
 			if (dist < get(editor.screenScale) / 2) {
-				return obj.id;
+				if (obj.order ?? 0 >= topZ) {
+					topZ = obj.order ?? 0;
+					topObject = obj.id;
+				}
 			}
 
 			if (fl instanceof Flatten.Polygon) {
-				if (fl.contains(point(cursor[0], cursor[1]))) return obj.id;
+				if (fl.contains(point(cursor[0], cursor[1]))) {
+					if (obj.order ?? 0 >= topZ) {
+						topZ = obj.order ?? 0;
+						topObject = obj.id;
+					}
+				}
 			}
 		}
 	}
 
-	return null;
+	return topObject;
 }

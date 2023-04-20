@@ -26,9 +26,7 @@ export class Overlay {
 		this.unsubs.push(unsub);
 	}
 
-	init() {
-		this.refresh();
-	}
+	init() {}
 
 	destroy() {
 		this.unsubs.forEach((unsub) => unsub());

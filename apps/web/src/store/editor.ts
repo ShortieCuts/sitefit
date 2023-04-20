@@ -152,10 +152,12 @@ export class ProjectBroker {
 				this.establishConnection();
 
 				setInterval(() => {
-					// Ping every 30 seconds
-					console.log('Pinging server...');
-					this.socket?.send(JSON.stringify({ type: 'ping' }));
-				}, 30000);
+					// Ping every 15 seconds
+					if (get(this.mySessionUid)) {
+						console.log('Pinging server...');
+						this.socket?.send(JSON.stringify({ type: 'ping' }));
+					}
+				}, 15000);
 			})();
 		}
 	}
@@ -267,7 +269,6 @@ export class ProjectBroker {
 	}
 
 	commitTransaction(transaction: ProjectTransaction, skipUndo: boolean = false) {
-		// Todo add an inverse transaction to the undo stack
 		if (!skipUndo) {
 			let undoTransaction = this.project.computeInverseTransaction(transaction);
 			this.undo.update((u) => [...u, undoTransaction]);
@@ -316,14 +317,12 @@ export class ProjectBroker {
 		return {
 			subscribe: internalWritable.subscribe,
 			set: (value) => {
-				console.log('Change going to server', value);
 				this.enqueueMessage(SocketMessage.writeGlobalProperty(key, value));
 				internalWritable.set(value);
 			},
 			update: (fn) => {
 				internalWritable.update((value) => {
 					let newValue = fn(value);
-					console.log('Change going to server', newValue);
 					this.enqueueMessage(SocketMessage.writeGlobalProperty(key, newValue));
 
 					return newValue;
@@ -429,6 +428,11 @@ export class ProjectBroker {
 	}
 
 	establishConnection() {
+		console.log('Establishing connection');
+		if (this.socket) {
+			this.socket.close();
+		}
+
 		const wss = document.location.protocol === 'http:' ? 'ws://' : 'wss://';
 		let ws = new WebSocket(wss + WEBSOCKET_URL + '/' + this.projectId + '/websocket');
 		this.socket = ws;
@@ -507,6 +511,10 @@ export class ProjectBroker {
 		}
 
 		this.needsRender.set(true);
+
+		for (let [key, store] of this.globalPropertyStores) {
+			store.set(this.project.globalProperties[key] as any);
+		}
 	}
 
 	markObjectDirty(id: ObjectID) {
@@ -553,7 +561,6 @@ export class ProjectBroker {
 				} else if (m.type == 'create') {
 					this.objectTreeWatcher.update((n) => n + 1);
 					this.markObjectDirty(m.subject);
-					console.log('Create', m.subject, m);
 				} else if (m.type == 'delete') {
 					this.objectTreeWatcher.update((n) => n + 1);
 					this.markObjectDirty(m.subject);
@@ -606,10 +613,6 @@ export class ProjectBroker {
 
 	pushMetadata() {
 		// Diff and push updates
-	}
-
-	destroy() {
-		// Close connection
 	}
 }
 

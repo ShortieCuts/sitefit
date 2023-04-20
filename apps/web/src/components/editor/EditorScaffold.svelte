@@ -26,13 +26,15 @@
 	import { dialogs } from './dialogs';
 	import EditorSessions from './EditorSessions.svelte';
 	import EditorMap from './EditorMap.svelte';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { processCadUploads } from '$lib/client/api';
 	import { refreshData } from 'src/store/cads';
 	import LocationInput from './common/LocationInput.svelte';
 	import LocationMap from './common/LocationMap.svelte';
-	import { Cornerstone } from 'core';
+	import { Cornerstone, makeObject } from 'core';
 	import { get } from 'svelte/store';
+	import EditorProperties from './EditorProperties.svelte';
+	import { browser } from '$app/environment';
 
 	export let auth: AuthState;
 	export let projectId: string;
@@ -45,7 +47,9 @@
 	const { name } = broker.metadata;
 	const { loading, error, connected } = broker;
 
-	const { activeDialog } = editorContext;
+	const { geo, heading } = broker.watchCornerstone();
+
+	const { activeDialog, effectiveSelection } = editorContext;
 
 	let needsCornerstone = false;
 
@@ -101,7 +105,73 @@
 		broker.commitTransaction(transaction);
 	}
 
+	function onCopy(e: ClipboardEvent) {
+		if (e.clipboardData) {
+			let data: { objects: any[] } = { objects: [] };
+			for (let key of $effectiveSelection) {
+				let obj = broker.project.objectsMap.get(key);
+				if (!obj) continue;
+
+				data.objects.push(obj.serialize());
+			}
+			e.clipboardData.setData('cad-mapper/objects', JSON.stringify(data));
+
+			e.preventDefault();
+		}
+	}
+
+	function onPaste(e: ClipboardEvent) {
+		if (e.clipboardData) {
+			let data = e.clipboardData.getData('cad-mapper/objects');
+			if (data) {
+				let idMap = new Map<string, string>();
+				let objects = JSON.parse(data).objects;
+				let transaction = broker.project.createTransaction();
+				let newSelection = [];
+				for (let obj of objects) {
+					let id = broker.allocateId(newSelection);
+					newSelection.push(id);
+					idMap.set(obj.id, id);
+				}
+
+				for (let obj of objects) {
+					let inst = makeObject(obj);
+					if (inst) {
+						inst.deserialize(obj);
+
+						inst.id = idMap.get(inst.id) as string;
+						if (inst.parent) {
+							if (idMap.has(inst.parent)) {
+								inst.parent = idMap.get(inst.parent);
+							} else {
+								inst.parent = undefined;
+							}
+						}
+
+						transaction.create(inst);
+					}
+				}
+				broker.commitTransaction(transaction);
+
+				editorContext.selection.set(newSelection);
+				editorContext.computeEffectiveSelection(broker);
+			}
+		}
+	}
+
+	onMount(() => {
+		if (browser) {
+			document.addEventListener('copy', onCopy);
+			document.addEventListener('paste', onPaste);
+		}
+	});
+
 	onDestroy(() => {
+		console.log('disposing editor scaffold');
+		if (browser) {
+			document.removeEventListener('copy', onCopy);
+			document.removeEventListener('paste', onPaste);
+		}
 		broker.dispose();
 	});
 </script>
@@ -238,7 +308,6 @@
 
 						await refreshData();
 					}
-					console.log('drop');
 				}}
 				on:dragleave={(e) => {
 					e.preventDefault();
@@ -247,7 +316,9 @@
 					console.log('leave');
 				}}
 			>
-				<EditorMap />
+				{#key `${$geo[0]},${$geo[1]},${$heading}`}
+					<EditorMap />
+				{/key}
 			</div>
 		</div>
 		{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'right'}
@@ -260,6 +331,15 @@
 		{/if}
 	</div>
 </div>
+
+{#if !$isMobile && $effectiveSelection.length > 0}
+	<div
+		transition:fly={{ duration: 200, y: 40, opacity: 0 }}
+		class="dialog-slide bg-white w-[300px] fixed right-10 bottom-10 z-20 h-auto border-gray-200 border shadow-lg rounded-lg"
+	>
+		<EditorProperties />
+	</div>
+{/if}
 
 {#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center'}
 	<div

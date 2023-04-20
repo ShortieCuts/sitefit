@@ -60,6 +60,9 @@
 		}
 
 		overlays.forEach((overlay) => overlay.init());
+		overlays.forEach((overlay) => overlay.refresh());
+
+		broker.markAllDirty();
 	}
 
 	function getMapId() {
@@ -85,35 +88,37 @@
 		}
 	}
 
-	$: {
-		$heading;
-		$geo;
+	// $: {
+	// 	$heading;
+	// 	$geo;
 
-		if (map && referenceOverlay) {
-			map.setHeading($heading);
+	// 	if (map && referenceOverlay) {
+	// 		map.setHeading($heading);
 
-			map.setCenter({
-				lat: $geo[1],
-				lng: $geo[0]
-			});
+	// 		map.setCenter({
+	// 			lat: $geo[1],
+	// 			lng: $geo[0]
+	// 		});
 
-			if ($geo[1] != 0 || $geo[0] != 0) {
-				map.setZoom(25);
-			} else {
-				map.setZoom(1);
-			}
+	// 		if ($geo[1] != 0 || $geo[0] != 0) {
+	// 			map.setZoom(25);
+	// 		} else {
+	// 			map.setZoom(1);
+	// 		}
 
-			referenceOverlay.setAnchor({
-				lat: $geo[1],
-				lng: $geo[0]
-			});
+	// 		referenceOverlay.setAnchor({
+	// 			lat: $geo[1],
+	// 			lng: $geo[0]
+	// 		});
 
-			let deg = -$heading;
-			let rad = (deg / 180) * Math.PI;
+	// 		let deg = -$heading;
+	// 		let rad = (deg / 180) * Math.PI;
 
-			referenceOverlay.scene.rotateY(rad);
-		}
-	}
+	// 		referenceOverlay.scene.rotateY(rad);
+
+	// 		map.setTilt(0);
+	// 	}
+	// }
 
 	onMount(() => {
 		if (browser) {
@@ -146,7 +151,7 @@
 					keyboardShortcuts: canDrag,
 					scrollwheel: true,
 					isFractionalZoomEnabled: true,
-					maxZoom: 30
+					maxZoom: 40
 				});
 
 				(window as any).editorMap = map;

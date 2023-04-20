@@ -29,7 +29,7 @@
 				</div>
 				<h2 class="text-lg my-2 opacity-50">No projects yet</h2>
 
-				<a href="/new" class="btn"><Fa icon={faPlus} />New Project</a>
+				<a data-sveltekit-reload href="/new" class="btn"><Fa icon={faPlus} />New Project</a>
 			</div>
 		</DataView>
 	</div>

@@ -6,6 +6,8 @@ import { Transform } from "./transform";
 import { Serializable } from "./serializable";
 
 import Flatten from "@flatten-js/core";
+import { Rectangle } from "../../lib/quadtree/index.esm";
+
 const {
   Polygon,
   point,
@@ -48,10 +50,44 @@ export class Object2D implements Serializable {
   style: Material;
   order: number = 0;
 
+  quadtreeObject: Rectangle | null = null;
+
   flatShape: Object2DShape[] | null = null;
 
   computeShape(): void {
     return null;
+  }
+
+  makeQuadtreeObject(): Rectangle<Object2D> | null {
+    this.computeShape();
+    if (!this.flatShape) return null;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (let shape of this.flatShape) {
+      let box: Flatten.Box;
+      if (shape instanceof Flatten.Box) {
+        box = shape;
+      } else {
+        box = shape.box;
+      }
+
+      if (box.xmin < minX) minX = box.xmin;
+      if (box.ymin < minY) minY = box.ymin;
+      if (box.xmax > maxX) maxX = box.xmax;
+      if (box.ymax > maxY) maxY = box.ymax;
+    }
+
+    return new Rectangle<Object2D>({
+      data: this,
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+    });
   }
 
   getMatrix(): Flatten.Matrix {
@@ -394,3 +430,84 @@ export function makeObject(data: any) {
   }
   return obj;
 }
+
+export type ObjectProperty = {
+  name: string;
+  type?:
+    | "number"
+    | "string"
+    | "boolean"
+    | "color"
+    | "select"
+    | "text"
+    | "geo"
+    | "transform";
+  options?: string[];
+};
+
+export const ObjectProperties: {
+  [key in ObjectType]: ObjectProperty[];
+} = {
+  [ObjectType.Path]: [
+    {
+      name: "stroke",
+    },
+  ],
+  [ObjectType.Group]: [],
+  [ObjectType.Note]: [
+    {
+      name: "owner",
+    },
+    {
+      name: "body",
+      type: "text",
+    },
+  ],
+  [ObjectType.Text]: [
+    {
+      name: "text",
+      type: "text",
+    },
+    {
+      name: "size",
+      type: "number",
+    },
+  ],
+  [ObjectType.Arc]: [
+    {
+      name: "radius",
+      type: "number",
+    },
+    {
+      name: "startAngle",
+      type: "number",
+    },
+    {
+      name: "endAngle",
+      type: "number",
+    },
+  ],
+  [ObjectType.Circle]: [
+    {
+      name: "radius",
+      type: "number",
+    },
+  ],
+  [ObjectType.Waypoint]: [
+    {
+      name: "kind",
+      type: "select",
+      options: ["generic", "utility", "question", "pedestrian"],
+    },
+  ],
+  [ObjectType.Cornerstone]: [
+    {
+      name: "heading",
+      type: "number",
+    },
+    {
+      name: "geo",
+      type: "geo",
+    },
+  ],
+};
