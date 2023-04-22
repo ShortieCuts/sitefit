@@ -100,6 +100,7 @@ export class ProjectBroker {
 	objectPropertyStores: Map<string, Writable<any>> = new Map();
 
 	objectTreeWatcher: Writable<number> = writable(0);
+	transactionWatcher: Writable<number> = writable(0);
 
 	rendererDirtyObjects = new Set<string>();
 	needsRender: Writable<boolean> = writable(false);
@@ -278,6 +279,7 @@ export class ProjectBroker {
 
 		let didChangeTree = false;
 		let changedObjects = new Set<string>();
+
 		for (const mutation of applied) {
 			if (mutation.type === 'create') {
 				didChangeTree = true;
@@ -303,6 +305,8 @@ export class ProjectBroker {
 		}
 
 		this.needsRender.set(true);
+
+		this.transactionWatcher.update((n) => n + 1);
 
 		this.enqueueMessage(SocketMessage.commitTransaction(transaction));
 	}
@@ -568,6 +572,7 @@ export class ProjectBroker {
 			}
 
 			this.needsRender.set(true);
+			this.transactionWatcher.update((n) => n + 1);
 		} else if (isBatch(message)) {
 			for (let m of message.messages) {
 				this.handleMessage(m);

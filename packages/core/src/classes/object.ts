@@ -58,6 +58,42 @@ export class Object2D implements Serializable {
     return null;
   }
 
+  getBounds(): {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  } {
+    this.computeShape();
+    if (!this.flatShape) return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (let shape of this.flatShape) {
+      let box: Flatten.Box;
+      if (shape instanceof Flatten.Box) {
+        box = shape;
+      } else {
+        box = shape.box;
+      }
+
+      if (box.xmin < minX) minX = box.xmin;
+      if (box.ymin < minY) minY = box.ymin;
+      if (box.xmax > maxX) maxX = box.xmax;
+      if (box.ymax > maxY) maxY = box.ymax;
+    }
+
+    return {
+      minX,
+      minY,
+      maxX,
+      maxY,
+    };
+  }
+
   makeQuadtreeObject(): Rectangle<Object2D> | null {
     this.computeShape();
     if (!this.flatShape) return null;
