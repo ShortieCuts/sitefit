@@ -39,9 +39,10 @@
 	let propertyMixedMap = new Map<string, boolean>();
 	let propertyValueMap = new Map<string, any>();
 
+	const LIKENESS_MARGIN = 0.01;
 	function trackProperty(key: string, value: any) {
 		if (propertyValueMap.has(key)) {
-			if (propertyValueMap.get(key) !== value) {
+			if (Math.abs(propertyValueMap.get(key) - value) > LIKENESS_MARGIN) {
 				propertyMixedMap.set(key, true);
 			}
 		} else {
@@ -77,11 +78,13 @@
 				trackProperty('width', bounds.maxX - bounds.minX);
 				trackProperty('height', bounds.maxY - bounds.minY);
 				trackProperty('angle', object.transform.rotation);
-				trackProperty('style.type', object.style.type);
-				trackProperty('style.color', object.style.color);
-				trackProperty('style.pattern', object.style.pattern);
-				trackProperty('style.accent', object.style.accent);
-				trackProperty('style.filled', object.style.filled);
+				if (object.style) {
+					trackProperty('style.type', object.style.type);
+					trackProperty('style.color', object.style.color);
+					trackProperty('style.pattern', object.style.pattern);
+					trackProperty('style.accent', object.style.accent);
+					trackProperty('style.filled', object.style.filled);
+				}
 			}
 		}
 

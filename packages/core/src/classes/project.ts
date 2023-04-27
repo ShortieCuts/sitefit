@@ -3,6 +3,7 @@ import { ObjectID } from "./ids";
 import { makeObject, Object2D } from "./object";
 import type { Serializable } from "./serializable";
 import { Quadtree, Rectangle } from "../../lib/quadtree/index.esm";
+import Flatten from "@flatten-js/core";
 
 export type ProjectMapStyle = "google-simple" | "google-satellite";
 
@@ -50,6 +51,17 @@ export class ProjectTransaction {
       type: "delete",
       subject: id,
       data: null,
+    });
+  }
+
+  translate(object: Object2D, dx: number, dy: number) {
+    this.update(object.id, "transform", {
+      size: [...object.transform.size],
+      position: [
+        object.transform.position[0] + dx,
+        object.transform.position[1] + dy,
+      ],
+      rotation: object.transform.rotation,
     });
   }
 }
@@ -119,6 +131,70 @@ export class Project implements Serializable {
     }
 
     console.log("reconstructQuadtree took ", Date.now() - now, "ms");
+  }
+
+  getObjectsWithDescendants(id: ObjectID): Object2D[] {
+    let objects = [];
+    let queue = [id];
+    while (queue.length > 0) {
+      let id = queue.shift();
+      if (!id) continue;
+      let obj = this.objectsMap.get(id);
+      if (!obj) continue;
+      objects.push(obj);
+      let children = this.objectsMapChildren.get(id);
+      if (children) queue.push(...children.map((child) => child.id));
+    }
+
+    return objects;
+  }
+
+  computeBounds(id: ObjectID) {
+    let box = {
+      minX: Infinity,
+      minY: Infinity,
+      maxX: -Infinity,
+      maxY: -Infinity,
+    };
+
+    let objects = this.getObjectsWithDescendants(id);
+
+    for (let obj of objects) {
+      if (obj.flatShape) {
+        for (let fl of obj.flatShape) {
+          if (fl instanceof Flatten.Box) {
+            box.maxX = Math.max(box.maxX, fl.xmax);
+            box.maxY = Math.max(box.maxY, fl.ymax);
+            box.minX = Math.min(box.minX, fl.xmin);
+            box.minY = Math.min(box.minY, fl.ymin);
+          } else {
+            if (fl.box) {
+              let bounds = fl.box;
+              if (bounds) {
+                box.maxX = Math.max(box.maxX, bounds.xmax);
+                box.maxY = Math.max(box.maxY, bounds.ymax);
+                box.minX = Math.min(box.minX, bounds.xmin);
+                box.minY = Math.min(box.minY, bounds.ymin);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return box;
+  }
+
+  translateObject(id: ObjectID, dx: number, dy: number): ProjectTransaction {
+    let objects = this.getObjectsWithDescendants(id);
+    console.log("objects", objects);
+    let trans = new ProjectTransaction();
+
+    for (let obj of objects) {
+      trans.translate(obj, dx, dy);
+    }
+
+    return trans;
   }
 
   getObjectsInBounds(bounds: {

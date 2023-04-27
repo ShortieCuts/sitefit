@@ -199,11 +199,7 @@
 		>
 		<button
 			on:click={(e) => {
-				let transaction = broker.project.createTransaction();
-				for (let id of $selection) {
-					transaction.delete(id);
-				}
-				broker.commitTransaction(transaction);
+				editor.deleteSelection(broker);
 			}}><Fa icon={faTrash} /> Delete</button
 		>
 	</ContextMenu>

@@ -185,7 +185,7 @@ export class ProjectBroker {
 		return id;
 	}
 
-	async placeCad(id: string) {
+	async placeCad(id: string, position: [number, number], rotation: number = 0) {
 		let cads = await getCads({});
 
 		function findCad(id: string, children: CadTreeNode[]): CadTreeNode | null {
@@ -218,10 +218,12 @@ export class ProjectBroker {
 
 		let prefixId = this.allocateId();
 		let transaction = this.project.createTransaction();
+		let rootId = '';
 		for (const obj of objects) {
 			if (obj.id == 'root') {
 				obj.name = cadInfo.name;
 				obj.originalCad = id;
+				rootId = prefixId + obj.id;
 			}
 			obj.id = prefixId + obj.id;
 			if (obj.parent) {
@@ -231,6 +233,21 @@ export class ProjectBroker {
 		}
 
 		this.commitTransaction(transaction);
+
+		// Center the cad to the position
+
+		let bounds = this.project.computeBounds(rootId);
+		let center = [(bounds.minX + bounds.maxX) / 2, (bounds.minY + bounds.maxY) / 2] as [
+			number,
+			number
+		];
+
+		let trans = this.project.translateObject(
+			rootId,
+			position[0] - center[0],
+			position[1] - center[1]
+		);
+		this.commitTransaction(trans, true);
 	}
 
 	createObject(obj: Object2D) {
@@ -669,6 +686,19 @@ export class EditorContext {
 		} else {
 			this.activeDialog.set(key);
 		}
+	}
+
+	lonLatToPosition(lon: number, lat: number): [number, number] {
+		if (!get(this.overlay)) {
+			return [0, 0];
+		}
+
+		let overlay = get(this.overlay);
+		let vec3 = overlay?.latLngAltitudeToVector3({ lat: lat, lng: lon, altitude: 0 });
+		if (!vec3) {
+			return [0, 0];
+		}
+		return [vec3.x, vec3.z];
 	}
 
 	getDesiredPosition(): [number, number] {

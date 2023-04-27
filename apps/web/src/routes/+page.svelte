@@ -11,11 +11,12 @@
 	import { faFolderOpen, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import Fa from 'svelte-fa';
 	import ProjectListItem from 'src/components/project/ProjectListItem.svelte';
+	import MobileBar from 'src/components/nav/MobileBar.svelte';
 	export let data: PageData;
 </script>
 
 <AppLanding auth={data.user}>
-	<div class="flex flex-col items-center pb-4">
+	<div class="flex flex-col items-center pb-20">
 		<DataView view={data.projects} class="flex-wrap flex justify-center">
 			<div class="inline-flex m-2" slot="item" let:item>
 				<ProjectListItem project={item} />
@@ -33,4 +34,5 @@
 			</div>
 		</DataView>
 	</div>
+	<MobileBar />
 </AppLanding>

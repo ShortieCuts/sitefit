@@ -15,7 +15,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { getContext } from 'svelte';
 	import Fa from 'svelte-fa';
-	import type { Writable } from 'svelte/store';
+	import { get, type Writable } from 'svelte/store';
 	import type { EditorLayerNode } from './EditorLayerNode';
 	import { getSvelteContext } from 'src/store/editor';
 	import type { CadTreeNode } from '$lib/types/cad';
@@ -168,7 +168,10 @@
 		{:else}
 			<button
 				on:click={() => {
-					broker.placeCad(node.id);
+					console.log(get(editor.longitude), get(editor.latitude));
+					let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
+					console.log('center', position);
+					broker.placeCad(node.id, position);
 				}}><Fa icon={faPlus} /> Place on map</button
 			>
 		{/if}

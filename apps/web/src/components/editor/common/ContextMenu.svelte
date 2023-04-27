@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isMobile } from 'src/store/responsive';
 	import { onDestroy, onMount } from 'svelte';
 	import Popover from 'svelte-smooth-popover/Popover.svelte';
 
@@ -17,15 +18,34 @@
 		}
 	};
 
+	let touchTimer: NodeJS.Timeout;
+
+	function handleTouchStart(e: TouchEvent) {
+		if (e.touches.length === 1) {
+			touchTimer = setTimeout(() => {
+				open = true;
+				position = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+			}, 500);
+		}
+	}
+
+	function handleTouchEnd(e: TouchEvent) {
+		if (e.touches.length === 0) {
+			clearTimeout(touchTimer);
+		}
+	}
+
 	$: if (el && typeof window !== 'undefined') {
 		el.addEventListener('click', handleClick);
 		el.addEventListener('contextmenu', handleClick);
+		el.addEventListener('touchstart', handleTouchStart);
 	}
 
 	onDestroy(() => {
 		if (el) {
 			el.removeEventListener('click', handleClick);
 			el.removeEventListener('contextmenu', handleClick);
+			el.removeEventListener('touchstart', handleTouchStart);
 		}
 	});
 
@@ -39,8 +59,22 @@
 </script>
 
 <svelte:window
-	on:click={() => setTimeout(() => (open = false), 10)}
-	on:contextmenu|capture={() => (open = false)}
+	on:click={(e) => {
+		if ($isMobile) {
+		} else {
+			setTimeout(() => (open = false), 10);
+		}
+	}}
+	on:contextmenu|capture={(e) => {
+		if ($isMobile) {
+			e.preventDefault();
+			e.stopPropagation();
+		} else {
+			open = false;
+		}
+	}}
+	on:touchestart={(e) => {}}
+	on:touchend={handleTouchEnd}
 />
 
 <div class="fixed" style="top: {position.y}px; left: {position.x}px;">

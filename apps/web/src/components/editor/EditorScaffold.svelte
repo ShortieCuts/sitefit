@@ -1,12 +1,15 @@
 <script lang="ts">
 	import {
+		faAdd,
 		faArrowLeft,
 		faArrowPointer,
 		faBackward,
 		faCog,
 		faComment,
 		faDirections,
+		faEarth,
 		faFileImport,
+		faHome,
 		faLocationArrow,
 		faPlus,
 		faSearch,
@@ -35,6 +38,7 @@
 	import { get } from 'svelte/store';
 	import EditorProperties from './EditorProperties.svelte';
 	import { browser } from '$app/environment';
+	import MobileBar from '../nav/MobileBar.svelte';
 
 	export let auth: AuthState;
 	export let projectId: string;
@@ -278,6 +282,7 @@
 				<div class="editor-mobile-sidebar absolute top-4 left-0 right-0 h-8 z-10">
 					<EditorNavbar />
 				</div>
+				<MobileBar />
 			{/if}
 
 			<div

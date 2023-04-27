@@ -507,24 +507,31 @@ export const SelectTool = {
 				let currentRel = sub(currentMousePosition, center);
 				currentRel = [currentRel[0] / length(currentRel), currentRel[1] / length(currentRel)];
 				let deltaAngle = Math.atan2(cross(lastRel, currentRel), dot(lastRel, currentRel));
+				if (ev.shiftKey) {
+					deltaAngle = Math.round(deltaAngle / (Math.PI / 4)) * (Math.PI / 4);
+				}
 				let rotationMatrix = matrix(1, 0, 0, 1, 0, 0).rotate(deltaAngle);
 				let centerPoint = transformStartBox.center;
 
-				lastPosition = [...currentMousePosition];
+				// lastPosition = [...currentMousePosition];
 				if (isNaN(deltaAngle)) return;
 
 				let sels = get(editor.effectiveSelection);
 
 				for (let id of sels) {
 					let obj = broker.project.objectsMap.get(id);
-					if (obj) {
+					let originalObj = transformStartObjects.get(id);
+					if (obj && originalObj) {
 						// Rotate about center point
-						let objectAnchorPoint = point(obj.transform.position[0], obj.transform.position[1]);
+						let objectAnchorPoint = point(
+							originalObj.transform.position[0],
+							originalObj.transform.position[1]
+						);
 						let objPoint = point(
 							objectAnchorPoint.x - centerPoint.x,
 							objectAnchorPoint.y - centerPoint.y
 						);
-						obj.transform.rotation += deltaAngle;
+						obj.transform.rotation = originalObj.transform.rotation + deltaAngle;
 
 						let rotatedPoint = objPoint.transform(rotationMatrix);
 						obj.transform.position[0] = rotatedPoint.x + centerPoint.x;

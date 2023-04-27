@@ -280,7 +280,17 @@
 				}
 
 				map.addListener('zoom_changed', () => {
+					if (!map) return;
 					computeScaling();
+					editor.zoom.set(map.getZoom() ?? 0);
+				});
+
+				map.addListener('bounds_changed', () => {
+					if (!map) return;
+					let center = map.getCenter();
+					if (!center) return;
+					editor.longitude.set(center.lng());
+					editor.latitude.set(center.lat());
 				});
 
 				setTimeout(() => {

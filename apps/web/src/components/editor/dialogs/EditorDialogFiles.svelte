@@ -9,6 +9,7 @@
 	import { createCadFolder, updateCadFile, updateCadFolder } from '$lib/client/api';
 	import Draggable from '../common/Draggable.svelte';
 	import type { CadTreeNode } from '$lib/types/cad';
+	import { isMobile } from 'src/store/responsive';
 
 	let toggleState = writable(new Map<string, boolean>());
 
@@ -38,7 +39,13 @@
 	}
 </script>
 
-<div class="overflow-y-auto max-h-full h-full flex flex-col" bind:this={containerEl}>
+<div
+	class="overflow-y-auto max-h-full h-full flex flex-col"
+	class:bg-white={$isMobile}
+	class:p-4={$isMobile}
+	class:pointer-events-auto={$isMobile}
+	bind:this={containerEl}
+>
 	{#each $cadStore.children as node}
 		<EditorCadNode {node} />
 	{/each}

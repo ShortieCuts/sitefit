@@ -241,9 +241,9 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 			}
 
 			return {
-				x: x,
-				y: y,
-				z: z
+				x: x * unitScaleMeters,
+				y: y * unitScaleMeters,
+				z: z * unitScaleMeters
 			};
 		}
 
@@ -330,7 +330,7 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 				arc.transform.size = [1, 1];
 				arc.transform.rotation = 0;
 
-				arc.radius = arcEnt.radius;
+				arc.radius = arcEnt.radius * unitScaleMeters;
 				arc.startAngle = arcEnt.startAngle;
 				arc.endAngle = arcEnt.endAngle;
 
@@ -346,7 +346,7 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 				circle.transform.size = [1, 1];
 				circle.transform.rotation = 0;
 
-				circle.radius = circleEnt.radius;
+				circle.radius = circleEnt.radius * unitScaleMeters;
 
 				obj = circle;
 			} else if (ent.type == 'TEXT') {
