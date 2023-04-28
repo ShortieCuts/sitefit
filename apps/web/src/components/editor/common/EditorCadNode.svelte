@@ -24,6 +24,11 @@
 	import { createCadFolder, updateCadFile, updateCadFolder } from '$lib/client/api';
 	import { refreshData } from 'src/store/cads';
 	import Draggable from './Draggable.svelte';
+	import { isMobile } from 'src/store/responsive';
+	import TabWrap from './TabWrap.svelte';
+	import TabWrapTab from './TabWrapTab.svelte';
+	import { portal } from '$lib/util/actions';
+	import { fly, slide } from 'svelte/transition';
 
 	const { editor, broker } = getSvelteContext();
 
@@ -63,6 +68,8 @@
 		checkEdit();
 	}
 
+	let selected = false;
+
 	async function makeSubFolder() {
 		let res = await createCadFolder({
 			parentId: node.id
@@ -98,6 +105,7 @@
 		allowReorder={false}
 		draggableKey="files"
 		payload={node.id}
+		bind:selected
 		commit={async (from, to, bias) => {
 			if (node.type == 'folder') {
 				// Check if we're moving to a child
@@ -168,10 +176,10 @@
 		{:else}
 			<button
 				on:click={() => {
-					console.log(get(editor.longitude), get(editor.latitude));
 					let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
-					console.log('center', position);
+
 					broker.placeCad(node.id, position);
+					editor.activateDialog('');
 				}}><Fa icon={faPlus} /> Place on map</button
 			>
 		{/if}
@@ -185,6 +193,73 @@
 		<button><Fa icon={faTrash} /> Delete</button>
 	</ContextMenu>
 </div>
+{#if $isMobile && selected}
+	<div
+		transition:fly={{ y: 400, duration: 200 }}
+		use:portal={'root'}
+		class="bg-gray-100 py-4 border-t-2 border-gray-200 fixed bottom-0 left-0 w-full z-50"
+	>
+		{#if node.type == 'folder'}
+			<TabWrap names={['Actions', 'Details']}>
+				<TabWrapTab class="flex flex-col space-y-2" tab={0}>
+					<button
+						class="flex flex-row items-center justify-start py-2 px-4"
+						on:click={makeSubFolder}><Fa class="pr-4" icon={faFolderPlus} /> New folder</button
+					>
+					<button
+						class="flex flex-row items-center justify-start py-2 px-4"
+						on:click={(e) => {
+							setTimeout(() => {
+								editingName = true;
+							});
+						}}><Fa class="pr-4" icon={faPenToSquare} /> Rename</button
+					>
+				</TabWrapTab>
+				<TabWrapTab class="bg-green-500" tab={1}>Details</TabWrapTab>
+			</TabWrap>
+		{:else}
+			<TabWrap names={['Actions', 'Preview', 'Details']}>
+				<TabWrapTab class="flex flex-col space-y-2" tab={0}>
+					<button
+						class="flex flex-row items-center justify-start py-2 px-4"
+						on:click={() => {
+							let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
+
+							broker.placeCad(node.id, position);
+							editor.activateDialog('');
+						}}><Fa class="pr-4" icon={faPlus} /> Place on map</button
+					>
+					<button
+						class="flex flex-row items-center justify-start py-2 px-4"
+						on:click={(e) => {
+							setTimeout(() => {
+								editingName = true;
+							});
+						}}><Fa class="pr-4" icon={faPenToSquare} /> Rename</button
+					>
+					<button class="flex flex-row items-center justify-start py-2 px-4"
+						><Fa class="pr-4" icon={faTrash} /> Delete</button
+					></TabWrapTab
+				>
+				<TabWrapTab class="bg-blue-500" tab={1}>Preview</TabWrapTab>
+				<TabWrapTab class="" tab={2}>
+					{#if node.file}
+						<p class="px-4 pb-2">
+							<b>Date Uploaded</b>:
+							{new Date(node.file.createdAt).toLocaleDateString()}
+						</p>
+						<p class="px-4">
+							<b>Original Filename</b>:
+							{node.file.filename}
+						</p>
+					{:else}
+						N/A
+					{/if}
+				</TabWrapTab>
+			</TabWrap>
+		{/if}
+	</div>
+{/if}
 
 <style>
 	.selected {

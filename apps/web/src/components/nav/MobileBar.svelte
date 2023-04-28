@@ -16,10 +16,13 @@
 	import MobileDrawer from './MobileDrawer.svelte';
 	import { fade } from 'svelte/transition';
 	import { getSvelteContext } from 'src/store/editor';
+	import { writable } from 'svelte/store';
 
 	let mode: '' | 'insert' = '';
 
 	const { broker, editor } = getSvelteContext();
+
+	const activeDialog = editor?.activeDialog ?? writable('');
 </script>
 
 {#if $isMobile}
@@ -37,7 +40,13 @@
 			>
 				<Fa icon={faHome} />
 			</button>
-			<button class="flex flex-1 justify-center items-center w-16 text-xl" on:click={() => {}}>
+			<button
+				class:text-blue-500={$activeDialog == ''}
+				class="flex flex-1 justify-center items-center w-16 text-xl"
+				on:click={() => {
+					editor.activateDialog('');
+				}}
+			>
 				<Fa icon={faEarth} />
 			</button>
 			<button class="flex flex-1 justify-center items-center w-16 text-xl" on:click={() => {}}>
@@ -45,8 +54,13 @@
 			</button>
 			<button
 				class="flex flex-1 justify-center items-center w-16 text-xl"
+				class:text-blue-500={$activeDialog == 'cads'}
 				on:click={() => {
-					mode = 'insert';
+					if ($activeDialog == 'cads') {
+						editor.activateDialog('');
+					} else {
+						mode = 'insert';
+					}
 				}}
 			>
 				<Fa icon={faAdd} />

@@ -6,6 +6,7 @@
 	export let payload: any;
 	export let allowReorder = true;
 	export let canSelect = true;
+	export let selected: boolean = false;
 
 	export let commit: (subject: any, to: any, toBias: number) => void;
 
@@ -43,6 +44,10 @@
 	$: draggingInto = $globalDragging && $globalSlot !== null && $globalSlot == payload;
 	$: dragging = $globalDragging && $globalPayload !== null && $globalPayload == payload;
 	$: canRender = canSelect ? true : $globalSlot === payload && payload !== $globalPayload;
+
+	$: {
+		selected = dragging;
+	}
 
 	function checkSignal() {
 		if (dragging) {

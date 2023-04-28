@@ -6,7 +6,7 @@
 	import { getSvelteContext } from 'src/store/editor';
 	import { isMobile } from 'src/store/responsive';
 	import { onDestroy, onMount } from 'svelte';
-	import { writable } from 'svelte/store';
+	import { get, writable } from 'svelte/store';
 	import type { Overlay } from './overlays/Overlay';
 	import { RendererOverlay } from './overlays/Renderer';
 	import { SelectionOverlay } from './overlays/Selection';
@@ -211,7 +211,7 @@
 					}
 				});
 
-				map.addListener('mousedown', (ev: google.maps.MapMouseEvent) => {
+				function handleMapTap(ev: google.maps.MapMouseEvent) {
 					const { latLng } = ev;
 
 					let deg = -$heading;
@@ -236,6 +236,17 @@
 							editor.currentToolHandlers.onDown(e, editor, broker);
 						}
 					}
+				}
+
+				map.addListener('mousedown', (ev: google.maps.MapMouseEvent) => {
+					if ($isMobile) return;
+					handleMapTap(ev);
+				});
+
+				map.addListener('click', (ev: google.maps.MapMouseEvent) => {
+					console.log('Clic', ev);
+					if (!$isMobile) return;
+					handleMapTap(ev);
 				});
 
 				map.addListener('mouseup', (ev: google.maps.MapMouseEvent) => {
@@ -327,13 +338,27 @@
 		}
 	}
 
-	function handleMouseWheel(e: WheelEvent) {
-		if (map && !canDrag) {
-			$isScrolling = true;
+	function handleMouseWheel(e: any) {
+		if (e.ctrlKey) {
+			e.preventDefault();
+			if (map && !canDrag) {
+				$isScrolling = true;
 
-			setTimeout(() => {
-				$isScrolling = false;
-			}, 100);
+				setTimeout(() => {
+					$isScrolling = false;
+				}, 100);
+			}
+		} else {
+			if (!map) return;
+			let center = map.getCenter();
+			let bounds = map.getBounds() ?? new google.maps.LatLngBounds();
+			let degrees = bounds.getNorthEast().lng() - bounds.getSouthWest().lng();
+			let out = normalizeWheel(e);
+
+			map?.setCenter({
+				lat: (center?.lat() ?? 0) + out.spinY * (degrees / 30) * -1,
+				lng: (center?.lng() ?? 0) + out.spinX * (degrees / 30)
+			});
 		}
 	}
 

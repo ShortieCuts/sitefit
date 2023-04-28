@@ -10,6 +10,9 @@
 	import Draggable from '../common/Draggable.svelte';
 	import type { CadTreeNode } from '$lib/types/cad';
 	import { isMobile } from 'src/store/responsive';
+	import TabWrap from '../common/TabWrap.svelte';
+	import TabWrapTab from '../common/TabWrapTab.svelte';
+	import { portal } from '$lib/util/actions';
 
 	let toggleState = writable(new Map<string, boolean>());
 
@@ -40,41 +43,41 @@
 </script>
 
 <div
-	class="overflow-y-auto max-h-full h-full flex flex-col"
+	class="overflow-y-auto max-h-full h-full flex flex-col flex-shrink-0"
 	class:bg-white={$isMobile}
 	class:p-4={$isMobile}
 	class:pointer-events-auto={$isMobile}
-	bind:this={containerEl}
 >
 	{#each $cadStore.children as node}
 		<EditorCadNode {node} />
 	{/each}
+	<div bind:this={containerEl} class="contents">
+		<Draggable
+			canSelect={false}
+			allowReorder={false}
+			draggableKey="files"
+			payload=""
+			commit={async (from, to, bias) => {
+				if (!from) return;
 
-	<Draggable
-		canSelect={false}
-		allowReorder={false}
-		draggableKey="files"
-		payload=""
-		commit={async (from, to, bias) => {
-			if (!from) return;
+				let node = findChild(from, $cadStore.children);
+				if (!node) return;
 
-			let node = findChild(from, $cadStore.children);
-			if (!node) return;
-
-			if (node.type == 'folder') {
-				await updateCadFolder(node.id, {
-					parentId: ''
-				});
-			} else {
-				await updateCadFile(node.id, {
-					parentId: ''
-				});
-			}
-			await refreshData();
-		}}
-	>
-		<div class="flex-1 min-h-[30px]" />
-	</Draggable>
+				if (node.type == 'folder') {
+					await updateCadFolder(node.id, {
+						parentId: ''
+					});
+				} else {
+					await updateCadFile(node.id, {
+						parentId: ''
+					});
+				}
+				await refreshData();
+			}}
+		>
+			<div class="flex-1 min-h-[30px]" />
+		</Draggable>
+	</div>
 
 	<ContextMenu el={containerEl}>
 		<button

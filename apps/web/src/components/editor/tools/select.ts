@@ -16,6 +16,7 @@ import {
 import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { computeBounds } from '../overlays/Selection';
 import { Cursors } from '../cursors';
+import { isMobile } from 'src/store/responsive';
 
 export const IGNORED_OBJECTS = ['cornerstone', 'group'];
 
@@ -120,6 +121,40 @@ export const SelectTool = {
 	key: 'select',
 	shortcut: 's',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		if (get(isMobile)) {
+			// Search through top-level objects to select
+			let target = get(editor.currentMousePositionRelative);
+			let minSize = Infinity;
+			let currentObj: string | null = null;
+			for (let obj of broker.project.objects) {
+				if (!obj.parent) {
+					let bounds = broker.project.computeBounds(obj.id);
+					if (
+						target[0] > bounds.minX &&
+						target[0] < bounds.maxX &&
+						target[1] > bounds.minY &&
+						target[1] < bounds.maxY
+					) {
+						let area = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
+						if (area < minSize) {
+							minSize = area;
+							currentObj = obj.id;
+						}
+					}
+				}
+			}
+
+			if (currentObj) {
+				editor.selection.set([currentObj]);
+				editor.computeEffectiveSelection(broker);
+			} else {
+				editor.selection.set([]);
+				editor.computeEffectiveSelection(broker);
+			}
+
+			return;
+		}
+
 		editor.selectionStart.set(get(editor.currentMousePosition));
 
 		if (get(editor.canScale)) {

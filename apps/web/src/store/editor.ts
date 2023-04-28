@@ -737,6 +737,9 @@ export class EditorContext {
 			transaction.delete(id);
 		}
 
+		this.selection.set([]);
+		this.computeEffectiveSelection(broker);
+
 		broker.commitTransaction(transaction);
 	}
 }

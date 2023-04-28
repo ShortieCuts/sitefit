@@ -39,6 +39,7 @@
 	import EditorProperties from './EditorProperties.svelte';
 	import { browser } from '$app/environment';
 	import MobileBar from '../nav/MobileBar.svelte';
+	import EditorMobileControls from './EditorMobileControls.svelte';
 
 	export let auth: AuthState;
 	export let projectId: string;
@@ -279,10 +280,14 @@
 			{#if !$isMobile}
 				<EditorToolbar />
 			{:else}
+				<div class="hidden">
+					<EditorToolbar />
+				</div>
 				<div class="editor-mobile-sidebar absolute top-4 left-0 right-0 h-8 z-10">
 					<EditorNavbar />
 				</div>
 				<MobileBar />
+				<EditorMobileControls></EditorMobileControls>
 			{/if}
 
 			<div

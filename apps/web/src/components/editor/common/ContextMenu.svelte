@@ -73,7 +73,14 @@
 			open = false;
 		}
 	}}
-	on:touchestart={(e) => {}}
+	on:touchstart={(e) => {
+		if (e.target.closest('.context-menu')) {
+			setTimeout(() => (open = false), 10);
+			return;
+		} else {
+			open = false;
+		}
+	}}
 	on:touchend={handleTouchEnd}
 />
 
@@ -87,7 +94,9 @@
 		alignAnchor="top-right"
 		align="bottom-right"
 	>
-		<div class="bg-white shadow-md py-2 context-menu w-40 rounded-md border border-gray-200">
+		<div
+			class="context-menu select-none bg-white shadow-md py-2 context-menu w-40 rounded-md border border-gray-200"
+		>
 			<slot />
 		</div>
 	</Popover>
