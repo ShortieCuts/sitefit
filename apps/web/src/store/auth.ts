@@ -30,6 +30,8 @@ function getUserState(user: User | null, firebaseUser: FirebaseUser | null): Aut
 	};
 }
 
+export const sessionCounter = writable(0);
+
 export const auth = writable(
 	{
 		isAnonymous: false,
@@ -43,14 +45,14 @@ export const auth = writable(
 			(async () => {
 				let { firebaseAuth } = await import('./firebase');
 
-				destroy = firebaseAuth.onAuthStateChanged(async (firebaseUser) => {
+				async function refresh() {
 					let user = await getMe();
 
 					if (!user.error) {
 						set({
-							isAnonymous: firebaseUser?.isAnonymous ?? true,
+							isAnonymous: false,
 							isLoading: false,
-							firebaseUser,
+							firebaseUser: null,
 							user: user.data
 						});
 					} else {
@@ -61,7 +63,20 @@ export const auth = writable(
 							user: null
 						});
 					}
+				}
+
+				let unsub = sessionCounter.subscribe(async (val) => {
+					refresh();
 				});
+
+				let unsub2 = firebaseAuth.onAuthStateChanged(async (firebaseUser) => {
+					refresh();
+				});
+
+				destroy = () => {
+					unsub();
+					unsub2();
+				};
 			})();
 
 		return () => {
@@ -70,11 +85,17 @@ export const auth = writable(
 	}
 );
 
+export function notifySessionChange() {
+	sessionCounter.update((val) => val + 1);
+}
+
 export const signIn = async (email: string, password: string) => {
 	let { firebaseAuth } = await import('./firebase');
 
 	let res = await signInWithEmailAndPassword(firebaseAuth, email, password);
+	console.log('Sign in', res);
 	await createSession({ delete: false });
+	notifySessionChange();
 	return res;
 };
 
@@ -93,6 +114,7 @@ export const signUp = async (
 	});
 
 	await createSession({ delete: false });
+	notifySessionChange();
 
 	return newUser;
 };
@@ -104,7 +126,9 @@ export const signInWithOAuth = async (provider: string) => {
 	if (provider == 'google') providerInstance = new GoogleAuthProvider();
 
 	let res = await signInWithPopup(firebaseAuth, providerInstance);
+	console.log('Sign in (oauth)', res);
 	await createSession({ delete: false });
+	notifySessionChange();
 
 	return res;
 };
@@ -113,6 +137,7 @@ export const signOut = async () => {
 	let { firebaseAuth } = await import('./firebase');
 
 	await createSession({ delete: true });
+	notifySessionChange();
 
 	await firebaseAuth.signOut();
 
@@ -146,6 +171,7 @@ export const getSession = async (noCreate: boolean = false): Promise<string> => 
 		if (noCreate) return '';
 
 		await createSession({ delete: false });
+		notifySessionChange();
 
 		return await getSession(true);
 	}

@@ -67,10 +67,14 @@
 
 	async function handleOAuthSignIn(provider: string) {
 		oauthError = '';
+		failed = false;
+		loading = true;
 		try {
 			await signInWithOAuth(provider);
+			loading = false;
 			$signInModalActive = false;
 		} catch (error) {
+			loading = false;
 			if (error instanceof FirebaseError) {
 				let fbError = error as FirebaseError;
 				if (fbError.code == 'auth/account-exists-with-different-credential') {
@@ -112,8 +116,10 @@
 						bind:value={password}
 					/>
 					<div class="text-right pb-2">
-						<button on:click|preventDefault={() => (passwordResetForm = true)} class="text-blue-400"
-							>Forgot password?</button
+						<span
+							on:click|preventDefault={() => (passwordResetForm = true)}
+							class="text-blue-400 cursor-pointer"
+							on:keydown={() => {}}>Forgot password?</span
 						>
 					</div>
 					<button class="btn btn-primary rounded-md bg-blue-400 py-1">Sign in</button>

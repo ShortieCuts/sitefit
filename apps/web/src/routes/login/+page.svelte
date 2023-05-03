@@ -7,8 +7,20 @@
 	import { onMount } from 'svelte';
 	import Fa from 'svelte-fa';
 
+	$: {
+		if (browser) {
+			if ($auth.user) {
+				let params = new URLSearchParams(window.location.search);
+				let redirectTo = params.get('redirect') || '/';
+
+				location.href = redirectTo;
+			}
+		}
+	}
+
 	onMount(() => {
 		if (browser) {
+			console.log('user', $auth);
 			if ($auth.user) {
 				location.href = '/';
 			}

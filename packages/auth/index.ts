@@ -279,31 +279,55 @@ export async function updateUserFromFirebase(
       return null;
     }
   } else {
-    let vals = {
-      email: user.email ?? "",
-      photoURL: user.photoURL ?? "",
-      publicId: nanoid(32),
-      firebaseId: user.uid,
-      updatedAt: new Date(),
-      createdAt: new Date(),
-      firstName: "",
-      lastName: "",
-      lastSeen: new Date(),
-    };
-    let data = await db()
-      .insertInto("User")
+    let existsByEmail = await db()
+      .selectFrom("User")
+      .selectAll()
+      .where("User.email", "=", user.email ?? "")
+      .executeTakeFirst();
+    console.log("Exists", existsByEmail);
 
-      .values([vals])
-      .execute();
-    console.log("insert", data);
+    if (existsByEmail) {
+      let res = await db()
+        .updateTable("User")
+        .set({
+          firebaseId: user.uid,
+        })
+        .where("User.email", "=", user.email ?? "")
+        .executeTakeFirstOrThrow();
 
-    if (data && data[0].insertId) {
-      return {
-        ...vals,
-        id: data[0].insertId,
-      };
+      if (res.numUpdatedRows > 0) {
+        let data = await getUserFromFirebaseId(user.uid);
+        if (data) {
+          return data;
+        }
+      }
     } else {
-      return null;
+      let vals = {
+        email: user.email ?? "",
+        photoURL: user.photoURL ?? "",
+        publicId: nanoid(32),
+        firebaseId: user.uid,
+        updatedAt: new Date(),
+        createdAt: new Date(),
+        firstName: "",
+        lastName: "",
+        lastSeen: new Date(),
+      };
+      let data = await db()
+        .insertInto("User")
+
+        .values([vals])
+        .execute();
+      console.log("insert", data);
+
+      if (data && data[0].insertId) {
+        return {
+          ...vals,
+          id: data[0].insertId,
+        };
+      } else {
+        return null;
+      }
     }
   }
   return null;
