@@ -59,6 +59,11 @@
 </script>
 
 <svelte:window
+	on:mousedown={(e) => {
+		if (e.button != 0) {
+			open = false;
+		}
+	}}
 	on:click={(e) => {
 		if ($isMobile) {
 		} else {

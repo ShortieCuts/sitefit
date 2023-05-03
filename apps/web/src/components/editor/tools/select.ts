@@ -19,7 +19,7 @@ import { Cursors } from '../cursors';
 import { isMobile } from 'src/store/responsive';
 
 export const IGNORED_OBJECTS = ['cornerstone', 'group'];
-
+let needsRootReset = false;
 function distanceTo(obj: Object2DShape, p: Flatten.Point): [number, Flatten.Segment] {
 	if (obj instanceof Flatten.Box) {
 		let segs = obj.toSegments();
@@ -58,6 +58,8 @@ let lastRotation = [0, 0];
 let lastScale = [0, 0];
 let transformStartBox: Flatten.Box | null = null;
 let transformStartObjects = new Map<ObjectID, Object2D>();
+let clickTimer = 0;
+
 function computeStartBox(editor: EditorContext, broker: ProjectBroker) {
 	transformStartObjects.clear();
 	let sels = get(editor.effectiveSelection);
@@ -149,11 +151,9 @@ export const SelectTool = {
 			}
 
 			if (currentObj) {
-				editor.selection.set([currentObj]);
-				editor.computeEffectiveSelection(broker);
+				editor.select(currentObj);
 			} else {
-				editor.selection.set([]);
-				editor.computeEffectiveSelection(broker);
+				editor.deselectAll();
 			}
 
 			return;
@@ -188,12 +188,20 @@ export const SelectTool = {
 
 		let canChangeSelection = true;
 
-		if (hover) {
+		if (hover || get(editor.canTranslate)) {
 			let sels = get(editor.effectiveSelection);
 
-			if (sels.includes(hover)) {
-				canChangeSelection = false;
+			if (hover) {
+				hover = ascendToRoot(editor, broker, hover);
+				if (sels.includes(hover)) {
+					canChangeSelection = false;
+				}
 			}
+			if (get(editor.canTranslate)) {
+				canChangeSelection = false;
+				editor.selectToolCursor.set(Cursors.grabbing);
+			}
+			editor.canTranslate.set(false);
 
 			startTransform(editor, broker);
 			editor.translating.set(true);
@@ -204,22 +212,48 @@ export const SelectTool = {
 		if (canChangeSelection) {
 			if (!ev.shiftKey) {
 				if (hover) {
-					editor.selection.set([hover]);
-					editor.computeEffectiveSelection(broker);
+					editor.select(hover);
 				} else {
-					editor.selection.set([]);
-					editor.computeEffectiveSelection(broker);
+					// We don't reset the root until mouse up
+					let cacheRoot = get(editor.rootGroup);
+					editor.deselectAll();
+					editor.rootGroup.set(cacheRoot);
+					needsRootReset = true;
 				}
 			} else {
 				if (hover) {
 					editor.selection.set([...get(editor.selection), hover]);
+
 					editor.computeEffectiveSelection(broker);
+					editor.rootGroup.set(null);
+				}
+			}
+		} else {
+			if (Date.now() - clickTimer < 300) {
+				// Double click
+				console.log('double click');
+				if (hover) {
+					let obj = broker.project.objectsMap.get(hover);
+					if (obj && obj.type == 'group') {
+						editor.rootGroup.set(hover);
+					}
+				}
+				hover = getObjectAtCursor(editor, broker, cursor);
+				if (hover) {
+					hover = ascendToRoot(editor, broker, hover);
+					editor.select(hover);
+					editor.hoveringObject.set(hover);
 				}
 			}
 		}
+		clickTimer = Date.now();
 		computeStartBox(editor, broker);
 	},
 	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		if (needsRootReset) {
+			editor.rootGroup.set(null);
+			needsRootReset = false;
+		}
 		editor.selectionDown.set(false);
 
 		let isTranslating = get(editor.translating);
@@ -241,6 +275,9 @@ export const SelectTool = {
 						transaction.update(id, 'transform', structuredClone(obj.transform));
 						obj.transform = objOrig.transform;
 					}
+				}
+				if (get(editor.selectToolCursor) == Cursors.grabbing) {
+					editor.selectToolCursor.set(Cursors.grab);
 				}
 				broker.commitTransaction(transaction);
 			} else if (isScaling) {
@@ -595,14 +632,18 @@ export const SelectTool = {
 			}
 			let box = computeBounds(objs);
 			if (box.width > 0 || box.height > 0) {
+				needsRootReset = false;
 				let cursorPoint = point(cursor[0], cursor[1]);
 
 				let setCursor = false;
 				let canScale = false;
 				let canRotate = false;
+				let canTranslate = false;
 				let scaleDirection: [number, number] = [0, 0];
 
 				let dist = get(editor.screenScale);
+
+				let topMid = point(box.center.x, box.low.y);
 
 				let topLeft = point(box.low.x, box.low.y);
 				let topRight = point(box.high.x, box.low.y);
@@ -614,6 +655,7 @@ export const SelectTool = {
 				let topRightRotate = point(box.high.x + rotateDistance, box.low.y - rotateDistance);
 				let bottomRightRotate = point(box.high.x + rotateDistance, box.high.y + rotateDistance);
 				let bottomLeftRotate = point(box.low.x - rotateDistance, box.high.y + rotateDistance);
+
 				if (
 					(Math.abs(box.low.x - cursor[0]) < dist || Math.abs(box.high.x - cursor[0]) < dist) &&
 					cursor[1] > box.low.y &&
@@ -687,6 +729,19 @@ export const SelectTool = {
 					canRotate = true;
 					setCursor = true;
 				}
+				if (
+					cursor[0] > topMid.x - dist * 1.5 &&
+					cursor[0] < topMid.x + dist * 1.5 &&
+					cursor[1] > topMid.y - dist &&
+					cursor[1] < topMid.y + dist
+				) {
+					editor.selectToolCursor.set(Cursors.grab);
+
+					canScale = false;
+					canRotate = false;
+					canTranslate = true;
+					setCursor = true;
+				}
 
 				if (!setCursor) {
 					editor.selectToolCursor.set(Cursors.default);
@@ -695,8 +750,14 @@ export const SelectTool = {
 				if (canRotate) {
 					editor.canRotate.set(canRotate);
 					editor.canScale.set(false);
-				} else {
+					editor.canTranslate.set(false);
+				} else if (canScale) {
 					editor.canScale.set(canScale);
+					editor.canRotate.set(false);
+					editor.canTranslate.set(false);
+				} else {
+					editor.canTranslate.set(canTranslate);
+					editor.canScale.set(false);
 					editor.canRotate.set(false);
 				}
 				editor.scaleDirection.set(scaleDirection);
@@ -707,6 +768,8 @@ export const SelectTool = {
 			let hover = getObjectAtCursor(editor, broker, cursor);
 
 			if (hover) {
+				hover = ascendToRoot(editor, broker, hover);
+				console.log('hover', get(editor.rootGroup));
 				if (get(editor.hoveringObject) !== hover) editor.hoveringObject.set(hover);
 			} else {
 				if (get(editor.hoveringObject) !== '') editor.hoveringObject.set('');
@@ -802,7 +865,10 @@ function computeSelectionBox(
 			} catch (e) {}
 		}
 
-		if (doesIntersect) selection.push(obj.id);
+		if (doesIntersect) {
+			let top = ascendToRoot(editor, broker, obj.id);
+			selection.push(top);
+		}
 	}
 
 	editor.selection.set(selection);
@@ -848,4 +914,27 @@ function getObjectAtCursor(
 	}
 
 	return topObject;
+}
+
+function ascendToRoot(editor: EditorContext, broker: ProjectBroker, id: ObjectID) {
+	if (id) {
+		let parentToHover = id;
+		let rootGroup = get(editor.rootGroup);
+		while (true) {
+			let obj = broker.project.objectsMap.get(parentToHover);
+			if (rootGroup === (obj?.parent ?? null)) {
+				break;
+			} else {
+				if (obj?.parent) {
+					parentToHover = obj.parent;
+				} else {
+					break;
+				}
+			}
+		}
+
+		id = parentToHover;
+	}
+
+	return id;
 }

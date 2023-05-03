@@ -16,7 +16,8 @@ import {
 	SocketMessage,
 	type GlobalProjectPropertiesKey,
 	type ObjectID,
-	type PropertyMutation
+	type PropertyMutation,
+	Group
 } from 'core';
 import { getContext, setContext } from 'svelte';
 import { getAuthHeader, getCads, getProjectMetadata } from '$lib/client/api';
@@ -175,8 +176,12 @@ export class ProjectBroker {
 	commitStagedObject() {
 		let staging = get(this.stagingObject);
 		if (staging) {
-			this.createObject(staging);
+			let id = this.createObject(staging);
 			this.stagingObject.set(null);
+
+			return id;
+		} else {
+			return null;
 		}
 	}
 
@@ -262,6 +267,8 @@ export class ProjectBroker {
 		let transaction = this.project.createTransaction();
 		transaction.create(obj);
 		this.commitTransaction(transaction);
+
+		return uid;
 	}
 
 	commitUndo() {
@@ -689,12 +696,15 @@ export class EditorContext {
 	canScale: Writable<boolean> = writable(false);
 	scaleDirection: Writable<[number, number]> = writable([0, 0]);
 	canRotate: Writable<boolean> = writable(false);
+	canTranslate: Writable<boolean> = writable(false);
 
 	transformOrigin: Writable<[number, number]> = writable([0, 0]);
 
 	selectToolCursor: Writable<string> = writable('default');
 
 	screenScale: Writable<number> = writable(1);
+
+	rootGroup: Writable<ObjectID | null> = writable(null);
 
 	selection: Writable<ObjectID[]> = writable([]);
 	/** Includes the children of selected groups */
@@ -945,9 +955,30 @@ export class EditorContext {
 		this.broker.commitTransaction(transaction);
 	}
 
+	select(id: ObjectID) {
+		this.selection.set([id]);
+		this.computeEffectiveSelection(this.broker);
+		let obj = this.broker.project.objectsMap.get(id);
+		console.log(obj);
+		if (obj) {
+			console.log(obj.parent);
+			this.rootGroup.set(obj.parent ?? null);
+		}
+	}
+
+	addSelection(id: ObjectID) {
+		let selection = get(this.selection);
+		selection.push(id);
+		this.selection.set(selection);
+		this.computeEffectiveSelection(this.broker);
+
+		this.rootGroup.set(null);
+	}
+
 	deselectAll() {
 		this.selection.set([]);
 		this.effectiveSelection.set([]);
+		this.rootGroup.set(null);
 	}
 
 	getDesiredPosition(): [number, number] {
@@ -990,6 +1021,48 @@ export class EditorContext {
 		this.computeEffectiveSelection(broker);
 
 		broker.commitTransaction(transaction);
+	}
+
+	groupSelection() {
+		let selection = get(this.selection);
+		if (selection.length <= 1) {
+			return;
+		}
+
+		let obj1 = this.broker.project.objectsMap.get(selection[0]);
+		if (!obj1) {
+			return;
+		}
+
+		let commonParent: string | undefined | null = obj1.parent;
+		let hasCommonParent = true;
+
+		for (let id of selection) {
+			let obj = this.broker.project.objectsMap.get(id);
+			if (obj) {
+				if (obj.parent !== commonParent) {
+					hasCommonParent = false;
+				}
+			}
+		}
+		let transaction = this.broker.project.createTransaction();
+		let group = new Group();
+		group.id = this.broker.allocateId();
+		group.name = 'Group';
+
+		if (hasCommonParent) {
+			group.parent = commonParent;
+		} else {
+			group.parent = undefined;
+		}
+		transaction.create(group);
+		for (let id of selection) {
+			transaction.update(id, 'parent', group.id);
+		}
+
+		this.broker.commitTransaction(transaction);
+
+		this.select(group.id);
 	}
 }
 

@@ -56,7 +56,10 @@ class OutlinedBox {
 
 	setPosition(pos: THREE.Vector3): void {
 		this.box.position.copy(pos);
-		this.line.position.copy(pos);
+		let p2 = pos.clone();
+
+		p2.y = pos.y + 0.09;
+		this.line.position.copy(p2);
 	}
 
 	setScale(max: THREE.Vector3): void {
@@ -71,6 +74,7 @@ class SelectionBox {
 	topRight: OutlinedBox;
 	bottomLeft: OutlinedBox;
 	bottomRight: OutlinedBox;
+	topMid: OutlinedBox;
 	overlay: Overlay;
 
 	constructor(overlay: Overlay) {
@@ -92,6 +96,15 @@ class SelectionBox {
 			mainOuterColor,
 			mainOuterOpacity
 		);
+
+		this.topMid = new OutlinedBox(
+			overlay,
+			grabInnerColor,
+			grabInnerOpacity,
+			grabOuterColor,
+			grabOuterOpacity
+		);
+
 		this.topLeft = new OutlinedBox(
 			overlay,
 			grabInnerColor,
@@ -128,6 +141,7 @@ class SelectionBox {
 		this.topRight.setVisible(visible);
 		this.bottomLeft.setVisible(visible);
 		this.bottomRight.setVisible(visible);
+		this.topMid.setVisible(visible);
 	}
 
 	updateSize() {
@@ -142,6 +156,7 @@ class SelectionBox {
 		this.topRight.setScale(new THREE.Vector3(grabSize, 1, grabSize));
 		this.bottomLeft.setScale(new THREE.Vector3(grabSize, 1, grabSize));
 		this.bottomRight.setScale(new THREE.Vector3(grabSize, 1, grabSize));
+		this.topMid.setScale(new THREE.Vector3(grabSize * 2, 1, grabSize));
 		this.overlay.overlay.requestRedraw();
 	}
 
@@ -149,14 +164,22 @@ class SelectionBox {
 		this.main.setPosition(pos);
 		this.main.setScale(scale);
 
-		this.topLeft.setPosition(new THREE.Vector3(pos.x - scale.x / 2, pos.y, pos.z + scale.z / 2));
+		this.topMid.setPosition(new THREE.Vector3(pos.x, pos.y + 0.1, pos.z - scale.z / 2));
 
-		this.topRight.setPosition(new THREE.Vector3(pos.x + scale.x / 2, pos.y, pos.z + scale.z / 2));
+		this.topLeft.setPosition(
+			new THREE.Vector3(pos.x - scale.x / 2, pos.y + 0.1, pos.z + scale.z / 2)
+		);
 
-		this.bottomLeft.setPosition(new THREE.Vector3(pos.x - scale.x / 2, pos.y, pos.z - scale.z / 2));
+		this.topRight.setPosition(
+			new THREE.Vector3(pos.x + scale.x / 2, pos.y + 0.1, pos.z + scale.z / 2)
+		);
+
+		this.bottomLeft.setPosition(
+			new THREE.Vector3(pos.x - scale.x / 2, pos.y + 0.1, pos.z - scale.z / 2)
+		);
 
 		this.bottomRight.setPosition(
-			new THREE.Vector3(pos.x + scale.x / 2, pos.y, pos.z - scale.z / 2)
+			new THREE.Vector3(pos.x + scale.x / 2, pos.y + 0.1, pos.z - scale.z / 2)
 		);
 
 		this.updateSize();

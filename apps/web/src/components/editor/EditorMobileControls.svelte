@@ -87,8 +87,8 @@
 		for (let id of selection) {
 			let obj = broker.project.objectsMap.get(id);
 			if (obj) {
-				obj.transform.position[0] += transformed.y * -1;
-				obj.transform.position[1] += transformed.x;
+				obj.transform.position[0] += deltaX;
+				obj.transform.position[1] += deltaY;
 				obj.computeShape();
 				broker.markObjectDirty(id);
 			}
@@ -146,8 +146,7 @@
 			<div>
 				<button
 					on:click={() => {
-						editor.selection.set([]);
-						editor.computeEffectiveSelection(broker);
+						editor.deselectAll();
 					}}
 					class="text-blue-600"
 					style="justify-content: center;">Deselect</button

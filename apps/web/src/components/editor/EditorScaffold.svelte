@@ -3,9 +3,12 @@
 		faAdd,
 		faArrowLeft,
 		faArrowPointer,
+		faArrowsLeftRight,
+		faArrowsUpDown,
 		faBackward,
 		faCog,
 		faComment,
+		faCopy,
 		faDirections,
 		faEarth,
 		faExclamationCircle,
@@ -13,10 +16,15 @@
 		faFileImport,
 		faHome,
 		faInfoCircle,
+		faLayerGroup,
 		faLocationArrow,
+		faPaste,
 		faPlus,
+		faRotateLeft,
+		faRotateRight,
 		faSearch,
-		faShare
+		faShare,
+		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import { fade, slide, fly } from 'svelte/transition';
 	import type { AuthState } from 'auth';
@@ -44,9 +52,12 @@
 	import MobileBar from '../nav/MobileBar.svelte';
 	import EditorMobileControls from './EditorMobileControls.svelte';
 	import { flip } from 'svelte/animate';
+	import ContextMenu from './common/ContextMenu.svelte';
 
 	export let auth: AuthState;
 	export let projectId: string;
+
+	let midEl: HTMLElement;
 
 	let broker = createProjectBroker(projectId);
 	let editorContext = createEditorContext(broker);
@@ -102,12 +113,18 @@
 			editorContext.deleteSelection(broker);
 		}
 
-		console.log(e.code, e.ctrlKey, e.shiftKey);
-
 		if (e.code == 'KeyS' && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			e.stopPropagation();
 			editorContext.info('Changes are saved automatically.');
+		}
+
+		console.log(e.code, e.ctrlKey, e.metaKey);
+
+		if (e.code == 'KeyG' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+			e.stopPropagation();
+			editorContext.groupSelection();
 		}
 	}
 
@@ -120,6 +137,30 @@
 		obj.heading = location[2];
 		transaction.create(obj);
 		broker.commitTransaction(transaction);
+	}
+
+	function doCopy() {
+		document.execCommand('copy'); // Async clipboard API doesn't allow us to use a custom mime type
+	}
+
+	async function doPaste() {
+		try {
+			let items = await navigator.clipboard.read();
+			for (let item of items) {
+				console.log(item);
+				for (let type of item.types) {
+					if (type == 'cad-mapper/objects') {
+						item.getType(type).then((blob) => {
+							blob.text().then((text) => {
+								pasteRawData(text);
+							});
+						});
+					}
+				}
+			}
+		} catch (e) {
+			editorContext.alert('Paste failed, please use Ctrl/Cmd+V instead.');
+		}
 	}
 
 	function onCopy(e: ClipboardEvent) {
@@ -137,41 +178,63 @@
 		}
 	}
 
+	function onCut(e: ClipboardEvent) {
+		if (e.clipboardData) {
+			let data: { objects: any[] } = { objects: [] };
+			for (let key of $effectiveSelection) {
+				let obj = broker.project.objectsMap.get(key);
+				if (!obj) continue;
+
+				data.objects.push(obj.serialize());
+			}
+			e.clipboardData.setData('cad-mapper/objects', JSON.stringify(data));
+
+			editorContext.deleteSelection(broker);
+
+			e.preventDefault();
+		}
+	}
+
+	function pasteRawData(data: string) {
+		let idMap = new Map<string, string>();
+		let objects = JSON.parse(data).objects;
+		let transaction = broker.project.createTransaction();
+		let newSelection = [];
+		for (let obj of objects) {
+			let id = broker.allocateId(newSelection);
+			newSelection.push(id);
+			idMap.set(obj.id, id);
+		}
+
+		for (let obj of objects) {
+			let inst = makeObject(obj);
+			if (inst) {
+				inst.deserialize(obj);
+
+				inst.id = idMap.get(inst.id) as string;
+				if (inst.parent) {
+					if (idMap.has(inst.parent)) {
+						inst.parent = idMap.get(inst.parent);
+					} else {
+						inst.parent = undefined;
+					}
+				}
+
+				transaction.create(inst);
+			}
+		}
+		broker.commitTransaction(transaction);
+
+		editorContext.selection.set(newSelection);
+		editorContext.computeEffectiveSelection(broker);
+		editorContext.rootGroup.set(null);
+	}
+
 	function onPaste(e: ClipboardEvent) {
 		if (e.clipboardData) {
 			let data = e.clipboardData.getData('cad-mapper/objects');
 			if (data) {
-				let idMap = new Map<string, string>();
-				let objects = JSON.parse(data).objects;
-				let transaction = broker.project.createTransaction();
-				let newSelection = [];
-				for (let obj of objects) {
-					let id = broker.allocateId(newSelection);
-					newSelection.push(id);
-					idMap.set(obj.id, id);
-				}
-
-				for (let obj of objects) {
-					let inst = makeObject(obj);
-					if (inst) {
-						inst.deserialize(obj);
-
-						inst.id = idMap.get(inst.id) as string;
-						if (inst.parent) {
-							if (idMap.has(inst.parent)) {
-								inst.parent = idMap.get(inst.parent);
-							} else {
-								inst.parent = undefined;
-							}
-						}
-
-						transaction.create(inst);
-					}
-				}
-				broker.commitTransaction(transaction);
-
-				editorContext.selection.set(newSelection);
-				editorContext.computeEffectiveSelection(broker);
+				pasteRawData(data);
 			}
 		}
 	}
@@ -180,6 +243,7 @@
 		if (browser) {
 			document.addEventListener('copy', onCopy);
 			document.addEventListener('paste', onPaste);
+			document.addEventListener('cut', onCut);
 		}
 	});
 
@@ -188,6 +252,7 @@
 		if (browser) {
 			document.removeEventListener('copy', onCopy);
 			document.removeEventListener('paste', onPaste);
+			document.removeEventListener('cut', onCut);
 		}
 		broker.dispose();
 	});
@@ -304,6 +369,7 @@
 
 			<div
 				class="h-full"
+				bind:this={midEl}
 				on:dragenter={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
@@ -338,6 +404,53 @@
 				{#key `${$geo[0]},${$geo[1]},${$heading}`}
 					<EditorMap />
 				{/key}
+
+				<ContextMenu el={midEl}>
+					{#if $effectiveSelection.length > 0}
+						<button on:click={doCopy}><Fa icon={faCopy} /> Copy </button>
+						<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>
+						<div class="my-2 w-full border-b border-gray-200" />
+						<button
+							on:click={() => {
+								editorContext.flipSelection(true, false);
+							}}
+							><Fa icon={faArrowsLeftRight} /> Flip Left/Right
+						</button>
+						<button
+							on:click={() => {
+								editorContext.flipSelection(false, true);
+							}}
+							><Fa icon={faArrowsUpDown} /> Flip Up/Down
+						</button>
+
+						<button
+							on:click={() => {
+								editorContext.rotateSelection(Math.PI / 4);
+							}}
+							><Fa icon={faRotateRight} /> Spin +45°
+						</button>
+						<button
+							on:click={() => {
+								editorContext.rotateSelection(-Math.PI / 4);
+							}}
+							><Fa icon={faRotateLeft} /> Spin -45°
+						</button>
+						<div class="my-2 w-full border-b border-gray-200" />
+
+						<button
+							on:click={() => {
+								editorContext.groupSelection();
+							}}><Fa icon={faLayerGroup} /> Group Selection</button
+						>
+						<button
+							on:click={() => {
+								editorContext.deleteSelection(broker);
+							}}><Fa icon={faTrash} /> Delete</button
+						>
+					{:else}
+						<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>
+					{/if}
+				</ContextMenu>
 			</div>
 		</div>
 		{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'right'}
@@ -436,7 +549,7 @@
 
 <svelte:window
 	on:keydown={(e) => {
-		if (e.code == 'KeyS' && (e.ctrlKey || e.metaKey)) {
+		if ((e.code == 'KeyS' || e.code == 'KeyG') && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 		}
 	}}

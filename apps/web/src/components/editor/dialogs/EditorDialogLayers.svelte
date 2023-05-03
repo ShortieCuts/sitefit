@@ -8,7 +8,8 @@
 	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 
-	const { broker } = getSvelteContext();
+	const { editor, broker } = getSvelteContext();
+	const { selection } = editor;
 	const mapStyle = broker.writableGlobalProperty<ProjectMapStyle>('mapStyle', 'google-satellite');
 
 	let objectTree: EditorLayerNode[] = [];
@@ -90,11 +91,38 @@
 		buildObjectTree();
 
 		objectTree.sort(sortItems);
-
-		console.log('objectTree', objectTree);
 	}
 
-	console.log('objectTree', objectTree);
+	$: {
+		let sels = $selection;
+		let alreadyWalked = new Set<string>();
+		function walkTreeUp(id: string, visit: (id: string) => void) {
+			if (alreadyWalked.has(id)) {
+				return;
+			}
+			alreadyWalked.add(id);
+			visit(id);
+
+			let obj = broker.project.objectsMap.get(id);
+			if (obj?.parent) {
+				walkTreeUp(obj.parent, visit);
+			}
+		}
+		for (let id of sels) {
+			let obj = broker.project.objectsMap.get(id);
+			if (!obj) {
+				continue;
+			}
+			if (obj.parent) walkTreeUp(obj.parent, (nodeId: string) => {});
+		}
+
+		toggleState.update((map) => {
+			for (let id of alreadyWalked.keys()) {
+				map.set(id, true);
+			}
+			return map;
+		});
+	}
 </script>
 
 <div class="overflow-y-auto max-h-full">

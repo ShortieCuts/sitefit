@@ -16,7 +16,7 @@ export const PenTool = {
 		obj.style.type = 'color';
 		obj.name = 'Line';
 		obj.closed = false;
-		obj.parent = null;
+		obj.parent = undefined;
 		obj.segments.push(editor.getDesiredPosition());
 
 		broker.stagingObject.set(obj);
@@ -25,7 +25,8 @@ export const PenTool = {
 	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		isDown = false;
 
-		broker.commitStagedObject();
+		let id = broker.commitStagedObject();
+		if (id) editor.select(id);
 	},
 	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		if (isDown) {

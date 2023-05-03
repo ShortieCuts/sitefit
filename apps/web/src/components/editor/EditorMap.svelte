@@ -344,7 +344,9 @@
 	}
 
 	function handleMouseWheel(e: any) {
-		if (!e.target.closest('.map-container')) return;
+		if (!e.target.closest('.map-container') || e.target.closest('.map-container') != containerEl)
+			return;
+
 		if (e.ctrlKey) {
 			e.preventDefault();
 			if (map && !canDrag) {

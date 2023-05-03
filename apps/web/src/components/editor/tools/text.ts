@@ -15,10 +15,14 @@ export const TextTool = {
 		obj.style.type = 'color';
 		obj.name = 'Text';
 		obj.text = 'Text';
+		obj.size = 6;
+
+		obj.transform.position = editor.getDesiredPosition();
 
 		broker.stagingObject.set(obj);
 
-		broker.commitStagedObject();
+		let id = broker.commitStagedObject();
+		if (id) editor.select(id);
 	},
 	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {},
 	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {}

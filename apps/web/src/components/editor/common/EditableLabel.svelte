@@ -11,7 +11,6 @@
 	let dispatch = createEventDispatcher();
 
 	function commit() {
-		console.log('commit');
 		if (!editing) return;
 		editing = false;
 		if (workingValue == value) return;

@@ -368,13 +368,24 @@ export class RendererOverlay extends Overlay {
 	init(): void {
 		super.init();
 
+		const isChildOf = (parent: ObjectID, child: ObjectID): boolean => {
+			while (true) {
+				let obj = this.broker.project.objectsMap.get(child);
+				if (!obj) return false;
+				if (obj.parent === parent) return true;
+				if (!obj.parent) return false;
+				child = obj.parent;
+			}
+		};
+
 		const refreshActive = () => {
 			let sel = get(this.editor.effectiveSelection);
 			let hover = get(this.editor.hoveringObject);
 
 			for (let [key, obj] of this.renderedObjects) {
 				let realObj = this.broker.project.objectsMap.get(key);
-				let shouldBeActive = sel.includes(key) || hover === key;
+				let shouldBeActive = sel.includes(key) || hover === key || isChildOf(hover, key);
+
 				if (obj.active !== shouldBeActive) {
 					obj.active = shouldBeActive;
 					if (realObj) {

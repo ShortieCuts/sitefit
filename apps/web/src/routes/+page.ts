@@ -5,17 +5,5 @@ import type { PageLoad } from './$types';
 import type { ListViewProject } from '$lib/types/project';
 
 export const load = (async ({ params, fetch }) => {
-	let projects: APIDataView<ListViewProject> = emptyDataView();
-
-	projects = await fetchDataView(
-		`/api/projects`,
-		{
-			pageSize: 9
-		},
-		fetch
-	);
-
-	return {
-		projects
-	};
+	return {};
 }) satisfies PageLoad;

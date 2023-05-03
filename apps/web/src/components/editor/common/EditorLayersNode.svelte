@@ -25,6 +25,7 @@
 	import Draggable from './Draggable.svelte';
 	import ContextMenu from './ContextMenu.svelte';
 	import EditableLabel from './EditableLabel.svelte';
+	import { browser } from '$app/environment';
 
 	const { editor, broker } = getSvelteContext();
 
@@ -63,17 +64,29 @@
 	function select(e: MouseEvent) {
 		if (!selected) {
 			if (e.ctrlKey) {
-				$selection = [...$selection, node.id];
-				editor.computeEffectiveSelection(broker);
+				editor.addSelection(node.id);
 			} else {
-				$selection = [node.id];
-				editor.computeEffectiveSelection(broker);
+				editor.select(node.id);
 			}
 		}
 	}
 
 	$: selected = $selection.includes(node.id);
 	$: selectedPartial = $effectiveSelection.includes(node.id);
+
+	$: {
+		if ($selection.length > 0 && $selection[0] == node.id) {
+			if (browser) {
+				if (nodeElement) {
+					let rect = nodeElement.getBoundingClientRect();
+					if (rect.top < 0 || rect.bottom > window.innerHeight)
+						nodeElement.scrollIntoView({
+							block: 'center'
+						});
+				}
+			}
+		}
+	}
 
 	$: name = broker.writableObjectProperty(node.id, 'name', undefined);
 
@@ -189,7 +202,11 @@
 	</Draggable>
 
 	<ContextMenu el={nodeElement}>
-		<button on:click={(e) => {}}><Fa icon={faMapPin} /> Locate</button>
+		<button
+			on:click={(e) => {
+				editor.flyToSelection();
+			}}><Fa icon={faMapPin} /> Locate</button
+		>
 		<button
 			on:click={(e) => {
 				setTimeout(() => {

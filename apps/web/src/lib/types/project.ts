@@ -28,3 +28,12 @@ export type MetadataProject = {
 		blanketAccessGranted: boolean;
 	};
 };
+
+export type ProjectTreeNode = {
+	type: 'folder' | 'project';
+	name: string;
+	id: string;
+	children: ProjectTreeNode[];
+
+	file?: ListViewProject;
+};

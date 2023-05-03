@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setContext } from 'svelte';
+	import { onDestroy, onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 
 	const activeTab = writable(0);
@@ -9,6 +9,34 @@
 	export { activeTab };
 
 	setContext('activeTab', activeTab);
+
+	let targetHeight = 0;
+
+	let alive = false;
+
+	let wrapEl: HTMLElement;
+
+	onMount(() => {
+		alive = true;
+
+		function updateHeight() {
+			if (!alive) return;
+			requestAnimationFrame(updateHeight);
+
+			let childHeight = wrapEl.children[0].clientHeight;
+
+			if (childHeight !== targetHeight) {
+				targetHeight = childHeight;
+			}
+		}
+
+		updateHeight();
+		0;
+	});
+
+	onDestroy(() => {
+		alive = false;
+	});
 </script>
 
 <div class="tab-wrap overflow-hidden">
@@ -40,18 +68,24 @@
 			{/each}
 		</div>
 	</div>
-	<div class="tab-body mt-2 tab-wrap-transition-container"><slot /></div>
+	<div
+		class="tab-body mt-2 tab-wrap-transition-container transition-all"
+		style="height: {targetHeight}px; transition: height .2s;"
+		bind:this={wrapEl}
+	>
+		<slot />
+	</div>
 </div>
 
 <style lang="scss">
 	:global(.tab-wrap-transition-container) {
-		display: grid;
-		grid-template-rows: 1fr;
-		grid-template-columns: 1fr;
+		// display: grid;
+		// grid-template-rows: 1fr;
+		// grid-template-columns: 1fr;
 	}
 
 	:global(.tab-wrap-transition-container > *) {
-		grid-row: 1;
-		grid-column: 1;
+		// grid-row: 1;
+		// grid-column: 1;
 	}
 </style>

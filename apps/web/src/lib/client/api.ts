@@ -1,5 +1,5 @@
 import type { CadTreeNode } from '$lib/types/cad';
-import type { MetadataProject } from '$lib/types/project';
+import type { MetadataProject, ProjectTreeNode } from '$lib/types/project';
 import type { PublicUserInfo } from '$lib/types/user';
 import type { User } from 'auth';
 import type { EditorContext } from 'src/store/editor';
@@ -95,6 +95,37 @@ export const createProject = createApiEndpointHelper<
 		projectId: string;
 	}
 >('POST', '/api/project');
+
+export const createProjectFolder = createApiEndpointHelper<
+	{
+		parentId: string;
+	},
+	{
+		folderId: string;
+	}
+>('POST', '/api/project/folder');
+
+export const updateProjectFolder = createIdApiEndpointHelper<
+	{
+		name?: string;
+		parentId?: string;
+	},
+	{
+		success: boolean;
+	}
+>('POST', '/api/project/folder/<id>');
+
+export const updateProjectFile = createIdApiEndpointHelper<
+	{
+		name?: string;
+		parentId?: string;
+	},
+	{
+		success: boolean;
+	}
+>('POST', '/api/project/<id>');
+
+export const getProjects = createApiEndpointHelper<{}, ProjectTreeNode>('POST', '/api/projects');
 
 export const createSession = createApiEndpointHelper<
 	{

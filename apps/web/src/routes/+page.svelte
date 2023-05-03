@@ -12,27 +12,25 @@
 	import Fa from 'svelte-fa';
 	import ProjectListItem from 'src/components/project/ProjectListItem.svelte';
 	import MobileBar from 'src/components/nav/MobileBar.svelte';
+	import ProjectsView from 'src/components/common/ProjectsView.svelte';
+	import { browser } from '$app/environment';
 	export let data: PageData;
 </script>
 
 <AppLanding auth={data.user}>
-	<div class="flex flex-col items-center pb-20">
-		<DataView view={data.projects} class="flex-wrap flex justify-center">
-			<div class="inline-flex m-2" slot="item" let:item>
-				<ProjectListItem project={item} />
-			</div>
-			<div
-				slot="empty"
-				class="bg-gray-100 h-80 w-96 rounded-lg flex flex-col items-center justify-center"
-			>
-				<div class="opacity-10">
-					<Fa class="text-8xl" icon={faFolderOpen} />
-				</div>
-				<h2 class="text-lg my-2 opacity-50">No projects yet</h2>
-
-				<a data-sveltekit-reload href="/new" class="btn"><Fa icon={faPlus} />New Project</a>
-			</div>
-		</DataView>
+	<div class="flex flex-col pb-20 alternate min-h-[100vh]">
+		{#if browser}
+			<ProjectsView />
+		{/if}
 	</div>
 	<MobileBar />
 </AppLanding>
+
+<style lang="scss">
+	:global(.alternate > * > *:nth-child(odd)) {
+		@apply bg-gray-50;
+	}
+	:global(.alternate > *) {
+		@apply min-h-[100vh];
+	}
+</style>

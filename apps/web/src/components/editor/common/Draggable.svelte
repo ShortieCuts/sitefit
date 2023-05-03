@@ -71,7 +71,7 @@
 <div
 	bind:this={el}
 	class="draggable-node contents"
-	class:dragging={canRender && dragging}
+	class:dragging={canRender && dragging && canSelect}
 	class:dragging-into={canRender && draggingInto && ($globalBias == 0 || !allowReorder)}
 	class:dragging-into-top={canRender && allowReorder && draggingInto && $globalBias == -1}
 	class:dragging-into-bottom={canRender && allowReorder && draggingInto && $globalBias == 1}
