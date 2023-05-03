@@ -23,6 +23,7 @@
 		height: number | string;
 		angle: number | string;
 		style: Material;
+		props: { [key: string]: any };
 	} = {
 		x: 0,
 		y: 0,
@@ -33,7 +34,8 @@
 			type: 'color',
 			color: [0, 0, 0, 1],
 			filled: false
-		}
+		},
+		props: {}
 	};
 
 	let propertyMixedMap = new Map<string, boolean>();
@@ -41,12 +43,22 @@
 
 	const LIKENESS_MARGIN = 0.01;
 	function trackProperty(key: string, value: any) {
-		if (propertyValueMap.has(key)) {
-			if (Math.abs(propertyValueMap.get(key) - value) > LIKENESS_MARGIN) {
-				propertyMixedMap.set(key, true);
+		if (typeof value === 'number') {
+			if (propertyValueMap.has(key)) {
+				if (Math.abs(propertyValueMap.get(key) - value) > LIKENESS_MARGIN) {
+					propertyMixedMap.set(key, true);
+				}
+			} else {
+				propertyValueMap.set(key, value);
 			}
 		} else {
-			propertyValueMap.set(key, value);
+			if (propertyValueMap.has(key)) {
+				if (propertyValueMap.get(key) !== value) {
+					propertyMixedMap.set(key, true);
+				}
+			} else {
+				propertyValueMap.set(key, value);
+			}
 		}
 	}
 
@@ -63,12 +75,17 @@
 		propertyValueMap = new Map<string, any>();
 
 		let propertiesMap = new Map<string, ObjectProperty>();
+		let propertiesMapCounter = new Map<string, number>();
+		let hasSetInitialProperties = false;
 		for (const id of $effectiveSelection) {
 			const object = broker.project.objectsMap.get(id);
 			if (object) {
 				let type = object.type;
 				for (let p of ObjectProperties[type]) {
 					propertiesMap.set(p.name, p);
+
+					propertiesMapCounter.set(p.name, (propertiesMapCounter.get(p.name) || 0) + 1);
+					trackProperty(p.name, (object as any)[p.name]);
 				}
 
 				let bounds = object.getBounds();
@@ -87,10 +104,17 @@
 				}
 			}
 		}
+		propertiesDisplay.props = {};
 
 		properties = [];
 		for (let p of propertiesMap.values()) {
-			properties.push(p);
+			if (propertiesMapCounter.get(p.name) === $effectiveSelection.length) {
+				properties.push(p);
+
+				propertiesDisplay.props[p.name] = propertyMixedMap.get(p.name)
+					? 'Mixed'
+					: propertyValueMap.get(p.name);
+			}
 		}
 
 		(propertiesDisplay.x = propertyMixedMap.get('x')
@@ -122,6 +146,35 @@
 		$effectiveSelection;
 		$transactionWatcher;
 		recalculateProperties();
+	}
+
+	function doPropChange(prop: ObjectProperty): any {
+		return (e: InputEvent) => {
+			let setTo: any = null;
+			if (prop.type == 'number') {
+				let num = parseFloat((e.target as HTMLInputElement).value);
+				if (isNaN(num)) {
+					recalculateProperties();
+					return;
+				}
+
+				setTo = num;
+			} else if (prop.type == 'string') {
+				setTo = (e.target as HTMLInputElement).value;
+			}
+
+			if (setTo !== null) {
+				let transaction = broker.project.createTransaction();
+				for (const id of $effectiveSelection) {
+					const object = broker.project.objectsMap.get(id);
+					if (object) {
+						transaction.update(object.id, prop.name, setTo);
+					}
+				}
+
+				broker.commitTransaction(transaction);
+			}
+		};
 	}
 
 	function doTransformChange(prop: 'x' | 'y' | 'width' | 'height' | 'angle'): any {
@@ -308,13 +361,49 @@
 	</div>
 	<div class="border-b border-gray-200" />
 	<div class="properties-style flex flex-col space-y-2 p-2">
-		<ColorInput bind:value={propertiesDisplay.style.color} on:change={doStyleChange('color')} />
-	</div>
-	{#each properties as prop}
-		<div>
-			{prop.name}
+		<div class="flex flex-row space-x-2 border-gray-200 rounded-md border p-1">
+			<div>
+				<ColorInput bind:value={propertiesDisplay.style.color} on:change={doStyleChange('color')} />
+			</div>
+			<div class="flex-1 w-auto">
+				<select class="border-gray-200 rounded-md border w-full">
+					<option> Solid </option>
+					<option> Dashed </option>
+					<option> Filled </option>
+					<option> Hatch </option>
+				</select>
+			</div>
 		</div>
-	{/each}
+	</div>
+	{#if properties.length > 0}
+		<div class="border-b border-gray-200" />
+		<div class="space-y-2 mt-2">
+			{#each properties as prop}
+				<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+					<span
+						class="flex-shrink-0 h-full w-20 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-center"
+					>
+						{prop.name}
+					</span>
+					{#if prop.type == 'string'}
+						<input
+							class="w-full px-1"
+							type="text"
+							bind:value={propertiesDisplay.props[prop.name]}
+							on:change={doPropChange(prop)}
+						/>
+					{:else if prop.type == 'number'}
+						<input
+							class="w-full px-1"
+							type="number"
+							bind:value={propertiesDisplay.props[prop.name]}
+							on:change={doPropChange(prop)}
+						/>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	{/if}
 	<div />
 </div>
 

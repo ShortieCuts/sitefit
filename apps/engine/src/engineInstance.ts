@@ -20,6 +20,7 @@ import {
 
 import { checkRequestAuth, getUserFromFirebaseId } from "auth";
 import { randomNiceColorFromString } from "./color";
+import LZString from "lz-string";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -80,7 +81,7 @@ class Session {
   }
 
   send(msg: SocketMessage) {
-    this.socket.send(JSON.stringify(msg));
+    this.socket.send(LZString.compressToUint8Array(JSON.stringify(msg)));
   }
 }
 
@@ -218,7 +219,10 @@ export class EngineInstance {
 
       let data: SocketMessage | null = null;
       try {
-        data = JSON.parse(msg.data.toString());
+        let raw = LZString.decompressFromUint8Array(
+          new Uint8Array(msg.data as ArrayBuffer)
+        );
+        data = JSON.parse(raw);
       } catch (e) {
         console.log("Error parsing message: ", e);
       }
@@ -315,7 +319,7 @@ export class EngineInstance {
   }
 
   broadcast(message: SocketMessage) {
-    let json = JSON.stringify(message);
+    let json = LZString.compressToUint8Array(JSON.stringify(message));
 
     let dead: Session[] = [];
     this.sessions = this.sessions.filter((session) => {

@@ -12,6 +12,7 @@
 	import { SelectionOverlay } from './overlays/Selection';
 	import { Cursors } from './cursors';
 	import * as THREE from 'three';
+	import Flatten from '@flatten-js/core';
 
 	const { editor, broker } = getSvelteContext();
 	const { geo, heading } = broker.watchCornerstone();
@@ -29,6 +30,7 @@
 	let overlays: Overlay[] = [];
 	const overlayTypes: (typeof Overlay)[] = [SelectionOverlay, RendererOverlay];
 	let referenceOverlay: ThreeJSOverlayView | null = null;
+	let overlayView: google.maps.OverlayView | null = null;
 
 	let origin = { lat: 0, lng: 0 };
 
@@ -46,7 +48,7 @@
 	}
 
 	function rebuildOverlays(map: google.maps.Map) {
-		if (!referenceOverlay) return;
+		if (!referenceOverlay || !overlayView) return;
 
 		for (const overlay of overlays) {
 			overlay.destroy();
@@ -55,7 +57,7 @@
 		overlays = [];
 
 		for (let i = 0; i < overlayTypes.length; i++) {
-			const overlay = new overlayTypes[i](map, referenceOverlay, editor, broker);
+			const overlay = new overlayTypes[i](map, referenceOverlay, overlayView, editor, broker);
 			overlays.push(overlay);
 		}
 
@@ -162,6 +164,9 @@
 
 				scene.rotateY(rad);
 
+				overlayView = new google.maps.OverlayView();
+				overlayView.setMap(map);
+
 				referenceOverlay = new ThreeJSOverlayView({
 					map,
 					scene,
@@ -170,6 +175,7 @@
 				});
 
 				editor.overlay.set(referenceOverlay);
+				editor.map.set(map);
 
 				map.setTilt(0);
 
@@ -244,7 +250,6 @@
 				});
 
 				map.addListener('click', (ev: google.maps.MapMouseEvent) => {
-					console.log('Clic', ev);
 					if (!$isMobile) return;
 					handleMapTap(ev);
 				});
@@ -339,6 +344,7 @@
 	}
 
 	function handleMouseWheel(e: any) {
+		if (!e.target.closest('.map-container')) return;
 		if (e.ctrlKey) {
 			e.preventDefault();
 			if (map && !canDrag) {
@@ -355,9 +361,19 @@
 			let degrees = bounds.getNorthEast().lng() - bounds.getSouthWest().lng();
 			let out = normalizeWheel(e);
 
+			let angle = -(map.getHeading() ?? 0) * (Math.PI / 180);
+
+			let rightVector = [Math.cos(angle + Math.PI / 2), Math.sin(angle + Math.PI / 2)];
+			let upVector = [Math.cos(angle), Math.sin(angle)];
+
+			let real = [
+				rightVector[0] * out.spinX + upVector[0] * out.spinY,
+				rightVector[1] * out.spinX + upVector[1] * out.spinY
+			];
+
 			map?.setCenter({
-				lat: (center?.lat() ?? 0) + out.spinY * (degrees / 30) * -1,
-				lng: (center?.lng() ?? 0) + out.spinX * (degrees / 30)
+				lat: (center?.lat() ?? 0) + real[0] * (degrees / 30) * -1,
+				lng: (center?.lng() ?? 0) + real[1] * (degrees / 30)
 			});
 		}
 	}
@@ -388,6 +404,8 @@
 				currentCursor = Cursors.pen;
 			} else if ($activeTool == 'comment') {
 				currentCursor = Cursors.comment;
+			} else if ($activeTool == 'text') {
+				currentCursor = Cursors.text;
 			}
 		}
 	}

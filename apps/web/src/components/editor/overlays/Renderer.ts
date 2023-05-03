@@ -2,7 +2,7 @@ import { getSvelteContext } from 'src/store/editor';
 import { Overlay } from './Overlay';
 import * as THREE from 'three';
 import { get } from 'svelte/store';
-import { Arc, Circle, Cornerstone, Group, Path, type Object2D, type ObjectID } from 'core';
+import { Arc, Circle, Cornerstone, Group, Path, Text, type Object2D, type ObjectID } from 'core';
 import type { Vector3 } from 'three';
 
 const ACTIVE_COLOR = '#0c8ae5';
@@ -13,6 +13,8 @@ export interface RenderObject2D {
 	destroy(overlay: Overlay): void;
 	setMaterial(mat: THREE.Material): void;
 	translate(delta: Vector3): void;
+
+	mapUpdate?(overlay: Overlay, obj: Object2D): void;
 }
 
 function randomColorHEX() {
@@ -253,6 +255,92 @@ class RenderCornerstone implements RenderObject2D {
 	destroy(overlay: Overlay): void {}
 }
 
+function colorArrayToCss(color: number[]): string {
+	return `rgba(${color[0] * 255}, ${color[1] * 255}, ${color[2] * 255}, ${color[3]})`;
+}
+
+class RenderText implements RenderObject2D {
+	active: boolean = false;
+	el: HTMLDivElement;
+	constructor(overlay: Overlay) {
+		this.el = document.createElement('div');
+		this.el.style.position = 'absolute';
+		this.el.style.top = '0';
+		this.el.style.left = '0';
+		this.el.style.fontFamily = 'sans-serif';
+		this.el.style.fontSize = '12px';
+		this.el.style.fontWeight = 'bold';
+		this.el.style.pointerEvents = 'none';
+		this.el.style.transformOrigin = 'top left';
+		this.el.style.fontFamily = 'monospace';
+		this.el.style.lineHeight = '1em';
+
+		overlay.map.getDiv().appendChild(this.el);
+	}
+
+	refresh(overlay: RendererOverlay, obj: Text): void {
+		this.el.innerText = obj.text;
+
+		this.mapUpdate(overlay, obj);
+		if (this.active) {
+			this.el.style.textShadow = `1px 0 1px ${ACTIVE_COLOR}, -1px 0 1px ${ACTIVE_COLOR}, 0px 1px 1px ${ACTIVE_COLOR}, 0 -1px 1px ${ACTIVE_COLOR}`;
+		} else {
+			this.el.style.textShadow = `none`;
+		}
+	}
+
+	setMaterial(mat: THREE.Material): void {}
+
+	translate(delta: Vector3): void {}
+
+	destroy(overlay: Overlay): void {
+		this.el.remove();
+	}
+
+	mapUpdate(overlay: RendererOverlay, obj: Text): void {
+		const map = overlay.overlay.getMap();
+		if (!map) return;
+		let p = overlay.editor.positionToLonLat(obj.transform.position[0], obj.transform.position[1]);
+		let p2 = overlay.editor.positionToLonLat(
+			obj.transform.position[0] + obj.size,
+			obj.transform.position[1]
+		);
+
+		let proj = overlay.overlayView.getProjection();
+		if (!proj) return;
+		let pos = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
+		let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
+		if (!pos || !pos2) return;
+
+		let screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
+		let inViewport =
+			pos.x + obj.text.length * screenSize * 0.5498070069642946 > 0 &&
+			pos.y + screenSize > 0 &&
+			pos.x < window.innerWidth &&
+			pos.y < window.innerHeight;
+
+		if (inViewport) {
+			this.el.style.color = colorArrayToCss(obj.style.color);
+			this.el.style.fontSize = `${screenSize}px`;
+			this.el.style.width = `${screenSize * obj.text.length * 0.5498070069642946}px`;
+			this.el.style.top = pos.y + 'px';
+			this.el.style.left = pos.x + 'px';
+			let trans = `rotate(${
+				obj.transform.rotation * (180 / Math.PI) +
+				(map.getHeading() ?? 0) * -1 +
+				(overlay.heading ?? 0)
+			}deg)`;
+
+			if (this.el.style.transform != trans) {
+				this.el.style.transform = trans;
+			}
+			this.el.style.display = 'block';
+		} else {
+			this.el.style.display = 'none';
+		}
+	}
+}
+
 export function createRenderObject(overlay: Overlay, obj: Object2D): RenderObject2D {
 	if (obj instanceof Path) {
 		return new RenderPath(overlay);
@@ -262,13 +350,17 @@ export function createRenderObject(overlay: Overlay, obj: Object2D): RenderObjec
 		return new RenderArc(overlay);
 	} else if (obj instanceof Cornerstone) {
 		return new RenderCornerstone(overlay);
+	} else if (obj instanceof Text) {
+		return new RenderText(overlay);
+	} else {
+		console.error('Unsupported object type', obj);
+		return new RenderPath(overlay);
 	}
-
-	throw new Error('Unsupported object type');
 }
 
 export class RendererOverlay extends Overlay {
 	isDown: boolean = false;
+	heading: number = 0;
 	stagedObject: RenderObject2D | null = null;
 
 	renderedObjects: Map<ObjectID, RenderObject2D> = new Map();
@@ -294,6 +386,12 @@ export class RendererOverlay extends Overlay {
 			this.overlay.requestRedraw();
 		};
 
+		this.overlayView.draw = () => {
+			for (let [id, ro] of this.renderedObjects.entries()) {
+				if (ro.mapUpdate) ro.mapUpdate(this, this.broker.project.objectsMap.get(id)!);
+			}
+		};
+
 		this.addUnsub(
 			this.editor.effectiveSelection.subscribe(() => {
 				refreshActive();
@@ -303,6 +401,11 @@ export class RendererOverlay extends Overlay {
 		this.addUnsub(
 			this.editor.hoveringObject.subscribe((val) => {
 				refreshActive();
+			})
+		);
+		this.addUnsub(
+			this.broker.watchCornerstone().heading.subscribe((val) => {
+				this.heading = val;
 			})
 		);
 

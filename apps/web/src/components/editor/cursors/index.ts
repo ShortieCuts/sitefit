@@ -12,6 +12,7 @@ import CursorRotateBR from './rbr.svg?url';
 import CursorComment from './comment.svg?url';
 import CursorPen from './pen.svg?url';
 import CursorCrosshair from './crosshair.svg?url';
+import CursorText from './text.svg?url';
 
 export const Cursors = {
 	default: CursorDefault,
@@ -27,5 +28,6 @@ export const Cursors = {
 	rbr: CursorRotateBR,
 	comment: CursorComment,
 	pen: CursorPen,
-	crosshair: CursorCrosshair
+	crosshair: CursorCrosshair,
+	text: CursorText
 };

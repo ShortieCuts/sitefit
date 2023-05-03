@@ -22,10 +22,12 @@
 
 	const { broker, editor } = getSvelteContext();
 
+	const { mobileToolMode } = editor ?? { mobileToolMode: writable('') };
+
 	const activeDialog = editor?.activeDialog ?? writable('');
 </script>
 
-{#if $isMobile}
+{#if $isMobile && $mobileToolMode == ''}
 	<div
 		class="editor-mobile-bottom-bar-container fixed bottom-4 left-0 right-0 pointer-events-none h-14 flex flex-row items-center justify-center z-40"
 	>

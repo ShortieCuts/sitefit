@@ -44,7 +44,7 @@
 <div class=" flex flex-row border border-gray-200 rounded-md hover:shadow-sm h-6">
 	{#if value}
 		<div
-			class="w-4 h-4 mx-1 my-auto rounded-md"
+			class="w-4 h-4 mx-1 my-auto rounded"
 			style="background-color: rgba({value[0] * 255}, {value[1] * 255}, {value[2] *
 				255}, {value[3]})"
 		/>
@@ -86,6 +86,7 @@
 		{valueToHEX(value)}
 		<div class="border-l border-gray-200 mx-2" />
 		{value[3]}
+		<div class="pr-2" />
 	{:else}
 		<div
 			class="w-4 h-4 m-1 rounded-md border border-gray-200"

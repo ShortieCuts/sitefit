@@ -185,6 +185,25 @@ export class Project implements Serializable {
     return box;
   }
 
+  computeBoundsMulti(objects: ObjectID[]) {
+    let box = {
+      minX: Infinity,
+      minY: Infinity,
+      maxX: -Infinity,
+      maxY: -Infinity,
+    };
+
+    for (let id of objects) {
+      let bounds = this.computeBounds(id);
+      box.maxX = Math.max(box.maxX, bounds.maxX);
+      box.maxY = Math.max(box.maxY, bounds.maxY);
+      box.minX = Math.min(box.minX, bounds.minX);
+      box.minY = Math.min(box.minY, bounds.minY);
+    }
+
+    return box;
+  }
+
   translateObject(id: ObjectID, dx: number, dy: number): ProjectTransaction {
     let objects = this.getObjectsWithDescendants(id);
     console.log("objects", objects);

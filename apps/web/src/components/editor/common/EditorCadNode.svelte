@@ -21,7 +21,12 @@
 	import type { CadTreeNode } from '$lib/types/cad';
 	import ContextMenu from './ContextMenu.svelte';
 	import EditableLabel from './EditableLabel.svelte';
-	import { createCadFolder, updateCadFile, updateCadFolder } from '$lib/client/api';
+	import {
+		createCadFolder,
+		processCadUploads,
+		updateCadFile,
+		updateCadFolder
+	} from '$lib/client/api';
 	import { refreshData } from 'src/store/cads';
 	import Draggable from './Draggable.svelte';
 	import { isMobile } from 'src/store/responsive';
@@ -69,6 +74,8 @@
 	}
 
 	let selected = false;
+
+	let fileDragging = false;
 
 	async function makeSubFolder() {
 		let res = await createCadFolder({
@@ -126,7 +133,44 @@
 	>
 		<button
 			bind:this={nodeElement}
+			on:dragenter={(e) => {
+				if (node.type == 'folder') {
+					e.preventDefault();
+					e.stopPropagation();
+					fileDragging = true;
+				}
+			}}
+			on:dragover={(e) => {
+				if (node.type == 'folder') {
+					e.preventDefault();
+					e.stopPropagation();
+					fileDragging = true;
+				}
+			}}
+			on:drop={async (e) => {
+				if (node.type == 'folder') {
+					e.preventDefault();
+					e.stopPropagation();
+					fileDragging = false;
+
+					if (e.dataTransfer) {
+						const files = e.dataTransfer.files;
+
+						await processCadUploads(editor, files, parseInt(node.id));
+
+						await refreshData();
+					}
+				}
+			}}
+			on:dragleave={(e) => {
+				if (node.type == 'folder') {
+					e.preventDefault();
+					e.stopPropagation();
+					fileDragging = false;
+				}
+			}}
 			class="layer-item cursor-default flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent w-full"
+			class:bg-blue-500={fileDragging}
 		>
 			{#if node.children && node.children.length > 0}
 				<button

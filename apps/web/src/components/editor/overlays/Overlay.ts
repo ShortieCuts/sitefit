@@ -7,10 +7,12 @@ export class Overlay {
 	editor: EditorContext;
 	broker: ProjectBroker;
 	overlay: ThreeJSOverlayView;
+	overlayView: google.maps.OverlayView;
 
 	constructor(
 		map: google.maps.Map,
 		overlay: ThreeJSOverlayView,
+		overlayView: google.maps.OverlayView,
 		editor: EditorContext,
 		broker: ProjectBroker
 	) {
@@ -18,6 +20,7 @@ export class Overlay {
 		this.editor = editor;
 		this.broker = broker;
 		this.overlay = overlay;
+		this.overlayView = overlayView;
 
 		this.unsubs = [];
 	}

@@ -10,6 +10,7 @@
 	import { PanTool } from './tools/pan';
 	import { PenTool } from './tools/pen';
 	import { SelectTool } from './tools/select';
+	import { TextTool } from './tools/text';
 
 	const toolbarItems: {
 		icon: any;
@@ -18,7 +19,7 @@
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
-	}[] = [SelectTool, PanTool, CommentTool, PenTool];
+	}[] = [SelectTool, PanTool, CommentTool, PenTool, TextTool];
 
 	const { editor, broker } = getSvelteContext();
 

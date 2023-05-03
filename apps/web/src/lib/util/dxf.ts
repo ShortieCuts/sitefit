@@ -350,6 +350,7 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 
 				obj = circle;
 			} else if (ent.type == 'TEXT') {
+				console.log('TEXT', ent);
 				let textEnt = ent as ITextEntity;
 				let text = new Text();
 

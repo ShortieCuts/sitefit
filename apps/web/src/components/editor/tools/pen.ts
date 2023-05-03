@@ -1,7 +1,7 @@
 import { faPen } from '@fortawesome/free-solid-svg-icons';
 import type { EditorContext, ProjectBroker } from 'src/store/editor';
 import { get } from 'svelte/store';
-import { Path } from 'core';
+import { Material, Path } from 'core';
 
 let isDown = false;
 export const PenTool = {
@@ -10,8 +10,15 @@ export const PenTool = {
 	shortcut: 'v',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		let obj = new Path();
+		obj.style = new Material();
+		obj.style.color = [0, 0, 0, 1];
+		obj.style.filled = false;
+		obj.style.type = 'color';
 		obj.name = 'Line';
+		obj.closed = false;
+		obj.parent = null;
 		obj.segments.push(editor.getDesiredPosition());
+
 		broker.stagingObject.set(obj);
 		isDown = true;
 	},

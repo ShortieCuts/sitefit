@@ -2,6 +2,7 @@ import type { CadTreeNode } from '$lib/types/cad';
 import type { MetadataProject } from '$lib/types/project';
 import type { PublicUserInfo } from '$lib/types/user';
 import type { User } from 'auth';
+import type { EditorContext } from 'src/store/editor';
 
 export async function getAuthHeader(): Promise<string> {
 	let { firebaseAuth } = await import('src/store/firebase');
@@ -131,6 +132,7 @@ export const createCad = createApiEndpointHelper<
 		long: number;
 		lat: number;
 		data: string;
+		parent?: number | null;
 	},
 	{
 		cadId: string;
@@ -180,27 +182,45 @@ async function convertDwgToDxf(dwg: any): Promise<any> {
 	return await res.then((res) => res.text());
 }
 
-export async function processCadUploads(files: FileList): Promise<string[]> {
+export async function processCadUploads(
+	editor: EditorContext,
+	files: FileList,
+	targetFolder: number | null = null
+): Promise<string[]> {
 	let promises: Promise<string>[] = [];
+
 	for (let f of files) {
 		if (f.name.endsWith('.dwg')) {
 			promises.push(
 				new Promise((resolve, reject) => {
+					let uploadToast = editor.info("Uploading '" + f.name + "'...", 50000);
 					let reader = new FileReader();
 					reader.onload = async (e) => {
 						let data = e.target?.result;
 						if (data) {
-							let dxf = await convertDwgToDxf(f);
-							let cad = await createCad({
-								data: dxf,
-								description: '',
-								filename: f.name,
-								lat: 0,
-								long: 0,
-								name: f.name
-							});
+							uploadToast();
+							let convertToast = editor.info("Converting '" + f.name + "'...", 50000);
+							try {
+								let dxf = await convertDwgToDxf(f);
+								convertToast();
+								let createToast = editor.info("Finalizing '" + f.name + "'...", 50000);
+								let cad = await createCad({
+									data: dxf,
+									description: '',
+									filename: f.name,
+									lat: 0,
+									long: 0,
+									name: f.name,
+									parent: targetFolder
+								});
 
-							resolve(cad.data.cadId);
+								createToast();
+								editor.info("Finished '" + f.name + "'");
+								resolve(cad.data.cadId);
+							} catch (e) {
+								convertToast();
+								editor.alert("Failed to convert '" + f.name + "'");
+							}
 						} else {
 							reject();
 						}

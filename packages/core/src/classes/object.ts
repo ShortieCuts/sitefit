@@ -117,6 +117,18 @@ export class Object2D implements Serializable {
       if (box.ymax > maxY) maxY = box.ymax;
     }
 
+    if (
+      minX === Infinity ||
+      minY === Infinity ||
+      maxX === -Infinity ||
+      maxY === -Infinity
+    ) {
+      minX = 0;
+      minY = 0;
+      maxX = 0;
+      maxY = 0;
+    }
+
     return new Rectangle<Object2D>({
       data: this,
       x: minX,
@@ -293,9 +305,15 @@ export class Text extends Object2D implements Serializable {
 
   computeShape() {
     const m = this.getMatrix();
-    let min = point(0, 0).transform(m);
+    let width = this.text.length * 0.5498070069642946 * this.size;
+    let height = this.size;
+    let topLeft = point(0, 0).transform(m);
+    let topRight = point(width, 0).transform(m);
+    let bottomLeft = point(0, height).transform(m);
+    let bottomRight = point(width, height).transform(m);
+
     this.flatShape = [
-      new Box(min.x, min.y, min.x + this.text.length, min.y + 1),
+      new Flatten.Polygon([topLeft, topRight, bottomRight, bottomLeft]),
     ];
   }
 
@@ -502,7 +520,7 @@ export const ObjectProperties: {
   [ObjectType.Text]: [
     {
       name: "text",
-      type: "text",
+      type: "string",
     },
     {
       name: "size",

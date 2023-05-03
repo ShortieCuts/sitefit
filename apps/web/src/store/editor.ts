@@ -1,5 +1,6 @@
 import { get, writable, readable, type Readable, type Writable } from 'svelte/store';
 import {
+	Arc,
 	Cornerstone,
 	isBatch,
 	isCommitTransaction,
@@ -8,6 +9,8 @@ import {
 	isSync,
 	isWriteGlobalProperty,
 	Object2D,
+	ObjectType,
+	Path,
 	Project,
 	ProjectTransaction,
 	SocketMessage,
@@ -25,6 +28,8 @@ import { translateDXF } from '$lib/util/dxf';
 import { getCadsStore } from './cads';
 import type { CadTreeNode } from '$lib/types/cad';
 import * as THREE from 'three';
+import Flatten from '@flatten-js/core';
+import LZString from 'lz-string';
 
 const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
@@ -156,7 +161,7 @@ export class ProjectBroker {
 					// Ping every 15 seconds
 					if (get(this.mySessionUid)) {
 						console.log('Pinging server...');
-						this.socket?.send(JSON.stringify({ type: 'ping' }));
+						this.socket?.send(LZString.compressToUint8Array(JSON.stringify({ type: 'ping' })));
 					}
 				}, 15000);
 			})();
@@ -444,7 +449,7 @@ export class ProjectBroker {
 
 	sendMessage(message: SocketMessage) {
 		if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-			this.socket.send(JSON.stringify(message));
+			this.socket.send(LZString.compressToUint8Array(JSON.stringify(message)));
 		}
 	}
 
@@ -456,6 +461,7 @@ export class ProjectBroker {
 
 		const wss = document.location.protocol === 'http:' ? 'ws://' : 'wss://';
 		let ws = new WebSocket(wss + WEBSOCKET_URL + '/' + this.projectId + '/websocket');
+		ws.binaryType = 'arraybuffer';
 		this.socket = ws;
 
 		ws.addEventListener('open', (event) => {
@@ -466,7 +472,9 @@ export class ProjectBroker {
 		});
 
 		ws.addEventListener('message', (event) => {
-			let data = JSON.parse(event.data);
+			let raw = LZString.decompressFromUint8Array(new Uint8Array(event.data as ArrayBuffer));
+
+			let data = JSON.parse(raw);
 			console.log(data);
 			this.handleMessage(data);
 		});
@@ -637,7 +645,31 @@ export class ProjectBroker {
 		// Diff and push updates
 	}
 }
+function mirrorArc(startAngle: number, endAngle: number, mirrorX: boolean, mirrorY: boolean) {
+	let start = [Math.cos(startAngle), Math.sin(startAngle)];
+	let end = [Math.cos(endAngle), Math.sin(endAngle)];
 
+	if (mirrorX) {
+		start[0] *= -1;
+		end[0] *= -1;
+	}
+
+	if (mirrorY) {
+		start[1] *= -1;
+		end[1] *= -1;
+	}
+
+	let a = {
+		startAngle: Math.atan2(start[1], start[0]),
+		endAngle: Math.atan2(end[1], end[0])
+	};
+
+	if (a.startAngle > a.endAngle) {
+		a.endAngle += Math.PI * 2;
+	}
+
+	return a;
+}
 export class EditorContext {
 	activeTool: Writable<string> = writable('select');
 	activeDialog: Writable<string> = writable('');
@@ -668,8 +700,20 @@ export class EditorContext {
 	/** Includes the children of selected groups */
 	effectiveSelection: Writable<ObjectID[]> = writable([]);
 	overlay: Writable<ThreeJSOverlayView | null> = writable(null);
+	map: Writable<google.maps.Map | null> = writable(null);
+
+	broker: ProjectBroker;
+
+	toasts: Writable<
+		{
+			id: string;
+			message: string;
+			type: 'info' | 'error' | 'warn';
+		}[]
+	> = writable([]);
 
 	desiredPosition: [number, number] = [0, 0];
+	mobileToolMode: Writable<'transform' | ''> = writable('');
 
 	currentToolHandlers: {
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
@@ -679,6 +723,45 @@ export class EditorContext {
 
 	currentMousePosition: Writable<[number, number]> = writable([0, 0]);
 	currentMousePositionRelative: Writable<[number, number]> = writable([0, 0]);
+
+	constructor(broker: ProjectBroker) {
+		this.broker = broker;
+	}
+
+	toast(message: string, type: 'info' | 'error' | 'warn', timeout = 5000) {
+		let id = nanoid();
+		this.toasts.update((t) => {
+			t.push({
+				id,
+				message,
+				type
+			});
+
+			return t;
+		});
+
+		setTimeout(() => {
+			this.toasts.update((t) => {
+				return t.filter((t) => t.id !== id) as any;
+			});
+		}, timeout);
+
+		return () => {
+			this.toasts.update((t) => {
+				return t.filter((t) => t.id !== id) as any;
+			});
+		};
+	}
+
+	alert(message: string, timeout = 5000) {
+		return this.toast(message, 'error', timeout);
+	}
+	info(message: string, timeout = 5000) {
+		return this.toast(message, 'info', timeout);
+	}
+	warn(message: string, timeout = 5000) {
+		return this.toast(message, 'warn', timeout);
+	}
 
 	activateDialog(key: string) {
 		if (get(this.activeDialog) === key) {
@@ -699,6 +782,172 @@ export class EditorContext {
 			return [0, 0];
 		}
 		return [vec3.x, vec3.z];
+	}
+
+	positionToLonLat(x: number, y: number): [number, number] {
+		let overlay = get(this.overlay);
+		if (!overlay) {
+			return [0, 0];
+		}
+
+		let { geo, heading } = this.broker.watchCornerstone();
+		let anchor = get(geo);
+		let angle = get(heading);
+		let mat = Flatten.matrix(1, 0, 0, 1, 0, 0);
+		mat = mat.rotate(-angle * (Math.PI / 180));
+		let v2 = Flatten.point(x, -y).transform(mat);
+		x = v2.x;
+		y = v2.y;
+		let radius = 6371010.0;
+		let newLatitude = anchor[1] + (y / radius) * (180 / Math.PI);
+		let newLongitude =
+			anchor[0] + ((x / radius) * (180 / Math.PI)) / Math.cos((anchor[1] * Math.PI) / 180);
+
+		let lonLat: [number, number] = [newLongitude, newLatitude];
+
+		let v3New = overlay.latLngAltitudeToVector3({ lat: lonLat[1], lng: lonLat[0], altitude: 0 });
+
+		return lonLat;
+	}
+
+	getBoundsCenter(bounds: { minX: number; minY: number; maxX: number; maxY: number }) {
+		return [(bounds.minX + bounds.maxX) / 2, (bounds.minY + bounds.maxY) / 2];
+	}
+
+	flyToSelection() {
+		let bounds = this.broker.project.computeBoundsMulti(get(this.effectiveSelection));
+		let center = this.getBoundsCenter(bounds);
+
+		let [lon, lat] = this.positionToLonLat(center[0], center[1]);
+		let map = get(this.map);
+		if (!map) {
+			return;
+		}
+
+		map.setCenter({ lat: lat, lng: lon });
+	}
+
+	/**
+	 * Rotates the entire selection around its origin and commits the changes
+	 * @param angle Angle in radians
+	 */
+	rotateSelection(angle: number) {
+		let selection = get(this.effectiveSelection);
+		let bounds = this.broker.project.computeBoundsMulti(selection);
+		let center = this.getBoundsCenter(bounds);
+
+		let transaction = this.broker.project.createTransaction();
+
+		for (let id of selection) {
+			let obj = this.broker.project.objectsMap.get(id);
+			if (obj) {
+				// Rotate about center point
+				let objectAnchorPoint = Flatten.point(obj.transform.position[0], obj.transform.position[1]);
+				let objPoint = Flatten.point(
+					objectAnchorPoint.x - center[0],
+					objectAnchorPoint.y - center[1]
+				);
+				let rotationMatrix = Flatten.matrix(1, 0, 0, 1, 0, 0).rotate(angle);
+				let transform = structuredClone(obj.transform);
+				transform.rotation = obj.transform.rotation + angle;
+
+				let rotatedPoint = objPoint.transform(rotationMatrix);
+				transform.position[0] = rotatedPoint.x + center[0];
+				transform.position[1] = rotatedPoint.y + center[1];
+				transaction.update(id, 'transform', transform);
+			}
+		}
+		this.broker.commitTransaction(transaction);
+	}
+
+	flipSelection(x: boolean, y: boolean) {
+		let selection = get(this.effectiveSelection);
+		let bounds = this.broker.project.computeBoundsMulti(selection);
+		let center = this.getBoundsCenter(bounds);
+
+		let transaction = this.broker.project.createTransaction();
+
+		for (let id of selection) {
+			let obj = this.broker.project.objectsMap.get(id);
+			if (obj) {
+				let transform = structuredClone(obj.transform);
+
+				if (transform.rotation != 0) {
+					// Apply transform
+					let rotation = transform.rotation;
+					let translation = Flatten.point(transform.position[0], transform.position[1]);
+
+					let mat = Flatten.matrix(1, 0, 0, 1, 0, 0)
+						.translate(translation.x, translation.y)
+						.rotate(rotation);
+					if (obj.type == ObjectType.Path) {
+						let path = obj as Path;
+						for (let seg of path.segments) {
+							let p = Flatten.point(seg[0], seg[1]);
+							p = p.transform(mat);
+							seg[0] = p.x;
+							seg[1] = p.y;
+						}
+						transform.position[0] = 0;
+						transform.position[1] = 0;
+					} else if (obj.type == ObjectType.Arc) {
+						let arc = obj as Arc;
+
+						// Apply start/end angles
+						let startAngle = arc.startAngle;
+						let endAngle = arc.endAngle;
+
+						arc.startAngle = startAngle - rotation;
+						arc.endAngle = endAngle - rotation;
+					}
+
+					transform.rotation = 0;
+				}
+
+				// Flip about center point
+				if (obj.type == ObjectType.Path) {
+					let path = obj as Path;
+					let newSegments = [];
+					let minX = Infinity;
+					let minY = Infinity;
+					for (let segment of path.segments) {
+						let segmentRealX = segment[0] + transform.position[0];
+						let segmentRealY = segment[1] + transform.position[1];
+						newSegments.push([
+							x ? center[0] - (segmentRealX - center[0]) : segmentRealX,
+							y ? center[1] - (segmentRealY - center[1]) : segmentRealY
+						]);
+						minX = Math.min(minX, newSegments[newSegments.length - 1][0]);
+						minY = Math.min(minY, newSegments[newSegments.length - 1][1]);
+					}
+					transform.position[0] = minX;
+					transform.position[1] = minY;
+					for (let segment of newSegments) {
+						segment[0] -= minX;
+						segment[1] -= minY;
+					}
+					transaction.update(id, 'segments', newSegments);
+					transaction.update(id, 'transform', transform);
+				} else {
+					if (x) {
+						transform.position[0] = center[0] - (transform.position[0] - center[0]);
+						transform.size[0] = transform.size[0] * -1;
+					}
+					if (y) {
+						transform.position[1] = center[1] - (transform.position[1] - center[1]);
+						transform.size[1] = transform.size[1] * -1;
+					}
+
+					transaction.update(id, 'transform', transform);
+				}
+			}
+		}
+		this.broker.commitTransaction(transaction);
+	}
+
+	deselectAll() {
+		this.selection.set([]);
+		this.effectiveSelection.set([]);
 	}
 
 	getDesiredPosition(): [number, number] {
@@ -748,8 +997,8 @@ export function createProjectBroker(id: string) {
 	return new ProjectBroker(id);
 }
 
-export function createEditorContext() {
-	return new EditorContext();
+export function createEditorContext(broker: ProjectBroker) {
+	return new EditorContext(broker);
 }
 
 export function setSvelteContext(broker: ProjectBroker, editor: EditorContext) {

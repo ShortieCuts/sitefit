@@ -8,8 +8,11 @@
 		faComment,
 		faDirections,
 		faEarth,
+		faExclamationCircle,
+		faExclamationTriangle,
 		faFileImport,
 		faHome,
+		faInfoCircle,
 		faLocationArrow,
 		faPlus,
 		faSearch,
@@ -40,12 +43,13 @@
 	import { browser } from '$app/environment';
 	import MobileBar from '../nav/MobileBar.svelte';
 	import EditorMobileControls from './EditorMobileControls.svelte';
+	import { flip } from 'svelte/animate';
 
 	export let auth: AuthState;
 	export let projectId: string;
 
 	let broker = createProjectBroker(projectId);
-	let editorContext = createEditorContext();
+	let editorContext = createEditorContext(broker);
 
 	setSvelteContext(broker, editorContext);
 
@@ -54,7 +58,7 @@
 
 	const { geo, heading } = broker.watchCornerstone();
 
-	const { activeDialog, effectiveSelection } = editorContext;
+	const { activeDialog, effectiveSelection, toasts } = editorContext;
 
 	let needsCornerstone = false;
 
@@ -96,6 +100,14 @@
 
 		if (e.code == 'Delete') {
 			editorContext.deleteSelection(broker);
+		}
+
+		console.log(e.code, e.ctrlKey, e.shiftKey);
+
+		if (e.code == 'KeyS' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+			e.stopPropagation();
+			editorContext.info('Changes are saved automatically.');
 		}
 	}
 
@@ -287,7 +299,7 @@
 					<EditorNavbar />
 				</div>
 				<MobileBar />
-				<EditorMobileControls></EditorMobileControls>
+				<EditorMobileControls />
 			{/if}
 
 			<div
@@ -296,13 +308,11 @@
 					e.preventDefault();
 					e.stopPropagation();
 					fileDragging = true;
-					console.log('Enter');
 				}}
 				on:dragover={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
 					fileDragging = true;
-					console.log('over');
 				}}
 				on:drop={async (e) => {
 					e.preventDefault();
@@ -314,7 +324,7 @@
 
 						fileEl.files = files;
 
-						await processCadUploads(fileEl.files);
+						await processCadUploads(editorContext, fileEl.files);
 
 						await refreshData();
 					}
@@ -323,7 +333,6 @@
 					e.preventDefault();
 					e.stopPropagation();
 					fileDragging = false;
-					console.log('leave');
 				}}
 			>
 				{#key `${$geo[0]},${$geo[1]},${$heading}`}
@@ -350,6 +359,50 @@
 		<EditorProperties />
 	</div>
 {/if}
+
+<div
+	class="toasts w-[300px] fixed bottom-10 z-20 h-auto rounded-lg space-y-2 px-2 transition-all"
+	style="right: {!$isMobile && $effectiveSelection.length > 0 ? '340px' : '2.5rem'}"
+>
+	{#each $toasts as toast (toast.id)}
+		<div
+			animate:flip={{ duration: 200 }}
+			in:fly={{
+				y: 100
+			}}
+			out:fly={{
+				y: -100
+			}}
+			class="rounded-md bg-white border border-gray-200 flex flex-row shadow-md cursor-pointer"
+			on:click={() => ($toasts = $toasts.filter((t) => t.id !== toast.id))}
+			on:keydown={(e) => {
+				if (e.key === 'Enter') {
+					$toasts = $toasts.filter((t) => t.id !== toast.id);
+				}
+			}}
+		>
+			<div
+				class="flex-shrink-0 w-14 bg-gray-200 flex items-center justify-center text-lg opacity-50"
+				class:text-black={toast.type === 'info'}
+				class:text-yellow-500={toast.type === 'warn'}
+				class:text-red-500={toast.type === 'error'}
+			>
+				<Fa
+					icon={toast.type === 'error'
+						? faExclamationTriangle
+						: toast.type === 'info'
+						? faInfoCircle
+						: toast.type === 'warn'
+						? faExclamationCircle
+						: faInfoCircle}
+				/>
+			</div>
+			<div class="p-2" style="line-height: 1em">
+				{toast.message}
+			</div>
+		</div>
+	{/each}
+</div>
 
 {#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center'}
 	<div
@@ -382,6 +435,11 @@
 {/if}
 
 <svelte:window
+	on:keydown={(e) => {
+		if (e.code == 'KeyS' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+		}
+	}}
 	on:keyup={(e) => {
 		if (e.key === 'Escape') {
 			if ($activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center') {

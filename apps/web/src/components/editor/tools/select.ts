@@ -122,6 +122,10 @@ export const SelectTool = {
 	shortcut: 's',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		if (get(isMobile)) {
+			let toolMode = get(editor.mobileToolMode);
+			if (toolMode == 'transform') {
+				return;
+			}
 			// Search through top-level objects to select
 			let target = get(editor.currentMousePositionRelative);
 			let minSize = Infinity;
@@ -701,6 +705,7 @@ export const SelectTool = {
 			}
 			// Hover object highlight
 			let hover = getObjectAtCursor(editor, broker, cursor);
+
 			if (hover) {
 				if (get(editor.hoveringObject) !== hover) editor.hoveringObject.set(hover);
 			} else {
@@ -825,7 +830,7 @@ function getObjectAtCursor(
 		for (let fl of obj.flatShape) {
 			let [dist, seg] = distanceTo(fl, point(cursor[0], cursor[1]));
 			if (dist < get(editor.screenScale) / 2) {
-				if (obj.order ?? 0 >= topZ) {
+				if ((obj.order ?? 0) >= topZ) {
 					topZ = obj.order ?? 0;
 					topObject = obj.id;
 				}
@@ -833,7 +838,7 @@ function getObjectAtCursor(
 
 			if (fl instanceof Flatten.Polygon) {
 				if (fl.contains(point(cursor[0], cursor[1]))) {
-					if (obj.order ?? 0 >= topZ) {
+					if ((obj.order ?? 0) >= topZ) {
 						topZ = obj.order ?? 0;
 						topObject = obj.id;
 					}

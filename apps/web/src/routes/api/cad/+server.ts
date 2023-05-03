@@ -5,6 +5,7 @@ const CreateCadSchema = z.object({
 	name: z.string().min(1).max(100),
 	description: z.string().max(1000).optional(),
 	filename: z.string().min(1).max(100),
+	parent: z.number().nullable(),
 
 	long: z.number().min(-180).max(180),
 	lat: z.number().min(-90).max(90),
@@ -31,6 +32,7 @@ export const POST = (async ({ request }) => {
 				long: payload.long,
 				size: 0,
 				filename: payload.filename,
+				parentId: payload.parent ? BigInt(payload.parent) : null,
 
 				updatedAt: new Date(),
 				createdAt: new Date(),
