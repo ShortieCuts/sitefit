@@ -102,6 +102,7 @@ export async function checkRequestAuth(
     try {
       const protectedHeader = await jose.decodeProtectedHeader(auth);
       console.log("Cookie: ", protectedHeader);
+      console.log("After cookie");
 
       if (protectedHeader && protectedHeader.kid && protectedHeader.alg) {
         let publicKey = pkey[protectedHeader.kid];
@@ -109,12 +110,13 @@ export async function checkRequestAuth(
           auth,
           await jose.importX509(publicKey, protectedHeader.alg)
         );
+        console.log("Verify", payload);
         let decoded = new TextDecoder().decode(payload);
         try {
           let parsed = JSON.parse(decoded);
 
           if (parsed.exp > Date.now() / 1000) {
-            console.log(parsed.user_id);
+            console.log("User id", parsed.user_id);
             let user = await getUserFromFirebaseId(parsed.user_id);
             console.log("User b", user);
             if (user) {
@@ -247,6 +249,8 @@ export async function getUserFromFirebaseId(
     .selectAll()
     .where("User.firebaseId", "=", id)
     .executeTakeFirst();
+
+  console.log("Getting from DB", data);
 
   if (data) {
     return data;

@@ -38,6 +38,12 @@ export enum ObjectType {
   Cornerstone = "cornerstone",
 }
 
+export type Object2DGuides = {
+  segments: Flatten.Segment[];
+  points: Flatten.Point[];
+  arcs: Flatten.Arc[];
+};
+
 export class Object2D implements Serializable {
   id: ObjectID;
   type: ObjectType;
@@ -56,6 +62,10 @@ export class Object2D implements Serializable {
 
   computeShape(): void {
     return null;
+  }
+
+  getGuides(): Object2DGuides {
+    return { segments: [], points: [], arcs: [] };
   }
 
   getBounds(): {
@@ -233,6 +243,23 @@ export class Path extends Object2D implements Serializable {
     this.flatShape = segs;
   }
 
+  getGuides(): Object2DGuides {
+    let points = [];
+    let segs = [];
+    for (let seg of this.flatShape) {
+      if (seg instanceof Flatten.Segment) {
+        segs.push(seg);
+        points.push(seg.start);
+        points.push(seg.end);
+      }
+    }
+    return {
+      segments: segs,
+      points,
+      arcs: [],
+    };
+  }
+
   serialize() {
     return {
       ...super.serialize(),
@@ -374,6 +401,23 @@ export class Arc extends Object2D implements Serializable {
     ];
   }
 
+  getGuides(): Object2DGuides {
+    let points = [];
+    let arcs = [];
+    for (let arc of this.flatShape) {
+      if (arc instanceof Flatten.Arc) {
+        arcs.push(arc);
+        points.push(arc.start);
+        points.push(arc.end);
+      }
+    }
+    return {
+      segments: [],
+      points: [],
+      arcs,
+    };
+  }
+
   serialize() {
     return {
       ...super.serialize(),
@@ -398,6 +442,25 @@ export class Circle extends Object2D implements Serializable {
   computeShape() {
     const m = this.getMatrix();
     this.flatShape = [new FlatCircle(point(0, 0).transform(m), this.radius)];
+  }
+
+  getGuides(): Object2DGuides {
+    let points = [];
+    let arcs = [];
+    for (let arc of this.flatShape) {
+      if (arc instanceof Flatten.Circle) {
+        arcs.push(Flatten.arc(arc.pc, arc.r, 0, 2 * Math.PI, true));
+        points.push(arc.box.center.clone().translate(arc.r, 0));
+        points.push(arc.box.center.clone().translate(-arc.r, 0));
+        points.push(arc.box.center.clone().translate(0, arc.r));
+        points.push(arc.box.center.clone().translate(0, -arc.r));
+      }
+    }
+    return {
+      segments: [],
+      points: [],
+      arcs,
+    };
   }
 
   serialize() {

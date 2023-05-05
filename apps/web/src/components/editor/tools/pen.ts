@@ -4,6 +4,7 @@ import { get } from 'svelte/store';
 import { Material, Path } from 'core';
 
 let isDown = false;
+let downPos: [number, number] = [0, 0];
 export const PenTool = {
 	icon: faPen,
 	key: 'pen',
@@ -18,6 +19,7 @@ export const PenTool = {
 		obj.closed = false;
 		obj.parent = undefined;
 		obj.segments.push(editor.getDesiredPosition());
+		downPos = [...editor.getDesiredPosition()];
 
 		broker.stagingObject.set(obj);
 		isDown = true;
@@ -33,8 +35,20 @@ export const PenTool = {
 			broker.stagingObject.update((obj) => {
 				if (obj) {
 					let path = obj as Path;
-					if (path.segments.length <= 1) path.segments.push(editor.getDesiredPosition());
-					path.segments[path.segments.length - 1] = editor.getDesiredPosition();
+					let targetPos = editor.getDesiredPosition();
+					let deltaX = targetPos[0] - downPos[0];
+					let deltaY = targetPos[1] - downPos[1];
+					if (ev.shiftKey) {
+						let angle = Math.atan2(deltaY, deltaX);
+						let length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+						let snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+						targetPos = [
+							downPos[0] + Math.cos(snapAngle) * length,
+							downPos[1] + Math.sin(snapAngle) * length
+						];
+					}
+					if (path.segments.length <= 1) path.segments.push(targetPos);
+					path.segments[path.segments.length - 1] = targetPos;
 					return obj;
 				} else {
 					return null;

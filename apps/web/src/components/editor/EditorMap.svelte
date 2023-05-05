@@ -13,6 +13,8 @@
 	import { Cursors } from './cursors';
 	import * as THREE from 'three';
 	import Flatten from '@flatten-js/core';
+	import { GuidesOverlay } from './overlays/Guides';
+	import { calculateGuides } from './tools/select';
 
 	const { editor, broker } = getSvelteContext();
 	const { geo, heading } = broker.watchCornerstone();
@@ -28,7 +30,7 @@
 	let isScrolling = writable(false);
 
 	let overlays: Overlay[] = [];
-	const overlayTypes: (typeof Overlay)[] = [SelectionOverlay, RendererOverlay];
+	const overlayTypes: (typeof Overlay)[] = [SelectionOverlay, RendererOverlay, GuidesOverlay];
 	let referenceOverlay: ThreeJSOverlayView | null = null;
 	let overlayView: google.maps.OverlayView | null = null;
 
@@ -207,7 +209,35 @@
 							lng: latLng?.lng() ?? 0,
 							altitude: 0
 						});
-						editor.desiredPosition = broker.normalizeVector([vectorPos.x, vectorPos.z]);
+						let normalized = broker.normalizeVector([vectorPos.x, vectorPos.z]);
+						let deltaX = 0;
+						let deltaY = 0;
+						if (get(editor.activeTool) == 'pen') {
+							if (!(ev.domEvent as MouseEvent).ctrlKey) {
+								let guides = calculateGuides(
+									editor,
+									broker,
+									Flatten.point(normalized[0], normalized[1])
+								);
+								if (guides.lines.length > 0 || guides.points.length > 0) {
+									editor.guides.set({
+										lines: guides.lines.map((l) => [
+											[l.start.x, l.start.y],
+											[l.end.x, l.end.y]
+										]),
+										points: guides.points.map((p) => [p.x, p.y])
+									});
+									deltaX = guides.translation[0];
+									deltaY = guides.translation[1];
+								} else {
+									editor.guides.set({
+										lines: [],
+										points: []
+									});
+								}
+							}
+						}
+						editor.desiredPosition = [normalized[0] + deltaX, normalized[1] + deltaY];
 					}
 
 					let e = ev.domEvent as MouseEvent;

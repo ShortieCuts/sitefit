@@ -238,6 +238,11 @@ export class SelectionOverlay extends Overlay {
 				this.refresh();
 			})
 		);
+		this.addUnsub(
+			this.editor.translating.subscribe(() => {
+				this.refresh();
+			})
+		);
 
 		this.addUnsub(
 			this.broker.needsRender.subscribe((newVal) => {
@@ -320,6 +325,10 @@ export class SelectionOverlay extends Overlay {
 				this.selectionBox?.setVisible(false);
 			}
 		} else {
+			this.selectionBox?.setVisible(false);
+		}
+
+		if (get(this.editor.translating)) {
 			this.selectionBox?.setVisible(false);
 		}
 

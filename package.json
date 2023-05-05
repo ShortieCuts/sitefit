@@ -7,7 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npx dotenv -- turbo run build",
+    "build": "npx dotenv -- turbo run build --force",
+    "deploy:web": "cd apps/web && npm run deploy",
     "dev": "npx dotenv -- turbo run dev --scope web",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

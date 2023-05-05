@@ -698,6 +698,14 @@ export class EditorContext {
 	canRotate: Writable<boolean> = writable(false);
 	canTranslate: Writable<boolean> = writable(false);
 
+	guides: Writable<{
+		lines: [[number, number], [number, number]][];
+		points: [number, number][];
+	}> = writable({
+		lines: [],
+		points: []
+	});
+
 	transformOrigin: Writable<[number, number]> = writable([0, 0]);
 
 	selectToolCursor: Writable<string> = writable('default');

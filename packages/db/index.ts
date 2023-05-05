@@ -11,6 +11,7 @@ import {
 let cachedDb: Kysely<DB> | null = null;
 
 export function db() {
+  console.log("Getting db:", cachedDb, GET_DATABASE_HOST());
   if (cachedDb) return cachedDb;
 
   cachedDb = new Kysely<DB>({

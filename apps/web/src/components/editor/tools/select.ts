@@ -17,6 +17,7 @@ import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { computeBounds } from '../overlays/Selection';
 import { Cursors } from '../cursors';
 import { isMobile } from 'src/store/responsive';
+import { Quadtree } from 'core/lib/quadtree/Quadtree';
 
 export const IGNORED_OBJECTS = ['cornerstone', 'group'];
 let needsRootReset = false;
@@ -116,6 +117,196 @@ function transformPoint(
 	const ty = cy + dy;
 
 	return [tx, ty];
+}
+
+export function calculateGuides(
+	editor: EditorContext,
+	broker: ProjectBroker,
+	candidateOverride: Flatten.Point | null = null
+): {
+	points: Flatten.Point[];
+	lines: Flatten.Segment[];
+	translation: [number, number];
+} {
+	let map = get(editor.map);
+	if (!map) return { points: [], lines: [], translation: [0, 0] };
+	let snappingDistance = map.getZoom() ?? 1;
+	snappingDistance = 21 - snappingDistance;
+
+	snappingDistance = Math.max(1, snappingDistance);
+	snappingDistance ** 2;
+	snappingDistance /= 2;
+	snappingDistance = get(editor.screenScale);
+
+	// Points on the subject object(s) (current effective selection)
+	let candidatePoints: Flatten.Point[] = [];
+
+	// Points on the target object(s) (all objects)
+	let targetPoints: Flatten.Point[] = [];
+
+	let targetLines: Flatten.Segment[] = [];
+	let targetArc: Flatten.Arc[] = [];
+
+	let selection = get(editor.effectiveSelection);
+	let selectionSet = new Set(selection);
+	for (let obj of broker.project.objects) {
+		if (IGNORED_OBJECTS.includes(obj.id)) continue;
+		let guides = obj.getGuides();
+		if (selectionSet.has(obj.id) && !candidateOverride) {
+			candidatePoints.push(...guides.points);
+		} else {
+			targetPoints.push(...guides.points);
+			targetLines.push(...guides.segments);
+			targetArc.push(...guides.arcs);
+		}
+	}
+
+	if (candidatePoints.length > 15) {
+		let bounds = broker.project.computeBoundsMulti(selection);
+		let center = [(bounds.maxX + bounds.minX) / 2, (bounds.maxY + bounds.minY) / 2];
+		candidatePoints = [
+			Flatten.point(center[0], center[1]),
+			Flatten.point(bounds.minX, bounds.minY),
+			Flatten.point(bounds.maxX, bounds.minY),
+			Flatten.point(bounds.minX, bounds.maxY),
+			Flatten.point(bounds.maxX, bounds.maxY)
+		];
+	}
+
+	if (candidateOverride) {
+		candidatePoints = [candidateOverride];
+	}
+
+	let outPoints: Flatten.Point[] = [];
+	let outLines: Flatten.Segment[] = [];
+
+	let currentTranslation: [number, number] = [0, 0];
+	let translations = new Map<
+		string,
+		{
+			translation: [number, number];
+			points: Flatten.Point[];
+			lines: Flatten.Segment[];
+			distance: number;
+		}
+	>();
+
+	function addPoint(target: Flatten.Point, candidate: Flatten.Point) {
+		let localTranslation = [target.x - candidate.x, target.y - candidate.y];
+		let key = `${localTranslation[0]}:${localTranslation[1]}`;
+		let data = translations.get(key);
+		if (!data) {
+			data = {
+				translation: [localTranslation[0], localTranslation[1]],
+				points: [],
+				lines: [],
+				distance: 0
+			};
+			translations.set(key, data);
+		}
+
+		data.points.push(target);
+		data.distance += target.distanceTo(candidate)[0];
+	}
+
+	function addLine(a: Flatten.Point, b: Flatten.Point, candidate: Flatten.Point) {
+		let localTranslation = [b.x - candidate.x, b.y - candidate.y];
+		let key = `${localTranslation[0]}:${localTranslation[1]}`;
+		let data = translations.get(key);
+		if (!data) {
+			data = {
+				translation: [localTranslation[0], localTranslation[1]],
+				points: [],
+				lines: [],
+				distance: 0
+			};
+			translations.set(key, data);
+		}
+
+		data.lines.push(Flatten.segment(a, b));
+
+		data.points.push(a);
+		data.points.push(b);
+
+		data.distance += b.distanceTo(candidate)[0];
+	}
+
+	for (let point of candidatePoints) {
+		for (let target of targetPoints) {
+			let [dist, seg] = point.distanceTo(target);
+			if (dist < snappingDistance) {
+				addPoint(target, point);
+			}
+
+			if (Math.abs(target.x - point.x) < snappingDistance) {
+				addLine(target, Flatten.point(target.x, point.y), point);
+			}
+
+			if (Math.abs(target.y - point.y) < snappingDistance) {
+				addLine(target, Flatten.point(point.x, target.y), point);
+			}
+		}
+
+		for (let target of targetLines) {
+			let [dist, seg] = point.distanceTo(target);
+			if (dist < snappingDistance) {
+				addPoint(seg.end, point);
+				addLine(target.start, seg.end, point);
+				addLine(target.end, seg.end, point);
+			}
+		}
+	}
+
+	let bestScore = Infinity;
+	let translation: {
+		translation: [number, number];
+		points: Flatten.Point[];
+		lines: Flatten.Segment[];
+	} | null = null;
+
+	for (let [key, data] of translations) {
+		if (data.lines.length == 0) {
+			let total = data.points.length;
+			if (data.distance < bestScore) {
+				bestScore = data.distance;
+				translation = data;
+			}
+		}
+	}
+
+	if (bestScore < Infinity && translation) {
+		return {
+			points: translation.points,
+			lines: translation.lines,
+			translation: translation.translation
+		};
+	}
+
+	bestScore = Infinity;
+	translation = null;
+	for (let [key, data] of translations) {
+		if (data.lines.length > 0) {
+			let total = data.points.length;
+			if (data.distance < bestScore) {
+				bestScore = total;
+				translation = data;
+			}
+		}
+	}
+
+	if (bestScore < Infinity && translation) {
+		return {
+			points: translation.points,
+			lines: translation.lines,
+			translation: translation.translation
+		};
+	}
+
+	return {
+		points: [],
+		lines: [],
+		translation: [0, 0]
+	};
 }
 
 export const SelectTool = {
@@ -250,6 +441,10 @@ export const SelectTool = {
 		computeStartBox(editor, broker);
 	},
 	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		editor.guides.set({
+			lines: [],
+			points: []
+		});
 		if (needsRootReset) {
 			editor.rootGroup.set(null);
 			needsRootReset = false;
@@ -336,19 +531,76 @@ export const SelectTool = {
 			// Transforming
 			let currentMousePosition = get(editor.currentMousePositionRelative);
 
-			let deltaX = currentMousePosition[0] - lastPosition[0];
-			let deltaY = currentMousePosition[1] - lastPosition[1];
+			let rootDeltaX = currentMousePosition[0] - lastPosition[0];
+			let rootDeltaY = currentMousePosition[1] - lastPosition[1];
 			let sels = get(editor.effectiveSelection);
 
 			if (isTranslating) {
-				lastPosition = [...currentMousePosition];
+				if (ev.shiftKey) {
+					if (Math.abs(rootDeltaX) > Math.abs(rootDeltaY)) {
+						rootDeltaY = 0;
+					} else {
+						rootDeltaX = 0;
+					}
+				}
 				for (let id of sels) {
 					let obj = broker.project.objectsMap.get(id);
-					if (obj) {
-						obj.transform.position[0] += deltaX;
-						obj.transform.position[1] += deltaY;
+					let origObj = transformStartObjects.get(id);
+					if (obj && origObj) {
+						obj.transform.position[0] = origObj.transform.position[0] + rootDeltaX;
+						obj.transform.position[1] = origObj.transform.position[1] + rootDeltaY;
 						obj.computeShape();
 						broker.markObjectDirty(id);
+					}
+				}
+
+				let deltaX = 0;
+				let deltaY = 0;
+
+				if (!ev.ctrlKey) {
+					let guides = calculateGuides(editor, broker);
+
+					if (guides.lines.length > 0 || guides.points.length > 0) {
+						editor.guides.set({
+							lines: guides.lines.map((l) => [
+								[l.start.x, l.start.y],
+								[l.end.x, l.end.y]
+							]),
+							points: guides.points.map((p) => [p.x, p.y])
+						});
+						deltaX = guides.translation[0];
+						deltaY = guides.translation[1];
+					} else {
+						editor.guides.set({
+							lines: [],
+							points: []
+						});
+					}
+				} else {
+					editor.guides.set({
+						lines: [],
+						points: []
+					});
+				}
+
+				if (ev.shiftKey) {
+					if (Math.abs(rootDeltaX) > Math.abs(rootDeltaY)) {
+						deltaY = 0;
+					} else {
+						deltaX = 0;
+					}
+				}
+
+				if (deltaX != 0 || deltaY != 0) {
+					for (let id of sels) {
+						let obj = broker.project.objectsMap.get(id);
+						let origObj = transformStartObjects.get(id);
+						if (obj && origObj) {
+							obj.transform.position[0] += deltaX;
+							obj.transform.position[1] += deltaY;
+							obj.computeShape();
+							broker.markObjectDirty(id);
+						}
 					}
 				}
 
