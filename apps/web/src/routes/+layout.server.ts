@@ -33,10 +33,6 @@ SET_DATABASE_PASSWORD(DATABASE_PASSWORD);
 
 export const load = async ({ cookies, request, url, route }) => {
 	let user = await getRequestUser(request);
-	console.log('user', user);
-	if (!user && route.id !== '/login' && route.id !== '/signup') {
-		throw redirect(302, '/login?redirect=' + encodeURI(url.pathname));
-	}
 
 	return {
 		user: await getRequestAuthState(request)

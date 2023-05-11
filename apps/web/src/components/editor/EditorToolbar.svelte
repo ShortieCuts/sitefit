@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { faArrowPointer, faComment, faHand } from '@fortawesome/free-solid-svg-icons';
-	import { EditorContext, getSvelteContext, ProjectBroker } from 'src/store/editor';
+	import {
+		EditorContext,
+		getSvelteContext,
+		ProjectBroker,
+		type ProjectAccessLevel
+	} from 'src/store/editor';
 	import { onMount } from 'svelte';
 
 	import Fa from 'svelte-fa';
@@ -11,11 +16,13 @@
 	import { PenTool } from './tools/pen';
 	import { SelectTool } from './tools/select';
 	import { TextTool } from './tools/text';
+	import { compareAccess } from '$lib/util/access';
 
 	const toolbarItems: {
 		icon: any;
 		key: string;
 		shortcut: string;
+		access: ProjectAccessLevel;
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
@@ -24,6 +31,7 @@
 	const { editor, broker } = getSvelteContext();
 
 	let { activeTool, activeDialog } = editor;
+	let { sessionAccess } = broker;
 
 	$: shiftRight = $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'left';
 
@@ -99,15 +107,17 @@
 	style={shiftRight ? `left: calc(400px + 1rem);` : ``}
 >
 	{#each toolbarItems as item}
-		<button
-			class="text-white w-10 h-10 flex items-center justify-center rounded-lg hover:bg-blue-400 cursor-default bg-black bg-opacity-30"
-			class:bg-blue-500={$activeTool === item.key}
-			style={$activeTool === item.key ? '--tw-bg-opacity: 1' : ''}
-			on:click={() => {
-				editor.activeTool.set(item.key);
-			}}
-		>
-			<Fa icon={item.icon} />
-		</button>
+		{#if compareAccess(item.access, $sessionAccess)}
+			<button
+				class="text-white w-10 h-10 flex items-center justify-center rounded-lg hover:bg-blue-400 cursor-default bg-black bg-opacity-30"
+				class:bg-blue-500={$activeTool === item.key}
+				style={$activeTool === item.key ? '--tw-bg-opacity: 1' : ''}
+				on:click={() => {
+					editor.activeTool.set(item.key);
+				}}
+			>
+				<Fa icon={item.icon} />
+			</button>
+		{/if}
 	{/each}
 </div>

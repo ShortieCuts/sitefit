@@ -5,6 +5,7 @@ import { Material, Path, Text } from 'core';
 
 export const TextTool = {
 	icon: faFont,
+	access: 'WRITE',
 	key: 'text',
 	shortcut: 't',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {

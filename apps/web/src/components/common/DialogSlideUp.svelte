@@ -10,7 +10,7 @@
 {#if $isMobile}
 	<div
 		transition:fly={{ y: 300, opacity: 1, duration: 200 }}
-		class="bg-white fixed bottom-0 left-0 right-0 h-[300px] p-4 pt-0 pointer-events-auto"
+		class="bg-white fixed bottom-0 left-0 right-0 h-[300px] p-4 pt-0 pointer-events-auto z-[42]"
 	>
 		<button
 			class="w-full flex items-center justify-center pb-4"

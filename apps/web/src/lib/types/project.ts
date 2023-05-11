@@ -1,3 +1,5 @@
+import type { UserAccessInfo } from './user';
+
 export type ListViewProject = {
 	publicId: string;
 	name: string;
@@ -19,11 +21,7 @@ export type MetadataProject = {
 	updatedAt: Date;
 
 	access: {
-		items: {
-			id: bigint;
-			userId: string;
-			level: 'READ' | 'WRITE' | 'COMMENT';
-		}[];
+		items: UserAccessInfo[];
 		blanketAccess: 'READ' | 'WRITE' | 'COMMENT';
 		blanketAccessGranted: boolean;
 	};

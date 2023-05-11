@@ -3,6 +3,7 @@ import {
   isCommitTransaction,
   isJoin,
   isLogin,
+  isRefresh,
   isWriteGlobalProperty,
   Project,
   SocketMessage,
@@ -19,8 +20,11 @@ import {
 } from "secrets";
 
 import { checkRequestAuth, getUserFromFirebaseId } from "auth";
+
 import { randomNiceColorFromString } from "./color";
 import LZString from "lz-string";
+import { db } from "db";
+import { AccessLevel, AccessStatus } from "db/db/types";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -49,30 +53,66 @@ class Session {
   socket: WebSocket;
   quit: boolean = false;
   color: string = "#000000";
+  accessLevel: AccessLevel | null = null;
 
-  constructor(socket: WebSocket, uid: string) {
+  engine: EngineInstance;
+
+  constructor(engine: EngineInstance, socket: WebSocket, uid: string) {
     this.socket = socket;
     this.uid = uid;
     this.userId = null;
+    this.engine = engine;
+  }
+
+  checkAccess(level: AccessLevel): boolean {
+    if (level == "READ") return true;
+    if (level == "COMMENT")
+      return this.accessLevel == "COMMENT" || this.accessLevel == "WRITE";
+    if (level == "WRITE") return this.accessLevel == "WRITE";
+    return false;
   }
 
   async handleLogin(msg: SocketMessage): Promise<boolean> {
     if (isLogin(msg)) {
-      let res = await checkRequestAuth(msg.session);
-      if (res) {
-        let user = await getUserFromFirebaseId(res.uid);
-        if (user) {
-          this.userId = user.publicId;
-          return true;
+      if (msg.session) {
+        if (msg.session.startsWith("!")) {
+          let access = await db()
+            .selectFrom("Access")
+            .selectAll()
+            .where("token", "=", msg.session.slice(1))
+            .where("projectId", "=", this.engine.realIdInt)
+            .executeTakeFirst();
+
+          if (access) {
+            this.userId = "email:" + access.email;
+            return true;
+          }
         } else {
-          return false;
+          let res = await checkRequestAuth(msg.session);
+          if (res) {
+            let user = await getUserFromFirebaseId(res.uid);
+            if (user) {
+              this.userId = user.publicId;
+              return true;
+            } else {
+              return false;
+            }
+          } else {
+            return false;
+          }
         }
       } else {
-        return false;
+        this.userId = "anon";
+        return true;
       }
     }
 
     return false;
+  }
+
+  setAccessLevel(level: AccessLevel) {
+    this.accessLevel = level;
+    this.send(SocketMessage.setAccessLevel(level));
   }
 
   kill() {
@@ -81,7 +121,11 @@ class Session {
   }
 
   send(msg: SocketMessage) {
-    this.socket.send(LZString.compressToUint8Array(JSON.stringify(msg)));
+    if (this.socket.readyState == WebSocket.READY_STATE_OPEN) {
+      this.socket.send(LZString.compressToUint8Array(JSON.stringify(msg)));
+    } else {
+      console.log("Socket not ready", this.socket.readyState);
+    }
   }
 }
 
@@ -96,9 +140,26 @@ export class EngineInstance {
   saveTimer: number | null = null;
   saveNonce: number = 0;
 
+  realId: string | null = null;
+  realIdInt: bigint | null = null;
+
   broken: boolean = false;
 
   sessions: Session[] = [];
+
+  accessState: {
+    ownerId: string;
+    blanketAccessGranted: boolean;
+    blanketAccess: "READ" | "WRITE" | "COMMENT";
+    access: {
+      level: "READ" | "WRITE" | "COMMENT";
+      id: bigint;
+      createdAt: Date;
+      token: string;
+      email: string;
+      userId: string;
+    }[];
+  } | null = null;
 
   private queuedMessages: SocketMessage[] = [];
   private messageQueueTimeout: number | null = null;
@@ -138,6 +199,121 @@ export class EngineInstance {
     });
   }
 
+  async refreshAccess() {
+    if (!this.realId) return;
+
+    let project = await db()
+      .selectFrom("Project")
+      .selectAll()
+      .where("publicId", "=", this.realId)
+      .executeTakeFirst();
+
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    this.realIdInt = project.id;
+
+    let ownerUser = await db()
+      .selectFrom("User")
+      .selectAll()
+      .where("id", "=", project.ownerId)
+      .executeTakeFirst();
+
+    if (!ownerUser) {
+      throw new Error("Owner not found");
+    }
+
+    let grantedAccess = await db()
+      .selectFrom("Access")
+      .where("projectId", "=", project.id)
+      .where("userId", "!=", 0n)
+      .innerJoin("User", "Access.userId", "User.id")
+      .select([
+        "Access.level",
+        "Access.id",
+        "Access.createdAt",
+        "User.publicId",
+        "User.firstName",
+        "User.lastName",
+        "User.photoURL",
+        "User.email",
+        "Access.token",
+      ])
+      .execute();
+
+    let grantedAccessEmail = await db()
+      .selectFrom("Access")
+      .where("projectId", "=", project.id)
+      .where("userId", "=", 0n)
+      .select([
+        "Access.level",
+        "Access.id",
+        "Access.createdAt",
+        "Access.email",
+        "Access.token",
+      ])
+      .execute();
+
+    this.accessState = {
+      ownerId: ownerUser.publicId,
+      blanketAccessGranted: project.blanketAccessGranted,
+      blanketAccess: project.blanketAccess,
+      access: [
+        ...grantedAccess.map((access) => ({
+          level: access.level,
+          id: access.id,
+          createdAt: access.createdAt,
+          token: access.token,
+          email: access.email,
+          userId: access.publicId,
+        })),
+        ...grantedAccessEmail.map((access) => ({
+          level: access.level,
+          id: access.id,
+          createdAt: access.createdAt,
+          token: access.token,
+          email: access.email,
+          userId: "email:" + access.email,
+        })),
+      ],
+    };
+
+    for (let session of this.sessions) {
+      this.checkSessionAccess(session);
+    }
+  }
+
+  checkSessionAccess(session: Session) {
+    if (!this.accessState) return;
+
+    if (session.userId == this.accessState.ownerId) {
+      session.setAccessLevel("WRITE");
+      return;
+    }
+
+    for (let access of this.accessState.access) {
+      if (session.userId?.startsWith("email:")) {
+        console.log("sess", session.userId, access.email);
+        if (access.email == session.userId.replace("email:", "")) {
+          session.setAccessLevel(access.level);
+          return;
+        }
+      } else {
+        if (access.userId == session.userId) {
+          session.setAccessLevel(access.level);
+          return;
+        }
+      }
+    }
+
+    if (!this.accessState.blanketAccessGranted) {
+      session.kill();
+    }
+
+    session.setAccessLevel(this.accessState.blanketAccess);
+  }
+
   async enqueueSave() {
     let nonce = ++this.saveNonce;
     await sleep(1000);
@@ -167,14 +343,26 @@ export class EngineInstance {
       let url = new URL(request.url);
 
       switch (url.pathname.split("/")[2]) {
+        case "setId": {
+          let body = (await request.json()) as any;
+          this.realId = body?.id ?? "";
+
+          return new Response(null, { status: 200 });
+        }
         case "websocket": {
           if (request.headers.get("Upgrade") != "websocket") {
             return new Response("expected websocket", { status: 400 });
           }
 
+          this.realId = url.pathname.split("/")[1];
+
           let ip = request.headers.get("CF-Connecting-IP");
 
           let pair = new WebSocketPair();
+
+          if (!this.accessState) {
+            await this.refreshAccess();
+          }
 
           await this.handleSession(pair[1], ip);
 
@@ -206,7 +394,7 @@ export class EngineInstance {
   async handleSession(webSocket: WebSocket, ip: string | null) {
     webSocket.accept();
 
-    let session = new Session(webSocket, "s" + this.uidCounter++);
+    let session = new Session(this, webSocket, "s" + this.uidCounter++);
     this.sessions.push(session);
 
     // Set event handlers to receive messages.
@@ -231,6 +419,7 @@ export class EngineInstance {
         if (data) {
           if (isLogin(data)) {
             if (await session.handleLogin(data)) {
+              this.checkSessionAccess(session);
               loggedIn = true;
               session.color = randomNiceColorFromString(
                 `${session.userId}.${session.uid}`
@@ -255,7 +444,9 @@ export class EngineInstance {
           }
         }
       } catch (err: any) {
-        webSocket.send(JSON.stringify({ error: err.stack }));
+        if (webSocket.readyState == WebSocket.READY_STATE_OPEN) {
+          webSocket.send(JSON.stringify({ error: err.stack }));
+        }
       }
     });
 
@@ -274,28 +465,41 @@ export class EngineInstance {
     }
 
     if (isWriteGlobalProperty(data)) {
-      if (data.key == "mapStyle") {
-        if (["google-satellite", "google-simple"].includes(data.value)) {
-          this.project.globalProperties.mapStyle = data.value;
-          this.enqueueBroadcast(data);
+      if (session.checkAccess("WRITE")) {
+        if (data.key == "mapStyle") {
+          if (["google-satellite", "google-simple"].includes(data.value)) {
+            this.project.globalProperties.mapStyle = data.value;
+            this.enqueueBroadcast(data);
+            this.dirty = true;
+            this.enqueueSave();
+          }
+        }
+      }
+    } else if (isCommitTransaction(data)) {
+      if (session.checkAccess("WRITE")) {
+        if (this.project) {
+          let appliedMutations = this.project.applyTransaction(
+            data.transaction,
+            false
+          );
+          let newTransaction = this.project.createTransaction();
+
+          for (let mutation of appliedMutations) {
+            newTransaction.mutations.push(mutation);
+          }
+          this.enqueueBroadcast(
+            SocketMessage.commitTransaction(newTransaction)
+          );
           this.dirty = true;
           this.enqueueSave();
         }
       }
-    } else if (isCommitTransaction(data)) {
-      if (this.project) {
-        let appliedMutations = this.project.applyTransaction(
-          data.transaction,
-          false
-        );
-        let newTransaction = this.project.createTransaction();
-
-        for (let mutation of appliedMutations) {
-          newTransaction.mutations.push(mutation);
+    } else if (isRefresh(data)) {
+      if (session.checkAccess("WRITE")) {
+        if (this.project) {
+          this.refreshAccess();
+          this.broadcast(SocketMessage.refresh("access"));
         }
-        this.enqueueBroadcast(SocketMessage.commitTransaction(newTransaction));
-        this.dirty = true;
-        this.enqueueSave();
       }
     }
   }
@@ -325,7 +529,9 @@ export class EngineInstance {
     this.sessions = this.sessions.filter((session) => {
       if (session.userId) {
         try {
-          session.socket.send(json);
+          if (session.socket.readyState == WebSocket.READY_STATE_OPEN) {
+            session.socket.send(json);
+          }
           return true;
         } catch (err) {
           session.quit = true;

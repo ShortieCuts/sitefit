@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { compareAccess } from '$lib/util/access';
 	import {
 		faArrowPointer,
 		faBox,
@@ -15,121 +16,165 @@
 		faSearch,
 		faTools
 	} from '@fortawesome/free-solid-svg-icons';
-	import { getSvelteContext } from 'src/store/editor';
+	import { auth } from 'src/store/auth';
+	import { getSvelteContext, type ProjectAccessLevel } from 'src/store/editor';
 	import { isMobile } from 'src/store/responsive';
 	import { onMount } from 'svelte';
 
 	import Fa from 'svelte-fa';
+	import type { IconName } from '../icon/icon';
+	import Icon from '../icon/Icon.svelte';
 
-	const navbarItemsDesktop = [
+	type NavItem = {
+		icon: IconName;
+		key: string;
+		name: string;
+		access: ProjectAccessLevel;
+		user: boolean;
+	};
+
+	const navbarItemsDesktop: NavItem[] = [
 		{
-			icon: faProjectDiagram,
+			icon: 'map',
 			key: 'projects',
-			name: 'Projects'
+			name: 'Projects',
+			access: 'READ',
+			user: true
 		},
 		{
-			icon: faFile,
+			icon: 'document',
 			key: 'cads',
-			name: 'CAD Files'
+			name: 'CAD Files',
+			access: 'READ',
+			user: true
 		},
 		{
-			icon: faTools,
+			icon: 'tools',
 			key: 'tools',
-			name: 'Tools'
+			name: 'Tools',
+			access: 'WRITE',
+			user: false
 		},
 		{
-			icon: faLayerGroup,
+			icon: 'layers',
 			key: 'layers',
-			name: 'Layers'
+			name: 'Layers',
+			access: 'READ',
+			user: false
 		},
 		{
-			icon: faPaintBrush,
+			icon: 'palette',
 			key: 'style',
-			name: 'Style'
+			name: 'Style',
+			access: 'WRITE',
+			user: false
 		},
 		{
-			icon: faBox,
+			icon: 'parcels',
 			key: 'parcels',
-			name: 'Parcels'
+			name: 'Parcels',
+			access: 'WRITE',
+			user: false
 		}
 	];
 
-	const navbarItemsMobile = [
+	const navbarItemsMobile: NavItem[] = [
 		{
-			icon: faBox,
+			icon: 'parcels',
 			key: 'parcels',
-			name: 'Parcels'
+			name: 'Parcels',
+			access: 'WRITE',
+			user: false
 		},
 
 		{
-			icon: faTools,
+			icon: 'tools',
 			key: 'tools',
-			name: 'Tools'
+			name: 'Tools',
+			access: 'WRITE',
+			user: false
 		},
 
 		{
-			icon: faPaintBrush,
+			icon: 'palette',
 			key: 'style',
-			name: 'Style'
+			name: 'Style',
+			access: 'WRITE',
+			user: false
 		},
 
 		{
-			icon: faComment,
+			icon: 'comment',
 			key: 'comments',
-			name: 'Comments'
+			name: 'Comments',
+			access: 'READ',
+			user: false
 		},
 		{
-			icon: faPersonCirclePlus,
+			icon: 'invite',
 			key: 'share',
-			name: 'Share'
+			name: 'Share',
+			access: 'READ',
+			user: false
 		},
 		{
-			icon: faLocationArrow,
+			icon: 'arrow',
 			key: 'location',
-			name: 'Location'
+			name: 'Location',
+			access: 'READ',
+			user: false
 		},
 		{
-			icon: faSearch,
+			icon: 'search',
 			key: 'search',
-			name: 'Search'
+			name: 'Search',
+			access: 'READ',
+			user: false
 		}
 	];
 
-	const { editor } = getSvelteContext();
+	const { editor, broker } = getSvelteContext();
 
 	let { activeDialog } = editor;
+	let { sessionAccess } = broker;
 
 	$: navbarItems = $isMobile ? navbarItemsMobile : navbarItemsDesktop;
 </script>
 
 {#if $isMobile}
-	<div class="editor-toolbar flex md:flex-col w-full rounded-lg justify-between md:space-y-2 px-4">
+	<div
+		class="editor-toolbar flex md:flex-col w-full rounded-lg justify-center space-x-4 md:space-y-2 px-4"
+	>
 		{#each navbarItems as item}
-			<button
-				class="btn btn-icon-only shadow-md text-black w-10 h-10 flex items-center justify-center hover:bg-blue-400 cursor-default"
-				style="border-radius: .7rem"
-				class:active={$activeDialog === item.key}
-				on:click={() => {
-					editor.activateDialog(item.key);
-				}}
-			>
-				<Fa icon={item.icon} />
-			</button>
+			{#if compareAccess(item.access, $sessionAccess) && ((item.user && $auth.user) || !item.user)}
+				<button
+					class="btn btn-icon-only shadow-md text-black w-10 h-10 flex items-center justify-center hover:bg-blue-400 cursor-default"
+					style="border-radius: .7rem"
+					class:active={$activeDialog === item.key}
+					on:click={() => {
+						editor.activateDialog(item.key);
+					}}
+				>
+					<Icon icon={item.icon} />
+				</button>
+			{/if}
 		{/each}
 	</div>
 {:else}
 	<div class="editor-toolbar flex flex-col w-full rounded-lg justify-between space-y-2">
 		{#each navbarItems as item}
-			<button
-				class="text-black w-16 min-h-[4rem] py-2 flex flex-col text-sm items-center justify-center hover:bg-gray-200 cursor-default"
-				class:bg-gray-100={$activeDialog === item.key}
-				on:click={() => {
-					editor.activateDialog(item.key);
-				}}
-			>
-				<span class="text-lg"><Fa icon={item.icon} /> </span>
-				<span class="max-w-[60px] mt-1">{item.name}</span>
-			</button>
+			{#if compareAccess(item.access, $sessionAccess) && ((item.user && $auth.user) || !item.user)}
+				<button
+					class="text-black w-16 min-h-[4rem] py-2 flex flex-col text-sm items-center justify-center hover:bg-gray-200 cursor-default"
+					class:bg-gray-100={$activeDialog === item.key}
+					on:click={() => {
+						editor.activateDialog(item.key);
+					}}
+				>
+					<span class="text-2xl"><Icon icon={item.icon} /> </span>
+					<span class="max-w-[60px] mt-1">{item.name}</span>
+				</button>
+			{/if}
 		{/each}
 	</div>
 {/if}

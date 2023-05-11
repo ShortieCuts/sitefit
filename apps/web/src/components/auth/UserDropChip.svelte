@@ -4,11 +4,13 @@
 		faChevronDown,
 		faCircle,
 		faCog,
+		faDoorOpen,
 		faEnvelope,
 		faGlobe,
 		faGrip,
 		faMessage,
 		faPerson,
+		faRightToBracket,
 		faSignOut,
 		faTag,
 		faUser
@@ -49,15 +51,27 @@
 				</div>
 				<div class="border-b-2 border-gray-100" />
 				<div>
-					<a href="/" class="flex flex-row items-center px-4 py-2 hover:bg-gray-100">
+					<a
+						href="/"
+						data-sveltekit-reload
+						class="flex flex-row items-center px-4 py-2 hover:bg-gray-100"
+					>
 						<div class="icon-sm mr-2"><IconProject /></div>
 						Projects
 					</a>
-					<a href="/files" class="flex flex-row items-center px-4 py-2 hover:bg-gray-100">
+					<a
+						href="/files"
+						data-sveltekit-reload
+						class="flex flex-row items-center px-4 py-2 hover:bg-gray-100"
+					>
 						<div class="icon-sm mr-2"><IconFile /></div>
 						CADs
 					</a>
-					<a href="/user/settings" class="flex flex-row items-center px-4 py-2 hover:bg-gray-100">
+					<a
+						href="/user/settings"
+						data-sveltekit-reload
+						class="flex flex-row items-center px-4 py-2 hover:bg-gray-100"
+					>
 						<Fa class="mr-2" icon={faCog} /> Settings
 					</a>
 				</div>
@@ -69,6 +83,38 @@
 					>
 						<Fa class="mr-2" icon={faSignOut} /> Sign Out
 					</button>
+				</div>
+			</div>
+		</Popover>
+	</button>
+{:else}
+	<button class="flex flex-row items-center justify-center">
+		<div
+			class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase flex items-center flex-row justify-center text-gray-400"
+			style="background: #eee; "
+		>
+			<Fa icon={faUser} />
+		</div>
+		<Popover
+			showOnClick={true}
+			hideOnExternalClick
+			caretBg="#f3f4f6"
+			offset={10}
+			caretCurveAmount={1}
+			caretWidth={20}
+			alignAnchor="top-right"
+		>
+			<div
+				class="shadow-xl bg-white border-gray-100 border-2 space-y-2 py-2 rounded-lg min-w-[150px]"
+			>
+				<div>
+					<a
+						href="/login?redirect={window.location.pathname}"
+						data-sveltekit-reload
+						class="flex flex-row items-center px-4 py-2 hover:bg-gray-100"
+					>
+						<Fa class="mr-2" icon={faRightToBracket} /> Login
+					</a>
 				</div>
 			</div>
 		</Popover>

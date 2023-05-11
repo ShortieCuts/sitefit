@@ -8,6 +8,7 @@ let downPos: [number, number] = [0, 0];
 export const PenTool = {
 	icon: faPen,
 	key: 'pen',
+	access: 'WRITE',
 	shortcut: 'v',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		let obj = new Path();

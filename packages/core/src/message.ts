@@ -11,7 +11,9 @@ export type SocketMessage =
   | Sync
   | Batch
   | WriteGlobalProperty
-  | CommitTransaction;
+  | CommitTransaction
+  | SetAccessLevel
+  | Refresh;
 
 type SessionShape = {
   uid: string;
@@ -88,6 +90,26 @@ export function isCommitTransaction(
   return message.type === "commitTransaction";
 }
 
+type SetAccessLevel = {
+  type: "setAccessLevel";
+  accessLevel: "READ" | "WRITE" | "COMMENT";
+};
+
+export function isSetAccessLevel(
+  message: SocketMessage
+): message is SetAccessLevel {
+  return message.type === "setAccessLevel";
+}
+
+type Refresh = {
+  type: "refresh";
+  subject: "access";
+};
+
+export function isRefresh(message: SocketMessage): message is Refresh {
+  return message.type === "refresh";
+}
+
 export namespace SocketMessage {
   export function join(uid: string, userId: string, color: string): Join {
     return {
@@ -156,6 +178,22 @@ export namespace SocketMessage {
     };
   }
 
+  export function setAccessLevel(
+    accessLevel: "READ" | "WRITE" | "COMMENT"
+  ): SetAccessLevel {
+    return {
+      type: "setAccessLevel",
+      accessLevel,
+    };
+  }
+
+  export function refresh(subject: "access"): Refresh {
+    return {
+      type: "refresh",
+      subject,
+    };
+  }
+
   export type JoinType = Join;
   export type LeaveType = Leave;
   export type LoginType = Login;
@@ -163,4 +201,6 @@ export namespace SocketMessage {
   export type BatchType = Batch;
   export type WriteGlobalPropertyType = WriteGlobalProperty;
   export type CommitTransactionType = CommitTransaction;
+  export type SetAccessLevelType = SetAccessLevel;
+  export type RefreshType = Refresh;
 }

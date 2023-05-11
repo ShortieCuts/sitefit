@@ -31,13 +31,13 @@ async function getAuthToken(options) {
     }
     return token;
   } else {
-    if (cache.has(cacheKey)) {
-      return cache.get(cacheKey);
-    } else {
-      let token = await fetchAuthToken(credentials, scope);
-      cache.set(cacheKey, token);
-      return token;
-    }
+    // if (cache.has(cacheKey)) {
+    // return cache.get(cacheKey);
+    // } else {
+    let token = await fetchAuthToken(credentials, scope);
+    // cache.set(cacheKey, token);
+    return token;
+    // }
   }
 }
 export async function fetchAuthToken(credentials, scope) {

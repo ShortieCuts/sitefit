@@ -21,12 +21,16 @@ export function createApiEndpointHelper<T extends undefined, A>(
 export function createApiEndpointHelper<T, A>(
 	method: string,
 	endpoint: string
-): (payload: T) => Promise<{ data: A; error: boolean; message: string }>;
+): (
+	payload: T & { _accessToken?: string }
+) => Promise<{ data: A; error: boolean; message: string }>;
 export function createApiEndpointHelper<T, A>(
 	method: string,
 	endpoint: string
-): (payload: T) => Promise<{ data: A; error: boolean; message: string }> {
-	return async (payload: T) => {
+): (
+	payload: T & { _accessToken?: string }
+) => Promise<{ data: A; error: boolean; message: string }> {
+	return async (payload: T & { _accessToken?: string }) => {
 		let res = await fetch(endpoint, {
 			method,
 			...(method != 'GET'
@@ -37,6 +41,11 @@ export function createApiEndpointHelper<T, A>(
 							...(endpoint == '/api/user/session'
 								? {
 										Authorization: await getAuthHeader()
+								  }
+								: {}),
+							...(payload && typeof payload._accessToken !== 'undefined'
+								? {
+										'X-access-token': `${payload._accessToken}`
 								  }
 								: {})
 						},
@@ -75,7 +84,10 @@ export function createIdApiEndpointHelper<T extends undefined, A>(
 export function createIdApiEndpointHelper<T, A>(
 	method: string,
 	endpoint: string
-): (id: string, payload: T) => Promise<{ data: A; error: boolean; message: string }>;
+): (
+	id: string,
+	payload: T & { _accessToken?: string }
+) => Promise<{ data: A; error: boolean; message: string }>;
 export function createIdApiEndpointHelper<T, A>(
 	method: string,
 	endpoint: string
@@ -152,6 +164,16 @@ export const getProjectMetadata = createIdApiEndpointHelper<{}, MetadataProject>
 	'POST',
 	'/api/project/<id>/metadata'
 );
+
+export const writeProjectAccess = createIdApiEndpointHelper<
+	{
+		mode: 'grant' | 'revoke' | 'blanketMode' | 'blanketSet';
+		email?: string;
+		access?: 'READ' | 'WRITE' | 'COMMENT';
+		blanketMode?: boolean;
+	},
+	MetadataProject
+>('POST', '/api/project/<id>/access');
 
 export const getUserInfo = createIdApiEndpointHelper<{}, PublicUserInfo>('POST', '/api/user/<id>');
 

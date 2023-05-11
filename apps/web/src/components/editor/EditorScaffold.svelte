@@ -27,7 +27,7 @@
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import { fade, slide, fly } from 'svelte/transition';
-	import type { AuthState } from 'auth';
+	import { auth } from '../../store/auth';
 	import { createEditorContext, createProjectBroker, setSvelteContext } from 'src/store/editor';
 
 	import Fa from 'svelte-fa';
@@ -53,13 +53,18 @@
 	import EditorMobileControls from './EditorMobileControls.svelte';
 	import { flip } from 'svelte/animate';
 	import ContextMenu from './common/ContextMenu.svelte';
+	import SignInModal from '../modals/SignInModal.svelte';
+	import SignIn from '../auth/SignIn.svelte';
+	import { string } from 'zod';
+	import Icon from '../icon/Icon.svelte';
 
-	export let auth: AuthState;
+	// export let auth: AuthState;
 	export let projectId: string;
+	export let accessToken: string | undefined;
 
 	let midEl: HTMLElement;
 
-	let broker = createProjectBroker(projectId);
+	let broker = createProjectBroker(projectId, accessToken);
 	let editorContext = createEditorContext(broker);
 
 	setSvelteContext(broker, editorContext);
@@ -69,7 +74,7 @@
 
 	const { geo, heading } = broker.watchCornerstone();
 
-	const { activeDialog, effectiveSelection, toasts } = editorContext;
+	const { activeDialog, effectiveSelection, selection, toasts } = editorContext;
 
 	let needsCornerstone = false;
 
@@ -90,6 +95,12 @@
 	broker.connected.subscribe((connected) => {
 		checkCornerstone();
 	});
+
+	$: {
+		if ($auth.user) {
+			broker.retry();
+		}
+	}
 
 	let fileDragging = false;
 	let fileEl: HTMLInputElement | null = null;
@@ -308,33 +319,33 @@
 					class="search-bar relative h-10 w-60 lg:w-96 shadow-style rounded-lg border-[1px] border-gray-300 flex flex-row items-center"
 				>
 					<input
-						class="absolute top-0 left-0 right-0 bottom-0 pl-8 rounded-lg outline-none"
+						class="absolute top-0 left-0 right-0 bottom-0 pl-10 rounded-lg outline-none"
 						placeholder="Search (by Address, CAD name, Project name)"
 					/>
-					<Fa class="pointer-events-none text-1xl absolute z-10 ml-2" icon={faSearch} />
+					<Icon class="pointer-events-none text-lg absolute z-10 ml-2" icon="search" />
 				</div>
 				<button class="btn btn-icon-only w-10 h-10 flex items-center pr-0 text-xl ml-3 shadow-style"
-					><Fa icon={faLocationArrow} /></button
+					><Icon icon="arrow" /></button
 				>
 			</div>
 			<div
 				class="editor-bar-center flex-1 justify-end flex flex-row items-center my-auto space-x-4 h-8 pr-4"
 			>
 				<button
-					class="btn shadow-style"
+					class="btn btn-fat shadow-style"
 					on:click={() => editorContext.activateDialog('comments')}
 					class:active={$activeDialog == 'comments'}
 				>
-					<Fa icon={faComment} /> Comments</button
+					<Icon icon="comment" /> Comments</button
 				>
 				<button
-					class="btn shadow-style"
+					class="btn btn-fat shadow-style"
 					on:click={() => editorContext.activateDialog('share')}
-					class:active={$activeDialog == 'share'}><Fa icon={faShare} /> Share</button
+					class:active={$activeDialog == 'share'}><Icon icon="share" /> Share</button
 				>
 				<div class="flex flex-row">
 					<EditorSessions />
-					<UserDropChip {auth} />
+					<UserDropChip auth={$auth} />
 				</div>
 			</div>
 		</div>
@@ -404,53 +415,56 @@
 				{#key `${$geo[0]},${$geo[1]},${$heading}`}
 					<EditorMap />
 				{/key}
+				{#if !$isMobile}
+					<ContextMenu el={midEl}>
+						{#if $effectiveSelection.length > 0}
+							<button on:click={doCopy}><Fa icon={faCopy} /> Copy </button>
+							<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>
+							<div class="my-2 w-full border-b border-gray-200" />
+							<button
+								on:click={() => {
+									editorContext.flipSelection(true, false);
+								}}
+								><Fa icon={faArrowsLeftRight} /> Flip Left/Right
+							</button>
+							<button
+								on:click={() => {
+									editorContext.flipSelection(false, true);
+								}}
+								><Fa icon={faArrowsUpDown} /> Flip Up/Down
+							</button>
 
-				<ContextMenu el={midEl}>
-					{#if $effectiveSelection.length > 0}
-						<button on:click={doCopy}><Fa icon={faCopy} /> Copy </button>
-						<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>
-						<div class="my-2 w-full border-b border-gray-200" />
-						<button
-							on:click={() => {
-								editorContext.flipSelection(true, false);
-							}}
-							><Fa icon={faArrowsLeftRight} /> Flip Left/Right
-						</button>
-						<button
-							on:click={() => {
-								editorContext.flipSelection(false, true);
-							}}
-							><Fa icon={faArrowsUpDown} /> Flip Up/Down
-						</button>
+							<button
+								on:click={() => {
+									editorContext.rotateSelection(Math.PI / 4);
+								}}
+								><Fa icon={faRotateRight} /> Spin +45°
+							</button>
+							<button
+								on:click={() => {
+									editorContext.rotateSelection(-Math.PI / 4);
+								}}
+								><Fa icon={faRotateLeft} /> Spin -45°
+							</button>
+							<div class="my-2 w-full border-b border-gray-200" />
 
-						<button
-							on:click={() => {
-								editorContext.rotateSelection(Math.PI / 4);
-							}}
-							><Fa icon={faRotateRight} /> Spin +45°
-						</button>
-						<button
-							on:click={() => {
-								editorContext.rotateSelection(-Math.PI / 4);
-							}}
-							><Fa icon={faRotateLeft} /> Spin -45°
-						</button>
-						<div class="my-2 w-full border-b border-gray-200" />
-
-						<button
-							on:click={() => {
-								editorContext.groupSelection();
-							}}><Fa icon={faLayerGroup} /> Group Selection</button
-						>
-						<button
-							on:click={() => {
-								editorContext.deleteSelection(broker);
-							}}><Fa icon={faTrash} /> Delete</button
-						>
-					{:else}
-						<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>
-					{/if}
-				</ContextMenu>
+							{#if $selection.length > 1}
+								<button
+									on:click={() => {
+										editorContext.groupSelection();
+									}}><Fa icon={faLayerGroup} /> Group Selection</button
+								>
+							{/if}
+							<button
+								on:click={() => {
+									editorContext.deleteSelection(broker);
+								}}><Fa icon={faTrash} /> Delete</button
+							>
+						{:else}
+							<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>
+						{/if}
+					</ContextMenu>
+				{/if}
 			</div>
 		</div>
 		{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'right'}
@@ -520,8 +534,12 @@
 {#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center'}
 	<div
 		transition:fade={{ duration: 100 }}
-		class="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center"
-		on:click={() => editorContext.activateDialog('')}
+		class="dialog-slide-shade fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center"
+		on:click={(e) => {
+			if (e.target.classList.contains('dialog-slide-shade')) {
+				editorContext.activateDialog('');
+			}
+		}}
 		on:keydown={(e) => {
 			if (e.key === 'Escape') {
 				editorContext.activateDialog('');
@@ -529,22 +547,38 @@
 		}}
 	>
 		<div
-			on:click|stopPropagation={() => {}}
 			on:keydown={() => {}}
 			transition:fly={{
 				y: 20
 			}}
-			class="dialog-slide bg-white w-[450px] h-80 fixed z-30 rounded-lg border-gray-200 border-t-[1px]"
+			class="dialog-slide bg-white w-[450px] min-h-80 fixed z-30 rounded-lg border-gray-200 border-t-[1px]"
 		>
 			<svelte:component this={dialogs[$activeDialog].component} />
 		</div>
 	</div>
 {/if}
 
-{#if $isMobile && $activeDialog}
-	<div class="dialog-slide fixed top-0 bottom-0 left-0 right-0 z-30 pointer-events-none">
-		<svelte:component this={dialogs[$activeDialog].component} />
-	</div>
+{#if $isMobile && $activeDialog && dialogs[$activeDialog].component}
+	{#if (dialogs[$activeDialog]?.dock ?? 'left') === 'center'}
+		<div
+			transition:fly={{ x: 300, duration: 200 }}
+			class="dialog-slide bg-white fixed top-0 bottom-0 left-0 right-0 z-[41]"
+		>
+			<div class="pl-6 pt-6">
+				<button
+					class="text-xl"
+					on:click={() => {
+						editorContext.activateDialog('');
+					}}><Fa icon={faArrowLeft} /></button
+				>
+			</div>
+			<svelte:component this={dialogs[$activeDialog].component} />
+		</div>
+	{:else}
+		<div class="dialog-slide fixed top-0 bottom-0 left-0 right-0 z-[41] pointer-events-none">
+			<svelte:component this={dialogs[$activeDialog].component} />
+		</div>
+	{/if}
 {/if}
 
 <svelte:window
@@ -569,8 +603,10 @@
 		transition:fade={{ duration: 200 }}
 		class="fixed top-0 left-0 right-0 bottom-0 bg-gray-100 bg-opacity-25 flex items-center justify-center flex-col z-50 backdrop-blur-md"
 	>
-		<img src="/logo.svg" alt="logo" class="opacity-20" style="filter: grayscale(1)" />
-		<div class="text-2xl text-gray-400 mt-4">Connecting</div>
+		<div class="rounded-lg bg-white bg-opacity-50 p-10 flex items-center justify-center flex-col">
+			<img src="/logo.svg" alt="logo" class="opacity-20" style="filter: grayscale(1)" />
+			<div class="text-2xl text-stone-700 mt-4">Connecting</div>
+		</div>
 	</div>
 {/if}
 
@@ -592,8 +628,13 @@
 		<img src="/logo.svg" alt="logo" class="opacity-20" style="filter: grayscale(1)" />
 		<div class="text-2xl text-red-400 mt-4">Error</div>
 		<div class="text-xl text-gray-400 mt-4">{$error}</div>
+		{#if $error.toLowerCase() === 'unauthorized'}
+			<div class="mt-4">
+				<SignIn />
+			</div>
+		{/if}
 		<div class="absolute top-4 right-4">
-			<UserDropChip {auth} />
+			<UserDropChip auth={$auth} />
 		</div>
 	</div>
 {/if}

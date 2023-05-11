@@ -4,11 +4,11 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 import { z } from 'zod';
-import { validateRequestWithAuth } from '$lib/server/api';
+import { validateRequest, validateRequestWithAuth } from '$lib/server/api';
 import type { PublicUserInfo } from '$lib/types/user';
 
 export const POST = (async ({ request, params }) => {
-	return await validateRequestWithAuth(request, z.object({}), async (input, reqUser) => {
+	return await validateRequest(request, z.object({}), async (input) => {
 		let user = await db()
 			.selectFrom('User')
 			.select(['User.firstName', 'User.lastName', 'User.photoURL'])

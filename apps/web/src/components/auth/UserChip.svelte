@@ -8,13 +8,32 @@
 	import IconFile from '../icons/IconFile.svelte';
 	import IconProject from '../icons/IconProject.svelte';
 	import UserProfilePicture from './UserProfilePicture.svelte';
+	import { faEnvelope, faUser } from '@fortawesome/free-solid-svg-icons';
 
 	export let userId: string;
 
-	$: userStore = getUserInfoStore(userId);
+	$: userStore = userId == 'anon' || userId.startsWith('email:') ? null : getUserInfoStore(userId);
 	export let ringColor: string = '#e5e7eb';
 </script>
 
-<div title="{$userStore.firstName} {$userStore.lastName}">
-	<UserProfilePicture user={$userStore} {ringColor} />
-</div>
+{#if userStore && $userStore}
+	<div title="{$userStore.firstName} {$userStore.lastName}">
+		<UserProfilePicture user={$userStore} {ringColor} />
+	</div>
+{:else if userId.startsWith('email:')}
+	<div
+		title={userId.replace('email:', '')}
+		class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase flex items-center flex-row justify-center text-gray-400"
+		style="background: #eee; border-color: {ringColor};"
+	>
+		<Fa icon={faEnvelope} />
+	</div>
+{:else}
+	<div
+		title="Anonymous user"
+		class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase flex items-center flex-row justify-center text-gray-400"
+		style="background: #eee; border-color: {ringColor};"
+	>
+		<Fa icon={faUser} />
+	</div>
+{/if}

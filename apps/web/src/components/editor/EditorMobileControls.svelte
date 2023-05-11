@@ -19,6 +19,7 @@
 
 	const { editor, broker } = getSvelteContext();
 	const { effectiveSelection, latitude, longitude } = editor;
+	const { sessionAccess } = broker;
 
 	$: hasSelection = $effectiveSelection.length > 0;
 
@@ -30,6 +31,7 @@
 	let realLongitude = $longitude;
 	let realLatitude = $latitude;
 
+	$: canWrite = $sessionAccess == 'WRITE';
 	$: {
 		$effectiveSelection;
 		$mobileToolMode = '';
@@ -87,8 +89,8 @@
 		for (let id of selection) {
 			let obj = broker.project.objectsMap.get(id);
 			if (obj) {
-				obj.transform.position[0] += deltaX;
-				obj.transform.position[1] += deltaY;
+				obj.transform.position[0] += real[1];
+				obj.transform.position[1] += real[0];
 				obj.computeShape();
 				broker.markObjectDirty(id);
 			}
@@ -123,84 +125,86 @@
 	}
 </script>
 
-{#if hasSelection}
-	{#if $mobileToolMode === ''}
-		<MobileDrawer>
-			<div>
-				<button
-					on:click={() => {
-						editor.flyToSelection();
-						setTimeout(() => {
-							startTransform();
-							$mobileToolMode = 'transform';
-						}, 10);
-					}}><Fa icon={faArrows} /> Edit CAD</button
-				>
-				<button
-					class="text-red-500"
-					on:click={() => {
-						editor.deleteSelection(broker);
-					}}><Fa icon={faTrash} /> Delete</button
-				>
-			</div>
-			<div>
-				<button
-					on:click={() => {
-						editor.deselectAll();
-					}}
-					class="text-blue-600"
-					style="justify-content: center;">Deselect</button
-				>
-			</div>
-		</MobileDrawer>
-	{:else if $mobileToolMode == 'transform'}
-		<div class="fixed bottom-0 left-0 right-0 flex flex-row z-40 p-4 space-x-2 items-end">
-			<div class="flex-[2] flex flex-col space-y-2">
-				<button
-					class="btn"
-					on:click={() => {
-						applyTransform();
-						editor.flipSelection(false, true);
-						startTransform();
-					}}><Fa icon={faArrowsUpDown} /> Flip Up/Down</button
-				>
-				<button
-					class="btn"
-					on:click={() => {
-						applyTransform();
-						editor.flipSelection(true, false);
-						startTransform();
-					}}><Fa icon={faArrowsLeftRight} /> Flip Left/Right</button
-				>
-				<div class="flex flex-row space-x-2">
+{#if canWrite}
+	{#if hasSelection}
+		{#if $mobileToolMode === ''}
+			<MobileDrawer>
+				<div>
 					<button
-						class="btn flex-1"
 						on:click={() => {
-							applyTransform();
-							editor.rotateSelection(-Math.PI / 4);
-							startTransform();
-						}}><Fa icon={faRotateLeft} /> -45°</button
+							editor.flyToSelection();
+							setTimeout(() => {
+								startTransform();
+								$mobileToolMode = 'transform';
+							}, 10);
+						}}><Fa icon={faArrows} /> Edit CAD</button
 					>
 					<button
-						class="btn flex-1"
+						class="text-red-500"
+						on:click={() => {
+							editor.deleteSelection(broker);
+						}}><Fa icon={faTrash} /> Delete</button
+					>
+				</div>
+				<div>
+					<button
+						on:click={() => {
+							editor.deselectAll();
+						}}
+						class="text-blue-600"
+						style="justify-content: center;">Deselect</button
+					>
+				</div>
+			</MobileDrawer>
+		{:else if $mobileToolMode == 'transform'}
+			<div class="fixed bottom-0 left-0 right-0 flex flex-row z-40 p-4 space-x-2 items-end">
+				<div class="flex-[2] flex flex-col space-y-2">
+					<button
+						class="btn"
 						on:click={() => {
 							applyTransform();
-							editor.rotateSelection(Math.PI / 4);
+							editor.flipSelection(false, true);
 							startTransform();
-						}}><Fa icon={faRotateRight} /> +45°</button
+						}}><Fa icon={faArrowsUpDown} /> Flip Up/Down</button
+					>
+					<button
+						class="btn"
+						on:click={() => {
+							applyTransform();
+							editor.flipSelection(true, false);
+							startTransform();
+						}}><Fa icon={faArrowsLeftRight} /> Flip Left/Right</button
+					>
+					<div class="flex flex-row space-x-2">
+						<button
+							class="btn flex-1"
+							on:click={() => {
+								applyTransform();
+								editor.rotateSelection(-Math.PI / 4);
+								startTransform();
+							}}><Fa icon={faRotateLeft} /> -45°</button
+						>
+						<button
+							class="btn flex-1"
+							on:click={() => {
+								applyTransform();
+								editor.rotateSelection(Math.PI / 4);
+								startTransform();
+							}}><Fa icon={faRotateRight} /> +45°</button
+						>
+					</div>
+				</div>
+				<div class="flex-[1] flex flex-col">
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							applyTransform();
+							$mobileToolMode = '';
+							editor.deselectAll();
+						}}><Fa icon={faCheck} /> Done</button
 					>
 				</div>
 			</div>
-			<div class="flex-[1] flex flex-col">
-				<button
-					class="btn btn-primary"
-					on:click={() => {
-						applyTransform();
-						$mobileToolMode = '';
-						editor.deselectAll();
-					}}><Fa icon={faCheck} /> Done</button
-				>
-			</div>
-		</div>
+		{/if}
 	{/if}
 {/if}

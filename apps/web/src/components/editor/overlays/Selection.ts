@@ -7,6 +7,7 @@ import { createRenderObject, type RenderObject2D } from './Renderer';
 import { Vector3 } from 'three';
 import Flatten from '@flatten-js/core';
 import { IGNORED_OBJECTS } from '../tools/select';
+import { isMobile } from 'src/store/responsive';
 const { Polygon, point, Circle: FlatCircle, arc, matrix, Box } = Flatten;
 
 class OutlinedBox {
@@ -135,8 +136,11 @@ class SelectionBox {
 		);
 	}
 
-	setVisible(visible: boolean): void {
+	setVisible(visible: boolean, showHandles = true): void {
 		this.main.setVisible(visible);
+		if (!showHandles) {
+			visible = false;
+		}
 		this.topLeft.setVisible(visible);
 		this.topRight.setVisible(visible);
 		this.bottomLeft.setVisible(visible);
@@ -243,6 +247,11 @@ export class SelectionOverlay extends Overlay {
 				this.refresh();
 			})
 		);
+		this.addUnsub(
+			this.broker.sessionAccess.subscribe(() => {
+				this.refresh();
+			})
+		);
 
 		this.addUnsub(
 			this.broker.needsRender.subscribe((newVal) => {
@@ -261,6 +270,7 @@ export class SelectionOverlay extends Overlay {
 	}
 
 	refresh(): void {
+		let access = get(this.broker.sessionAccess);
 		if (!this.box || !this.selectionBox) {
 			return;
 		}
@@ -320,16 +330,16 @@ export class SelectionOverlay extends Overlay {
 					)
 				);
 
-				this.selectionBox.setVisible(true);
+				this.selectionBox.setVisible(true, access == 'WRITE' && !get(isMobile));
 			} else {
-				this.selectionBox?.setVisible(false);
+				this.selectionBox?.setVisible(false, access == 'WRITE' && !get(isMobile));
 			}
 		} else {
-			this.selectionBox?.setVisible(false);
+			this.selectionBox?.setVisible(false, access == 'WRITE' && !get(isMobile));
 		}
 
 		if (get(this.editor.translating)) {
-			this.selectionBox?.setVisible(false);
+			this.selectionBox?.setVisible(false, access == 'WRITE' && !get(isMobile));
 		}
 
 		this.overlay.requestRedraw();

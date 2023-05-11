@@ -34,8 +34,10 @@
 	import TabWrapTab from './TabWrapTab.svelte';
 	import { portal } from '$lib/util/actions';
 	import { fly, slide } from 'svelte/transition';
+	import { compareAccess } from '$lib/util/access';
 
 	const { editor, broker } = getSvelteContext();
+	const { sessionAccess } = broker;
 
 	const icons: {
 		[key: string]: any;
@@ -217,7 +219,7 @@
 	<ContextMenu el={nodeElement}>
 		{#if node.type == 'folder'}
 			<button on:click={makeSubFolder}><Fa icon={faFolderPlus} /> New folder</button>
-		{:else}
+		{:else if compareAccess('WRITE', $sessionAccess)}
 			<button
 				on:click={() => {
 					let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
@@ -264,15 +266,17 @@
 		{:else}
 			<TabWrap names={['Actions', 'Preview', 'Details']}>
 				<TabWrapTab class="flex flex-col space-y-2" tab={0}>
-					<button
-						class="flex flex-row items-center justify-start py-2 px-4"
-						on:click={() => {
-							let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
+					{#if compareAccess('WRITE', $sessionAccess)}
+						<button
+							class="flex flex-row items-center justify-start py-2 px-4"
+							on:click={() => {
+								let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
 
-							broker.placeCad(node.id, position);
-							editor.activateDialog('');
-						}}><Fa class="pr-4" icon={faPlus} /> Place on map</button
-					>
+								broker.placeCad(node.id, position);
+								editor.activateDialog('');
+							}}><Fa class="pr-4" icon={faPlus} /> Place on map</button
+						>
+					{/if}
 					<button
 						class="flex flex-row items-center justify-start py-2 px-4"
 						on:click={(e) => {

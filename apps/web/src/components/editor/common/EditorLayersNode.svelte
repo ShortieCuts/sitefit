@@ -26,8 +26,10 @@
 	import ContextMenu from './ContextMenu.svelte';
 	import EditableLabel from './EditableLabel.svelte';
 	import { browser } from '$app/environment';
+	import { compareAccess } from '$lib/util/access';
 
 	const { editor, broker } = getSvelteContext();
+	const { sessionAccess } = broker;
 
 	const icons: {
 		[key: string]: any;
@@ -189,6 +191,7 @@
 			>
 			<span class="ml-2 h-6 w-full flex items-center">
 				<EditableLabel
+					readonly={!compareAccess('WRITE', $sessionAccess)}
 					fullWidth
 					class="w-full h-full"
 					value={$name}
@@ -204,21 +207,23 @@
 	<ContextMenu el={nodeElement}>
 		<button
 			on:click={(e) => {
-				editor.flyToSelection();
+				editor.flyToSelection(true);
 			}}><Fa icon={faMapPin} /> Locate</button
 		>
-		<button
-			on:click={(e) => {
-				setTimeout(() => {
-					editingName = true;
-				});
-			}}><Fa icon={faPenToSquare} /> Rename</button
-		>
-		<button
-			on:click={(e) => {
-				editor.deleteSelection(broker);
-			}}><Fa icon={faTrash} /> Delete</button
-		>
+		{#if compareAccess('WRITE', $sessionAccess)}
+			<button
+				on:click={(e) => {
+					setTimeout(() => {
+						editingName = true;
+					});
+				}}><Fa icon={faPenToSquare} /> Rename</button
+			>
+			<button
+				on:click={(e) => {
+					editor.deleteSelection(broker);
+				}}><Fa icon={faTrash} /> Delete</button
+			>
+		{/if}
 	</ContextMenu>
 
 	{#if node.children && ($toggleState.get(node.id) ?? false)}

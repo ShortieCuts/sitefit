@@ -17,12 +17,14 @@ import {
 	type GlobalProjectPropertiesKey,
 	type ObjectID,
 	type PropertyMutation,
-	Group
+	Group,
+	isSetAccessLevel,
+	isRefresh
 } from 'core';
 import { getContext, setContext } from 'svelte';
-import { getAuthHeader, getCads, getProjectMetadata } from '$lib/client/api';
+import { getAuthHeader, getCads, getProjectMetadata, writeProjectAccess } from '$lib/client/api';
 import { dev } from '$app/environment';
-import { getSession } from './auth';
+import { auth, getSession } from './auth';
 import { nanoid } from 'nanoid';
 import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { translateDXF } from '$lib/util/dxf';
@@ -31,19 +33,16 @@ import type { CadTreeNode } from '$lib/types/cad';
 import * as THREE from 'three';
 import Flatten from '@flatten-js/core';
 import LZString from 'lz-string';
+import type { UserAccessInfo } from '$lib/types/user';
+import type { MetadataProject } from '$lib/types/project';
+import { isMobile } from './responsive';
 
 const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
-export type ProjectAccessLevel = 'READ' | 'WRITE' | 'COMMENt';
-
-export type ProjectAccess = {
-	userId: string;
-	level: ProjectAccessLevel;
-	grantedAt: Date;
-};
+export type ProjectAccessLevel = 'READ' | 'WRITE' | 'COMMENT';
 
 export type ProjectAccessList = {
-	items: ProjectAccess[];
+	items: UserAccessInfo[];
 	blanketAccess: ProjectAccessLevel;
 	blanketAccessGranted: boolean;
 };
@@ -90,13 +89,18 @@ export class ProjectBroker {
 	loading: Writable<boolean> = writable(true);
 	pushing: Writable<boolean> = writable(false);
 	connected: Writable<boolean> = writable(false);
+	establishingConnection: boolean = false;
 
 	sessions: Writable<ProjectSession[]> = writable([]);
 	mySessionUid: Writable<string> = writable('');
 
+	sessionAccess: Writable<ProjectAccessLevel> = writable('READ');
+
 	private realMetadata: ProjectMetadata;
 
 	project: Project;
+
+	accessToken?: string;
 
 	private socket: WebSocket | null = null;
 
@@ -121,8 +125,11 @@ export class ProjectBroker {
 
 	stagingObject: Writable<Object2D | null> = writable(null);
 
-	constructor(id: string) {
+	reconnectAttemptsRemaining: number = 5;
+
+	constructor(id: string, accessToken?: string) {
 		this.projectId = id;
+		this.accessToken = accessToken;
 		this.metadata = {
 			name: writable(''),
 			description: writable(''),
@@ -169,7 +176,70 @@ export class ProjectBroker {
 		}
 	}
 
+	async retry() {
+		this.error.set(null);
+		this.loading.set(true);
+		await this.pullMetadata();
+		this.loading.set(false);
+
+		this.establishConnection();
+	}
+
+	async setBlanketAccess(access: ProjectAccessLevel) {
+		let res = await writeProjectAccess(this.projectId, {
+			mode: 'blanketSet',
+			access
+		});
+
+		if (res.data) {
+			this.updateMetadataFromServer(res.data);
+			this.dispatchAccessRefreshMesssage();
+		}
+	}
+
+	async setBlanketAccessMode(isPublic: boolean) {
+		let res = await writeProjectAccess(this.projectId, {
+			mode: 'blanketMode',
+			blanketMode: isPublic
+		});
+
+		if (res.data) {
+			this.updateMetadataFromServer(res.data);
+			this.dispatchAccessRefreshMesssage();
+		}
+	}
+
+	async grantAccess(email: string, access: ProjectAccessLevel) {
+		let res = await writeProjectAccess(this.projectId, {
+			mode: 'grant',
+			email,
+			access
+		});
+
+		if (res.data) {
+			this.updateMetadataFromServer(res.data);
+			this.dispatchAccessRefreshMesssage();
+		}
+	}
+
+	async revokeAccess(email: string) {
+		let res = await writeProjectAccess(this.projectId, {
+			mode: 'revoke',
+			email
+		});
+
+		if (res.data) {
+			this.updateMetadataFromServer(res.data);
+			this.dispatchAccessRefreshMesssage();
+		}
+	}
+
+	dispatchAccessRefreshMesssage() {
+		this.enqueueMessage(SocketMessage.refresh('access'));
+	}
+
 	dispose() {
+		console.log('Disposing project broker');
 		this.socket?.close();
 	}
 
@@ -196,6 +266,8 @@ export class ProjectBroker {
 	}
 
 	async placeCad(id: string, position: [number, number], rotation: number = 0) {
+		if (!this.canWrite()) return;
+
 		let cads = await getCads({});
 
 		function findCad(id: string, children: CadTreeNode[]): CadTreeNode | null {
@@ -271,7 +343,12 @@ export class ProjectBroker {
 		return uid;
 	}
 
+	canWrite() {
+		return get(this.sessionAccess) == 'WRITE';
+	}
+
 	commitUndo() {
+		if (!this.canWrite()) return;
 		let undo = get(this.undo);
 		if (undo.length === 0) {
 			return;
@@ -286,6 +363,7 @@ export class ProjectBroker {
 	}
 
 	commitRedo() {
+		if (!this.canWrite()) return;
 		let redo = get(this.redo);
 		if (redo.length === 0) {
 			return;
@@ -299,6 +377,7 @@ export class ProjectBroker {
 	}
 
 	commitTransaction(transaction: ProjectTransaction, skipUndo: boolean = false) {
+		if (!this.canWrite()) return;
 		if (!skipUndo) {
 			let undoTransaction = this.project.computeInverseTransaction(transaction);
 			this.undo.update((u) => [...u, undoTransaction]);
@@ -461,7 +540,13 @@ export class ProjectBroker {
 	}
 
 	establishConnection() {
-		console.log('Establishing connection');
+		if (this.establishingConnection || get(this.connected)) {
+			return;
+		}
+
+		console.log('Establishing connection', this.establishingConnection, this, this.socket);
+		this.establishingConnection = true;
+
 		if (this.socket) {
 			this.socket.close();
 		}
@@ -473,8 +558,13 @@ export class ProjectBroker {
 
 		ws.addEventListener('open', (event) => {
 			this.connected.set(true);
+			this.establishingConnection = false;
 			(async () => {
-				this.sendMessage(SocketMessage.login(await getSession()));
+				if (this.accessToken) {
+					this.sendMessage(SocketMessage.login('!' + this.accessToken));
+				} else {
+					this.sendMessage(SocketMessage.login(await getSession()));
+				}
 			})();
 		});
 
@@ -482,20 +572,25 @@ export class ProjectBroker {
 			let raw = LZString.decompressFromUint8Array(new Uint8Array(event.data as ArrayBuffer));
 
 			let data = JSON.parse(raw);
-			console.log(data);
-			this.handleMessage(data);
+			if (data) this.handleMessage(data);
 		});
 
 		ws.addEventListener('close', (event) => {
+			this.establishingConnection = false;
 			this.connected.set(false);
 			this.sessions.set([]);
-			setTimeout(() => {
-				this.establishConnection();
-			}, 4000);
+			this.reconnectAttemptsRemaining--;
+			if (this.reconnectAttemptsRemaining > 0) {
+				console.log('Reconnecting in 4 seconds...');
+				setTimeout(() => {
+					this.establishConnection();
+				}, 4000);
+			}
 			console.log('WebSocket closed', event.code, event.reason);
 		});
 
 		ws.addEventListener('error', (event) => {
+			this.establishingConnection = false;
 			console.log('WebSocket error', event);
 		});
 	}
@@ -609,6 +704,12 @@ export class ProjectBroker {
 			for (let m of message.messages) {
 				this.handleMessage(m);
 			}
+		} else if (isSetAccessLevel(message)) {
+			this.sessionAccess.set(message.accessLevel);
+		} else if (isRefresh(message)) {
+			if (message.subject == 'access') {
+				this.pullMetadata();
+			}
 		}
 	}
 
@@ -633,19 +734,28 @@ export class ProjectBroker {
 
 	async pullMetadata() {
 		// Fetch and fill metadata and realMetadata
-		let response = await getProjectMetadata(this.project.id, {});
+		let response = await getProjectMetadata(this.project.id, {
+			_accessToken: this.accessToken
+		});
 
 		if (response.error) {
 			this.error.set(response.message);
 			return;
 		} else {
 			let data = response.data;
-			this.realMetadata.name.set(data.name);
-			this.metadata.name.set(data.name);
-
-			this.realMetadata.description.set(data.description);
-			this.metadata.description.set(data.description);
+			this.updateMetadataFromServer(data);
 		}
+	}
+
+	updateMetadataFromServer(data: MetadataProject) {
+		this.realMetadata.name.set(data.name);
+		this.metadata.name.set(data.name);
+
+		this.realMetadata.description.set(data.description);
+		this.metadata.description.set(data.description);
+
+		this.realMetadata.access.set(data.access);
+		this.metadata.access.set(data.access);
 	}
 
 	pushMetadata() {
@@ -677,6 +787,7 @@ function mirrorArc(startAngle: number, endAngle: number, mirrorX: boolean, mirro
 
 	return a;
 }
+
 export class EditorContext {
 	activeTool: Writable<string> = writable('select');
 	activeDialog: Writable<string> = writable('');
@@ -684,6 +795,18 @@ export class EditorContext {
 	longitude: Writable<number> = writable(0);
 	latitude: Writable<number> = writable(0);
 	zoom: Writable<number> = writable(0);
+
+	viewBounds: Writable<{
+		minX: number;
+		minY: number;
+		maxX: number;
+		maxY: number;
+	}> = writable({
+		minX: 0,
+		minY: 0,
+		maxX: 0,
+		maxY: 0
+	});
 
 	selectionDown: Writable<boolean> = writable(false);
 	selectionStart: Writable<[number, number]> = writable([0, 0]);
@@ -746,6 +869,12 @@ export class EditorContext {
 		this.broker = broker;
 	}
 
+	guard(p: Promise<any>) {
+		return p.catch((e) => {
+			console.error(e);
+			this.alert(e.message);
+		});
+	}
 	toast(message: string, type: 'info' | 'error' | 'warn', timeout = 5000) {
 		let id = nanoid();
 		this.toasts.update((t) => {
@@ -782,6 +911,9 @@ export class EditorContext {
 	}
 
 	activateDialog(key: string) {
+		if (get(isMobile) && key != '') {
+			this.deselectAll();
+		}
 		if (get(this.activeDialog) === key) {
 			this.activeDialog.set('');
 		} else {
@@ -832,7 +964,7 @@ export class EditorContext {
 		return [(bounds.minX + bounds.maxX) / 2, (bounds.minY + bounds.maxY) / 2];
 	}
 
-	flyToSelection() {
+	flyToSelection(zoom = false) {
 		let bounds = this.broker.project.computeBoundsMulti(get(this.effectiveSelection));
 		let center = this.getBoundsCenter(bounds);
 
@@ -842,7 +974,12 @@ export class EditorContext {
 			return;
 		}
 
-		map.setCenter({ lat: lat, lng: lon });
+		if (zoom) {
+			map.setZoom(20);
+			map.panTo({ lat: lat, lng: lon });
+		} else {
+			map.setCenter({ lat: lat, lng: lon });
+		}
 	}
 
 	/**
@@ -1074,8 +1211,8 @@ export class EditorContext {
 	}
 }
 
-export function createProjectBroker(id: string) {
-	return new ProjectBroker(id);
+export function createProjectBroker(id: string, accessToken?: string) {
+	return new ProjectBroker(id, accessToken);
 }
 
 export function createEditorContext(broker: ProjectBroker) {

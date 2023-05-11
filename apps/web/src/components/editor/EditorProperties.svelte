@@ -9,7 +9,7 @@
 	const { broker, editor } = getSvelteContext();
 
 	const { effectiveSelection } = editor;
-	const { transactionWatcher } = broker;
+	const { transactionWatcher, sessionAccess } = broker;
 
 	$: firstSelected =
 		$effectiveSelection.length > 0 ? broker.project.objectsMap.get($effectiveSelection[0]) : null;
@@ -295,117 +295,132 @@
 	}
 </script>
 
-<div class="pb-2 select-none">
-	<div class="bg-gray-200 px-4 py-1 rounded-t-lg">
-		{#if $effectiveSelection.length == 1}
-			{firstSelected?.name ?? 'Unnamed object'}
-		{:else}
-			{$effectiveSelection.length} selected objects
-		{/if}
-	</div>
-	<div class="properties-transform flex flex-col space-y-2 p-2">
-		<div class="flex flex-row space-x-2">
-			<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-				<label for="props-x" class="mr-2 ml-1 w-4 flex items-center justify-center">X</label>
-				<input
-					id="props-x"
-					class="w-full h-6 cursor-default"
-					bind:value={propertiesDisplay.x}
-					on:change={doTransformChange('x')}
-				/>
-			</div>
-			<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-				<label for="props-w" class="mr-2 ml-1 w-4 flex items-center justify-center">W</label>
-				<input
-					id="props-w"
-					class="w-full h-6 cursor-default"
-					bind:value={propertiesDisplay.width}
-					on:change={doTransformChange('width')}
-				/>
-			</div>
+{#if $sessionAccess == 'WRITE'}
+	<div class="pb-2 select-none">
+		<div class="bg-gray-200 px-4 py-1 rounded-t-lg">
+			{#if $effectiveSelection.length == 1}
+				{firstSelected?.name ?? 'Unnamed object'}
+			{:else}
+				{$effectiveSelection.length} selected objects
+			{/if}
 		</div>
-		<div class="flex flex-row space-x-2">
-			<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-				<label for="props-y" class="mr-2 ml-1 w-4 flex items-center justify-center">Y</label>
-				<input
-					id="props-y"
-					class="w-full h-6 cursor-default"
-					bind:value={propertiesDisplay.y}
-					on:change={doTransformChange('y')}
-				/>
-			</div>
-			<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-				<label for="props-h" class="mr-2 ml-1 w-4 flex items-center justify-center">H</label>
-				<input
-					id="props-h"
-					class="w-full h-6 cursor-default"
-					bind:value={propertiesDisplay.height}
-					on:change={doTransformChange('height')}
-				/>
-			</div>
-		</div>
-		<div class="flex flex-row space-x-2">
-			<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-				<label for="props-a" class="mr-2 ml-1 w-4 flex items-center justify-center"
-					><Fa icon={faCompassDrafting} /></label
-				>
-				<input
-					id="props-a"
-					class="w-full cursor-default"
-					bind:value={propertiesDisplay.angle}
-					on:change={doTransformChange('angle')}
-				/>
-			</div>
-			<div class="flex-1 flex flex-row" />
-		</div>
-	</div>
-	<div class="border-b border-gray-200" />
-	<div class="properties-style flex flex-col space-y-2 p-2">
-		<div class="flex flex-row space-x-2 border-gray-200 rounded-md border p-1">
-			<div>
-				<ColorInput bind:value={propertiesDisplay.style.color} on:change={doStyleChange('color')} />
-			</div>
-			<div class="flex-1 w-auto">
-				<select class="border-gray-200 rounded-md border w-full">
-					<option> Solid </option>
-					<option> Dashed </option>
-					<option> Filled </option>
-					<option> Hatch </option>
-				</select>
-			</div>
-		</div>
-	</div>
-	{#if properties.length > 0}
-		<div class="border-b border-gray-200" />
-		<div class="space-y-2 mt-2">
-			{#each properties as prop}
-				<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
-					<span
-						class="flex-shrink-0 h-full w-20 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-center"
-					>
-						{prop.name}
-					</span>
-					{#if prop.type == 'string'}
-						<input
-							class="w-full px-1"
-							type="text"
-							bind:value={propertiesDisplay.props[prop.name]}
-							on:change={doPropChange(prop)}
-						/>
-					{:else if prop.type == 'number'}
-						<input
-							class="w-full px-1"
-							type="number"
-							bind:value={propertiesDisplay.props[prop.name]}
-							on:change={doPropChange(prop)}
-						/>
-					{/if}
+		<div class="properties-transform flex flex-col space-y-2 p-2">
+			<div class="flex flex-row space-x-2">
+				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+					<label for="props-x" class="mr-2 ml-1 w-4 flex items-center justify-center">X</label>
+					<input
+						id="props-x"
+						class="w-full h-6 cursor-default"
+						bind:value={propertiesDisplay.x}
+						on:change={doTransformChange('x')}
+					/>
 				</div>
-			{/each}
+				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+					<label for="props-w" class="mr-2 ml-1 w-4 flex items-center justify-center">W</label>
+					<input
+						id="props-w"
+						class="w-full h-6 cursor-default"
+						bind:value={propertiesDisplay.width}
+						on:change={doTransformChange('width')}
+					/>
+				</div>
+			</div>
+			<div class="flex flex-row space-x-2">
+				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+					<label for="props-y" class="mr-2 ml-1 w-4 flex items-center justify-center">Y</label>
+					<input
+						id="props-y"
+						class="w-full h-6 cursor-default"
+						bind:value={propertiesDisplay.y}
+						on:change={doTransformChange('y')}
+					/>
+				</div>
+				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+					<label for="props-h" class="mr-2 ml-1 w-4 flex items-center justify-center">H</label>
+					<input
+						id="props-h"
+						class="w-full h-6 cursor-default"
+						bind:value={propertiesDisplay.height}
+						on:change={doTransformChange('height')}
+					/>
+				</div>
+			</div>
+			<div class="flex flex-row space-x-2">
+				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+					<label for="props-a" class="mr-2 ml-1 w-4 flex items-center justify-center"
+						><Fa icon={faCompassDrafting} /></label
+					>
+					<input
+						id="props-a"
+						class="w-full cursor-default"
+						bind:value={propertiesDisplay.angle}
+						on:change={doTransformChange('angle')}
+					/>
+				</div>
+				<div class="flex-1 flex flex-row" />
+			</div>
 		</div>
-	{/if}
-	<div />
-</div>
+		<div class="border-b border-gray-200" />
+		<div class="properties-style flex flex-col space-y-2 p-2">
+			<div class="flex flex-row space-x-2 border-gray-200 rounded-md border p-1">
+				<div>
+					<ColorInput
+						bind:value={propertiesDisplay.style.color}
+						on:change={doStyleChange('color')}
+					/>
+				</div>
+				<div class="flex-1 w-auto">
+					<select class="border-gray-200 rounded-md border w-full">
+						<option> Solid </option>
+						<option> Dashed </option>
+						<option> Filled </option>
+						<option> Hatch </option>
+					</select>
+				</div>
+			</div>
+		</div>
+		{#if properties.length > 0}
+			<div class="border-b border-gray-200" />
+			<div class="space-y-2 mt-2">
+				{#each properties as prop}
+					<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+						<span
+							class="flex-shrink-0 h-full w-20 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-center"
+						>
+							{prop.name}
+						</span>
+						{#if prop.type == 'string'}
+							<input
+								class="w-full px-1"
+								type="text"
+								bind:value={propertiesDisplay.props[prop.name]}
+								on:change={doPropChange(prop)}
+							/>
+						{:else if prop.type == 'number'}
+							<input
+								class="w-full px-1"
+								type="number"
+								bind:value={propertiesDisplay.props[prop.name]}
+								on:change={doPropChange(prop)}
+							/>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/if}
+		<div />
+	</div>
+{:else}
+	<div class="select-none">
+		<div class="bg-gray-200 px-4 py-1 rounded-lg">
+			{#if $effectiveSelection.length == 1}
+				{firstSelected?.name ?? 'Unnamed object'}
+			{:else}
+				{$effectiveSelection.length} selected objects
+			{/if}
+		</div>
+	</div>
+{/if}
 
 <style lang="scss">
 	:global(.prop-row) {

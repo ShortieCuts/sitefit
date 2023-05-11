@@ -9,9 +9,13 @@ import {
 } from "secrets";
 
 let cachedDb: Kysely<DB> | null = null;
+let cachedTime: number = 0;
 
 export function db() {
-  console.log("Getting db:", cachedDb, GET_DATABASE_HOST());
+  if (cachedTime >= Date.now()) {
+    cachedDb = null;
+  }
+
   if (cachedDb) return cachedDb;
 
   cachedDb = new Kysely<DB>({
@@ -21,6 +25,8 @@ export function db() {
       password: GET_DATABASE_PASSWORD(),
     }),
   });
+
+  cachedTime = Date.now() + 1000 * 5;
 
   return cachedDb;
 }

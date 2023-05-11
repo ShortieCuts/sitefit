@@ -26,7 +26,7 @@ export default Default;
 
 async function handleRequest(request: Request, env: Env) {
   let url = new URL(request.url);
-  console.log("HIt WS");
+
   let paths = url.pathname.split("/");
   let id = env.ENGINE_INSTANCE.idFromName(paths[1]);
 

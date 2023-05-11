@@ -8,6 +8,8 @@
 	}
 	export let editing = false;
 
+	export let readonly = false;
+
 	let dispatch = createEventDispatcher();
 
 	function commit() {
@@ -52,6 +54,7 @@
 >
 	{#if editing}
 		<input
+			{readonly}
 			on:keydown={(e) => {
 				if (e.code == 'Enter' || e.code == 'Tab') {
 					commit();

@@ -337,6 +337,36 @@
 					if (!center) return;
 					editor.longitude.set(center.lng());
 					editor.latitude.set(center.lat());
+
+					let topLeft = map.getBounds()?.getNorthEast();
+					let bottomRight = map.getBounds()?.getSouthWest();
+					let bounds = {
+						minX: Infinity,
+						minY: Infinity,
+						maxX: -Infinity,
+						maxY: -Infinity
+					};
+
+					let relativeTopLeft = referenceOverlay?.latLngAltitudeToVector3({
+						lat: topLeft?.lat() ?? 0,
+						lng: topLeft?.lng() ?? 0,
+						altitude: 0
+					});
+
+					let relativeBottomRight = referenceOverlay?.latLngAltitudeToVector3({
+						lat: bottomRight?.lat() ?? 0,
+						lng: bottomRight?.lng() ?? 0,
+						altitude: 0
+					});
+
+					if (relativeTopLeft && relativeBottomRight) {
+						bounds.minX = Math.min(relativeTopLeft.x, relativeBottomRight.x);
+						bounds.minY = Math.min(relativeTopLeft.z, relativeBottomRight.z);
+						bounds.maxX = Math.max(relativeTopLeft.x, relativeBottomRight.x);
+						bounds.maxY = Math.max(relativeTopLeft.z, relativeBottomRight.z);
+					}
+
+					editor.viewBounds.set(bounds);
 				});
 
 				setTimeout(() => {

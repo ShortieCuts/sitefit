@@ -149,14 +149,38 @@ export function calculateGuides(
 
 	let selection = get(editor.effectiveSelection);
 	let selectionSet = new Set(selection);
+	let viewBounds = get(editor.viewBounds);
 	for (let obj of broker.project.objects) {
 		if (IGNORED_OBJECTS.includes(obj.id)) continue;
 		let guides = obj.getGuides();
 		if (selectionSet.has(obj.id) && !candidateOverride) {
 			candidatePoints.push(...guides.points);
 		} else {
-			targetPoints.push(...guides.points);
-			targetLines.push(...guides.segments);
+			for (let point of guides.points) {
+				if (
+					point.x > viewBounds.minX &&
+					point.x < viewBounds.maxX &&
+					point.y > viewBounds.minY &&
+					point.y < viewBounds.maxY
+				) {
+					targetPoints.push(point);
+				}
+			}
+
+			for (let seg of guides.segments) {
+				if (
+					seg.start.x > viewBounds.minX &&
+					seg.start.x < viewBounds.maxX &&
+					seg.start.y > viewBounds.minY &&
+					seg.start.y < viewBounds.maxY &&
+					seg.end.x > viewBounds.minX &&
+					seg.end.x < viewBounds.maxX &&
+					seg.end.y > viewBounds.minY &&
+					seg.end.y < viewBounds.maxY
+				) {
+					targetLines.push(seg);
+				}
+			}
 			targetArc.push(...guides.arcs);
 		}
 	}
@@ -311,6 +335,7 @@ export function calculateGuides(
 
 export const SelectTool = {
 	icon: faArrowPointer,
+	access: 'READ',
 	key: 'select',
 	shortcut: 's',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
@@ -333,6 +358,7 @@ export const SelectTool = {
 						target[1] < bounds.maxY
 					) {
 						let area = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
+						console.log('select size', area);
 						if (area < minSize) {
 							minSize = area;
 							currentObj = obj.id;
@@ -343,6 +369,7 @@ export const SelectTool = {
 
 			if (currentObj) {
 				editor.select(currentObj);
+				editor.activateDialog('');
 			} else {
 				editor.deselectAll();
 			}
@@ -521,13 +548,15 @@ export const SelectTool = {
 		}
 	},
 	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		let access = get(broker.sessionAccess);
+
 		// Check for object intersection with cursor
 
 		let isTranslating = get(editor.translating);
 		let isRotating = get(editor.rotating);
 		let isScaling = get(editor.scaling);
 
-		if (isTranslating || isScaling || isRotating) {
+		if (access === 'WRITE' && (isTranslating || isScaling || isRotating)) {
 			// Transforming
 			let currentMousePosition = get(editor.currentMousePositionRelative);
 
@@ -883,7 +912,7 @@ export const SelectTool = {
 				if (obj) objs.push(obj);
 			}
 			let box = computeBounds(objs);
-			if (box.width > 0 || box.height > 0) {
+			if (access == 'WRITE' && (box.width > 0 || box.height > 0)) {
 				needsRootReset = false;
 				let cursorPoint = point(cursor[0], cursor[1]);
 
@@ -1021,7 +1050,6 @@ export const SelectTool = {
 
 			if (hover) {
 				hover = ascendToRoot(editor, broker, hover);
-				console.log('hover', get(editor.rootGroup));
 				if (get(editor.hoveringObject) !== hover) editor.hoveringObject.set(hover);
 			} else {
 				if (get(editor.hoveringObject) !== '') editor.hoveringObject.set('');

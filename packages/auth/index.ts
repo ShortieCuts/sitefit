@@ -82,16 +82,13 @@ export async function checkRequestAuth(
   let auth: string | null = null;
   if (typeof requestOrSession == "string") {
     auth = requestOrSession;
-    console.log("Got from string");
   } else {
     auth = requestOrSession.headers.get("Authorization");
     if (auth) {
-      console.log("Got from auth header");
       auth = auth.split(" ")[1];
     } else {
       let cookies = parseCookie(requestOrSession.headers.get("Cookie") ?? "");
       auth = cookies.session ?? null;
-      console.log("Got from cookies");
     }
   }
 
@@ -101,8 +98,6 @@ export async function checkRequestAuth(
     ).then((res) => res.json());
     try {
       const protectedHeader = await jose.decodeProtectedHeader(auth);
-      console.log("Cookie: ", protectedHeader);
-      console.log("After cookie");
 
       if (protectedHeader && protectedHeader.kid && protectedHeader.alg) {
         let publicKey = pkey[protectedHeader.kid];
@@ -110,15 +105,14 @@ export async function checkRequestAuth(
           auth,
           await jose.importX509(publicKey, protectedHeader.alg)
         );
-        console.log("Verify", payload);
+
         let decoded = new TextDecoder().decode(payload);
         try {
           let parsed = JSON.parse(decoded);
 
           if (parsed.exp > Date.now() / 1000) {
-            console.log("User id", parsed.user_id);
             let user = await getUserFromFirebaseId(parsed.user_id);
-            console.log("User b", user);
+
             if (user) {
               return {
                 emailVerified: parsed.email_verified,
@@ -250,8 +244,6 @@ export async function getUserFromFirebaseId(
     .where("User.firebaseId", "=", id)
     .executeTakeFirst();
 
-  console.log("Getting from DB", data);
-
   if (data) {
     return data;
   } else {
@@ -288,7 +280,6 @@ export async function updateUserFromFirebase(
       .selectAll()
       .where("User.email", "=", user.email ?? "")
       .executeTakeFirst();
-    console.log("Exists", existsByEmail);
 
     if (existsByEmail) {
       let res = await db()

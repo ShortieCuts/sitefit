@@ -18,10 +18,21 @@ body {
 }
 
 .btn {
-	@apply flex flex-row items-center transition-colors bg-white rounded-md border-gray-300 border-[1px] px-4 py-1 hover:bg-gray-100 justify-center cursor-pointer select-none;
+	@apply flex flex-row items-center transition-colors bg-white rounded-lg border-gray-300 border-[1px] px-4 py-1 hover:bg-gray-100 justify-center cursor-pointer select-none;
 
-	&:not(.btn-icon-only) svg {
+	&:not(.btn-icon-only) svg,
+	&:not(.btn-icon-only) .icon {
 		@apply w-4 h-4 mr-2;
+	}
+
+	&.btn-fat {
+		@apply pl-2;
+
+		&:not(.btn-icon-only) svg,
+		&:not(.btn-icon-only) .icon {
+			@apply w-6  h-auto mr-2;
+			max-width: unset;
+		}
 	}
 
 	&.active {
@@ -71,7 +82,8 @@ body {
 .input-group {
 	@apply flex flex-row items-center justify-between relative;
 
-	svg {
+	svg,
+	.icon {
 		position: absolute;
 		left: 0.75rem;
 		pointer-events: none;
@@ -88,7 +100,8 @@ body {
 	max-width: min(1200px, calc(100vw - 2rem));
 }
 
-.icon-sm > svg {
+.icon-sm > svg,
+.icon-sm > .icon {
 	@apply w-4 h-4;
 }
 

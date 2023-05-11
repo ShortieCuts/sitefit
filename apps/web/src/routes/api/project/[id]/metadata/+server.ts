@@ -14,6 +14,16 @@ import {
 } from '$lib/server/api';
 import type { ListViewProject, MetadataProject } from '$lib/types/project';
 
+function filterBool(v: any) {
+	if (typeof v === 'boolean') {
+		return v;
+	} else if (typeof v === 'string') {
+		return v === 'true';
+	} else if (typeof v === 'number') {
+		return v === 1;
+	}
+}
+
 export const POST = (async ({ request, params }) => {
 	return await validateRequestWithAccess(
 		params.id,
@@ -30,12 +40,40 @@ export const POST = (async ({ request, params }) => {
 			if (!project) {
 				throw error(404, 'Project not found');
 			}
+
 			let grantedAccess = await db()
 				.selectFrom('Access')
 				.where('projectId', '=', project.id)
+				.where('userId', '!=', 0n)
 				.innerJoin('User', 'Access.userId', 'User.id')
-				.select(['Access.level', 'Access.id', 'User.publicId'])
+				.select([
+					'Access.level',
+					'Access.id',
+					'Access.createdAt',
+					'User.publicId',
+					'User.firstName',
+					'User.lastName',
+					'User.photoURL',
+					'User.email'
+				])
 				.execute();
+
+			let grantedAccessNonUser = await db()
+				.selectFrom('Access')
+				.where('projectId', '=', project.id)
+				.where('userId', '=', 0n)
+				.select(['Access.level', 'Access.id', 'Access.createdAt', 'Access.email'])
+				.execute();
+
+			let owner = await db()
+				.selectFrom('User')
+				.where('id', '=', project.ownerId)
+				.select(['publicId', 'firstName', 'lastName', 'photoURL', 'email'])
+				.executeTakeFirst();
+
+			if (!owner) {
+				throw error(500, 'Owner not found (this should never happen)');
+			}
 
 			return json({
 				name: project.name,
@@ -46,14 +84,43 @@ export const POST = (async ({ request, params }) => {
 				updatedAt: project.updatedAt,
 
 				access: {
-					items: grantedAccess.map((access) => {
-						return {
-							level: access.level,
-							id: access.id,
-							userId: access.publicId
-						};
-					}),
-					blanketAccessGranted: project.blanketAccessGranted,
+					items: [
+						{
+							access: 'OWNER',
+							id: -1,
+							userId: owner.publicId,
+							firstName: owner.firstName,
+							lastName: owner.lastName,
+							photoURL: owner.photoURL,
+							email: owner.email,
+							createdAt: project.createdAt
+						},
+						...grantedAccess.map((access) => {
+							return {
+								access: access.level,
+								id: access.id,
+								userId: access.publicId,
+								firstName: access.firstName,
+								lastName: access.lastName,
+								photoURL: access.photoURL,
+								email: access.email,
+								createdAt: access.createdAt
+							};
+						}),
+						...grantedAccessNonUser.map((access) => {
+							return {
+								access: access.level,
+								id: access.id,
+								userId: 0,
+								firstName: access.email,
+								lastName: '',
+								photoURL: '',
+								email: access.email,
+								createdAt: access.createdAt
+							};
+						})
+					],
+					blanketAccessGranted: filterBool(project.blanketAccessGranted),
 					blanketAccess: project.blanketAccess
 				}
 			} as MetadataProject);

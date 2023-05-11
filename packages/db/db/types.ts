@@ -13,6 +13,8 @@ export type Access = {
     status: AccessStatus;
     level: AccessLevel;
     userId: bigint;
+    email: Generated<string>;
+    token: Generated<string>;
     projectId: bigint;
 };
 export type Cad = {
