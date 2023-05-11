@@ -1,4 +1,5 @@
 import type { CadTreeNode } from '$lib/types/cad';
+import type { ProjectComment, ProjectCommentReply } from '$lib/types/comment';
 import type { MetadataProject, ProjectTreeNode } from '$lib/types/project';
 import type { PublicUserInfo } from '$lib/types/user';
 import type { User } from 'auth';
@@ -91,9 +92,25 @@ export function createIdApiEndpointHelper<T, A>(
 export function createIdApiEndpointHelper<T, A>(
 	method: string,
 	endpoint: string
-): (id: string, payload: T) => Promise<{ data: A; error: boolean; message: string }> {
-	return async (id: string, payload: T) => {
+): (
+	id: string,
+	payload: T & { _accessToken?: string }
+) => Promise<{ data: A; error: boolean; message: string }> {
+	return async (id: string, payload: T & { _accessToken?: string }) => {
 		let realEndpoint = endpoint.replace('<id>', id);
+		return createApiEndpointHelper<T, A>(method, realEndpoint)(payload);
+	};
+}
+export function create2IdApiEndpointHelper<T, A>(
+	method: string,
+	endpoint: string
+): (
+	id1: string,
+	id2: string,
+	payload: T & { _accessToken?: string }
+) => Promise<{ data: A; error: boolean; message: string }> {
+	return async (id1: string, id2: string, payload: T & { _accessToken?: string }) => {
+		let realEndpoint = endpoint.replace('<id1>', id1).replace('<id2>', id2);
 		return createApiEndpointHelper<T, A>(method, realEndpoint)(payload);
 	};
 }
@@ -159,6 +176,59 @@ export const updateMe = createApiEndpointHelper<
 		success: boolean;
 	}
 >('POST', '/api/user/update');
+
+export const createComment = createIdApiEndpointHelper<
+	{
+		longitude: number;
+		latitude: number;
+		text: string;
+	},
+	{
+		id: bigint;
+	}
+>('POST', '/api/project/<id>/comment');
+
+export const deleteComment = create2IdApiEndpointHelper<{}, {}>(
+	'DELETE',
+	'/api/project/<id1>/comment/<id2>'
+);
+
+export const updateComment = create2IdApiEndpointHelper<
+	{
+		text: string;
+	},
+	{}
+>('POST', '/api/project/<id1>/comment/<id2>');
+
+export const replyToComment = create2IdApiEndpointHelper<
+	{
+		text: string;
+	},
+	{}
+>('POST', '/api/project/<id1>/comment/<id2>/reply');
+
+export const getCommentReplies = create2IdApiEndpointHelper<
+	{},
+	{
+		replies: ProjectCommentReply[];
+	}
+>('POST', '/api/project/<id1>/comment/<id2>/replies');
+
+export const markCommentRead = create2IdApiEndpointHelper<
+	{
+		markUnread: boolean;
+	},
+	{}
+>('POST', '/api/project/<id1>/comment/<id2>/read');
+
+export const getComments = createIdApiEndpointHelper<
+	{
+		sortBy: 'unread' | 'date';
+	},
+	{
+		comments: ProjectComment[];
+	}
+>('POST', '/api/project/<id>/comments');
 
 export const getProjectMetadata = createIdApiEndpointHelper<{}, MetadataProject>(
 	'POST',

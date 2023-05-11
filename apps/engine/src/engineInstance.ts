@@ -495,10 +495,16 @@ export class EngineInstance {
         }
       }
     } else if (isRefresh(data)) {
-      if (session.checkAccess("WRITE")) {
-        if (this.project) {
-          this.refreshAccess();
-          this.broadcast(SocketMessage.refresh("access"));
+      if (data.subject == "access") {
+        if (session.checkAccess("WRITE")) {
+          if (this.project) {
+            this.refreshAccess();
+            this.broadcast(SocketMessage.refresh("access"));
+          }
+        }
+      } else if (data.subject == "comments" || data.subject == "replies") {
+        if (session.checkAccess("COMMENT")) {
+          this.broadcast(data);
         }
       }
     }

@@ -28,7 +28,7 @@
 	let leftMouseDown = writable(false);
 	let middleMouseDown = writable(false);
 	let isScrolling = writable(false);
-
+	let svelteOverlaysEl: HTMLElement;
 	let overlays: Overlay[] = [];
 	const overlayTypes: (typeof Overlay)[] = [SelectionOverlay, RendererOverlay, GuidesOverlay];
 	let referenceOverlay: ThreeJSOverlayView | null = null;
@@ -168,6 +168,16 @@
 
 				overlayView = new google.maps.OverlayView();
 				overlayView.setMap(map);
+
+				overlayView.draw = () => {
+					for (let overlay of overlays) {
+						for (let draw of overlay.draws) {
+							draw();
+						}
+					}
+
+					updateSvelteOverlays();
+				};
 
 				referenceOverlay = new ThreeJSOverlayView({
 					map,
@@ -473,6 +483,63 @@
 	}
 
 	let topLeftCursors = [Cursors.default, Cursors.pen, Cursors.comment];
+
+	function updateSvelteOverlays() {
+		if (!svelteOverlaysEl || !overlayView) return;
+		let proj = overlayView.getProjection();
+
+		for (let child of svelteOverlaysEl.children) {
+			let childEl = child as HTMLElement;
+			if ('longitude' in childEl.dataset) {
+				let longitude = parseFloat(childEl.dataset.longitude ?? '0');
+				let latitude = parseFloat(childEl.dataset.latitude ?? '0');
+
+				let vec = referenceOverlay?.latLngAltitudeToVector3({
+					lat: latitude,
+					lng: longitude,
+					altitude: 0
+				});
+
+				let deg = -$heading;
+				let rad = (deg / 180) * Math.PI;
+
+				let x = vec?.x ?? 0;
+				let y = vec?.z ?? 0;
+
+				let cos = Math.cos(rad);
+				let sin = Math.sin(rad);
+
+				let x2 = x * cos - y * sin;
+				let y2 = x * sin + y * cos;
+
+				let pos = proj.fromLatLngToContainerPixel(new google.maps.LatLng(latitude, longitude));
+				if (pos) {
+					childEl.style.left = `${pos.x}px`;
+					childEl.style.top = `${pos.y}px`;
+					childEl.style.position = `absolute`;
+				}
+			}
+		}
+	}
+
+	let observer: MutationObserver | null = null;
+	onMount(() => {
+		observer = new MutationObserver((list, ob) => {
+			updateSvelteOverlays();
+		});
+
+		observer.observe(svelteOverlaysEl, {
+			childList: true,
+			subtree: true
+		});
+	});
+
+	onDestroy(() => {
+		if (observer) {
+			observer.disconnect();
+			observer = null;
+		}
+	});
 </script>
 
 <svelte:window on:mousewheel|capture={handleMouseWheel} />
@@ -486,6 +553,13 @@
 	on:mousedown={handleMouseDown}
 	on:mouseup={handleMouseUp}
 />
+
+<div
+	bind:this={svelteOverlaysEl}
+	class="map-container-svelte-overlays absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden"
+>
+	<slot />
+</div>
 
 <style lang="scss">
 	:global(.map-container *) {

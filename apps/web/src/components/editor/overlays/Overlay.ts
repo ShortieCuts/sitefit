@@ -8,6 +8,7 @@ export class Overlay {
 	broker: ProjectBroker;
 	overlay: ThreeJSOverlayView;
 	overlayView: google.maps.OverlayView;
+	draws: (() => void)[] = [];
 
 	constructor(
 		map: google.maps.Map,
@@ -33,6 +34,10 @@ export class Overlay {
 
 	destroy() {
 		this.unsubs.forEach((unsub) => unsub());
+	}
+
+	addDraw(draw: () => void) {
+		this.draws.push(draw);
 	}
 
 	refresh() {}

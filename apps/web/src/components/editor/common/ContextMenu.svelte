@@ -10,7 +10,7 @@
 	let position = { x: 0, y: 0 };
 
 	const handleClick = (e: MouseEvent) => {
-		if (e.button === 2) {
+		if (e.button === 2 || e.target.closest('[data-context]')) {
 			open = true;
 			position = { x: e.clientX, y: e.clientY };
 			e.preventDefault();

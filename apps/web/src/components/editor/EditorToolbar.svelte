@@ -72,6 +72,7 @@
 
 		if (item) {
 			editor.activeTool.set(item.key);
+			editor.stagingComment.set(null);
 		}
 
 		if (event.key === ' ') {
@@ -114,6 +115,7 @@
 				style={$activeTool === item.key ? '--tw-bg-opacity: 1' : ''}
 				on:click={() => {
 					editor.activeTool.set(item.key);
+					editor.stagingComment.set(null);
 				}}
 			>
 				<Fa icon={item.icon} />

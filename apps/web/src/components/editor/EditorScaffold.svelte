@@ -3,6 +3,7 @@
 		faAdd,
 		faArrowLeft,
 		faArrowPointer,
+		faArrowRight,
 		faArrowsLeftRight,
 		faArrowsUpDown,
 		faBackward,
@@ -57,6 +58,7 @@
 	import SignIn from '../auth/SignIn.svelte';
 	import { string } from 'zod';
 	import Icon from '../icon/Icon.svelte';
+	import UserChip from '../auth/UserChip.svelte';
 
 	// export let auth: AuthState;
 	export let projectId: string;
@@ -70,11 +72,11 @@
 	setSvelteContext(broker, editorContext);
 
 	const { name } = broker.metadata;
-	const { loading, error, connected } = broker;
+	const { loading, error, connected, rootComments } = broker;
 
 	const { geo, heading } = broker.watchCornerstone();
 
-	const { activeDialog, effectiveSelection, selection, toasts } = editorContext;
+	const { activeDialog, effectiveSelection, selection, toasts, stagingComment } = editorContext;
 
 	let needsCornerstone = false;
 
@@ -413,7 +415,82 @@
 				}}
 			>
 				{#key `${$geo[0]},${$geo[1]},${$heading}`}
-					<EditorMap />
+					<EditorMap>
+						{#if $stagingComment}
+							{#key $stagingComment.longitude + ' ' + $stagingComment.latitude}
+								<div
+									data-longitude={$stagingComment.longitude}
+									data-latitude={$stagingComment.latitude}
+								>
+									<div
+										class="relative rounded-full rounded-tl-none rotate-45 bg-white w-8 h-8 flex items-center justify-center hover:bg-blue-500 transition-colors pointer-events-auto"
+										style="left: -15px; top: 8px;"
+									>
+										<div class="origin-center -rotate-45 scale-[0.65]">
+											{#if $auth.user}
+												<UserChip userId={$auth.user.id} />
+											{/if}
+										</div>
+									</div>
+									<div class="flex flex-row items-center pointer-events-auto -mt-16 -ml-2">
+										<input
+											id="comment-input"
+											class="input-text"
+											style="padding-left: 0.5rem; padding-right: 0.5rem;"
+											on:keydown={(e) => {
+												if (e.key === 'Enter') {
+													editorContext.submitComment();
+												}
+											}}
+											bind:value={$stagingComment.text}
+										/>
+										<button
+											on:click={() => {
+												editorContext.submitComment();
+											}}
+											class="bg-blue-500 rounded-md flex flex-row items-center justify-center p-2 w-8 ml-2 text-white hover:bg-blue-400"
+											><Fa icon={faArrowRight} /></button
+										>
+									</div>
+								</div>
+							{/key}
+						{/if}
+						{#each $rootComments as comment}
+							{#key comment.long + ' ' + comment.lat}
+								<button
+									on:scroll|preventDefault|stopPropagation
+									on:mousewheel|preventDefault|stopPropagation
+									data-longitude={comment.long}
+									data-latitude={comment.lat}
+									class="comment-wrap"
+									on:click={() => {
+										if ($activeDialog !== 'comments') editorContext.activateDialog('comments');
+										setTimeout(() => {
+											let el = document.querySelector(`[data-comment-id="${comment.id}"]`);
+											if (el) {
+												el.scrollIntoView();
+												el.focus();
+											}
+										}, 100);
+									}}
+								>
+									<div class="comment-hover-side" />
+									<div
+										class="comment-bulb absolute rotate-45 w-8 h-8 flex items-center justify-center hover:bg-blue-500 transition-colors pointer-events-auto origin-top-left"
+										class:bg-blue-500={!comment.read}
+										class:bg-white={comment.read}
+									>
+										<div class="comment-chip origin-center -rotate-45 scale-[0.65]">
+											<UserChip userId={comment.authorId} />
+										</div>
+										<div class="absolute comment-text">
+											{comment.text}
+										</div>
+									</div>
+								</button>
+							{/key}
+						{/each}
+					</EditorMap>
 				{/key}
 				{#if !$isMobile}
 					<ContextMenu el={midEl}>
@@ -589,6 +666,7 @@
 	}}
 	on:keyup={(e) => {
 		if (e.key === 'Escape') {
+			editorContext.stagingComment.set(null);
 			if ($activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center') {
 				editorContext.activateDialog('');
 			}
@@ -684,3 +762,66 @@
 		</div>
 	</div>
 {/if}
+
+<style lang="scss">
+	.comment-bulb {
+		overflow: hidden;
+		border-top-left-radius: 0px;
+		border-top-right-radius: 200px;
+		border-bottom-right-radius: 200px;
+		border-bottom-left-radius: 200px;
+		cursor: pointer;
+
+		.comment-text {
+			opacity: 0;
+			transition: 0.2s;
+			margin-top: 0.5rem;
+			position: static;
+			display: none;
+		}
+	}
+
+	.comment-hover-side {
+		right: 100%;
+		top: 0;
+		height: 60px;
+		width: 20px;
+		position: absolute;
+		background-color: transparent;
+		pointer-events: auto;
+	}
+
+	.comment-wrap:hover {
+		.comment-bulb {
+			transition: 0.2s;
+			// border-top-left-radius: 0px;
+			// border-top-right-radius: 0.5rem;
+			// border-bottom-right-radius: 0.5rem;
+			// border-bottom-left-radius: 0.5rem;
+			background-color: white !important;
+			align-items: start;
+			justify-content: start;
+			padding-right: 0.5rem;
+			padding-bottom: 0.5rem;
+
+			transform-origin: top left;
+			width: 200px;
+			height: 40px;
+			transform: rotate(0deg);
+
+			.comment-chip {
+				transform: rotate(0deg) scale(0.65);
+			}
+
+			.comment-text {
+				opacity: 1;
+				display: block;
+				max-height: 100%;
+				overflow: hidden;
+				white-space: nowrap;
+
+				text-overflow: ellipsis;
+			}
+		}
+	}
+</style>

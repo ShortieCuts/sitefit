@@ -11,6 +11,9 @@
 	import { faEnvelope, faUser } from '@fortawesome/free-solid-svg-icons';
 
 	export let userId: string;
+	export let showName: boolean = false;
+	export let showPicture: boolean = true;
+	export let small: boolean = false;
 
 	$: userStore = userId == 'anon' || userId.startsWith('email:') ? null : getUserInfoStore(userId);
 	export let ringColor: string = '#e5e7eb';
@@ -18,7 +21,15 @@
 
 {#if userStore && $userStore}
 	<div title="{$userStore.firstName} {$userStore.lastName}">
-		<UserProfilePicture user={$userStore} {ringColor} />
+		{#if showPicture}
+			<UserProfilePicture {small} user={$userStore} {ringColor} />
+		{/if}
+		{#if showName}
+			<div class="text-center text-sm text-gray-600">
+				{$userStore.firstName}
+				{$userStore.lastName}
+			</div>
+		{/if}
 	</div>
 {:else if userId.startsWith('email:')}
 	<div

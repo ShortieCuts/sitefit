@@ -22,7 +22,19 @@ import {
 	isRefresh
 } from 'core';
 import { getContext, setContext } from 'svelte';
-import { getAuthHeader, getCads, getProjectMetadata, writeProjectAccess } from '$lib/client/api';
+import {
+	createComment,
+	deleteComment,
+	getAuthHeader,
+	getCads,
+	getCommentReplies,
+	getComments,
+	getProjectMetadata,
+	markCommentRead,
+	replyToComment,
+	updateComment,
+	writeProjectAccess
+} from '$lib/client/api';
 import { dev } from '$app/environment';
 import { auth, getSession } from './auth';
 import { nanoid } from 'nanoid';
@@ -36,6 +48,7 @@ import LZString from 'lz-string';
 import type { UserAccessInfo } from '$lib/types/user';
 import type { MetadataProject } from '$lib/types/project';
 import { isMobile } from './responsive';
+import type { ProjectComment, ProjectCommentReply } from '$lib/types/comment';
 
 const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
@@ -127,6 +140,9 @@ export class ProjectBroker {
 
 	reconnectAttemptsRemaining: number = 5;
 
+	rootComments: Writable<ProjectComment[]> = writable([]);
+	replyStores: Map<string, Writable<ProjectCommentReply[]>> = new Map();
+
 	constructor(id: string, accessToken?: string) {
 		this.projectId = id;
 		this.accessToken = accessToken;
@@ -161,6 +177,7 @@ export class ProjectBroker {
 			(async () => {
 				this.loading.set(true);
 				await this.pullMetadata();
+				await this.refreshComments();
 				this.loading.set(false);
 
 				this.establishConnection();
@@ -231,6 +248,94 @@ export class ProjectBroker {
 		if (res.data) {
 			this.updateMetadataFromServer(res.data);
 			this.dispatchAccessRefreshMesssage();
+		}
+	}
+
+	async mutatedComment() {
+		await this.refreshComments();
+		this.sendMessage(SocketMessage.refresh('comments'));
+	}
+
+	async mutatedReply(parentId: number) {
+		await this.refreshCommentReplies(parentId);
+		this.sendMessage(SocketMessage.refresh('replies', parentId));
+	}
+
+	async createComment(longitude: number, latitude: number, text: string) {
+		let newId = await createComment(this.projectId, {
+			longitude,
+			latitude,
+			text
+		});
+
+		if (newId.data) {
+			await this.mutatedComment();
+		}
+	}
+
+	async deleteComment(id: number) {
+		let res = await deleteComment(this.projectId, id.toString(), {});
+		if (!res.error) {
+			await this.mutatedComment();
+		}
+	}
+
+	async updateComment(id: number, text: string) {
+		let res = await updateComment(this.projectId, id.toString(), {
+			text
+		});
+		if (!res.error) {
+			await this.mutatedComment();
+		}
+	}
+
+	async replyToComment(id: number, text: string) {
+		await replyToComment(this.projectId, id.toString(), {
+			text
+		});
+
+		await this.mutatedReply(id);
+	}
+
+	async markCommentRead(id: number) {
+		await markCommentRead(this.projectId, id.toString(), {
+			markUnread: false
+		});
+
+		this.rootComments.update((comments) => {
+			let newComments = [...comments];
+			let index = newComments.findIndex((c) => c.id == id);
+			if (index !== -1) {
+				newComments[index].read = true;
+			}
+
+			return newComments;
+		});
+	}
+
+	async markCommentUnread(id: number) {
+		await markCommentRead(this.projectId, id.toString(), {
+			markUnread: true
+		});
+
+		this.rootComments.update((comments) => {
+			let newComments = [...comments];
+			let index = newComments.findIndex((c) => c.id == id);
+			if (index !== -1) {
+				newComments[index].read = false;
+			}
+
+			return newComments;
+		});
+	}
+
+	async refreshComments() {
+		let res = await getComments(this.projectId, {
+			sortBy: 'unread'
+		});
+
+		if (res.data) {
+			this.rootComments.set(res.data.comments);
 		}
 	}
 
@@ -451,6 +556,28 @@ export class ProjectBroker {
 			geo: this.writableObjectProperty('_cornerstone', 'geo', [0, 0]),
 			heading: this.writableObjectProperty('_cornerstone', 'heading', 0)
 		};
+	}
+
+	async refreshCommentReplies(commentId: number) {
+		if (this.replyStores.has(commentId.toString())) {
+			let replies = await getCommentReplies(this.projectId, commentId.toString(), {});
+
+			if (replies.data) {
+				this.replyStores.get(commentId.toString())?.set(replies.data.replies);
+			}
+		}
+	}
+
+	watchCommentReplies(commentId: number) {
+		let store = this.replyStores.get(commentId.toString());
+		if (!store) {
+			store = writable([]);
+			this.replyStores.set(commentId.toString(), store);
+
+			this.refreshCommentReplies(commentId);
+		}
+
+		return store;
 	}
 
 	normalizeVector(vector: THREE.Vector3): THREE.Vector3;
@@ -709,6 +836,11 @@ export class ProjectBroker {
 		} else if (isRefresh(message)) {
 			if (message.subject == 'access') {
 				this.pullMetadata();
+			} else if (message.subject == 'replies') {
+				if (typeof message.payload == 'number')
+					this.refreshCommentReplies(message.payload as number);
+			} else if (message.subject == 'comments') {
+				this.refreshComments();
 			}
 		}
 	}
@@ -808,6 +940,12 @@ export class EditorContext {
 		maxY: 0
 	});
 
+	stagingComment: Writable<{
+		text: string;
+		longitude: number;
+		latitude: number;
+	} | null> = writable(null);
+
 	selectionDown: Writable<boolean> = writable(false);
 	selectionStart: Writable<[number, number]> = writable([0, 0]);
 	hoveringObject: Writable<ObjectID> = writable('');
@@ -900,6 +1038,21 @@ export class EditorContext {
 		};
 	}
 
+	async submitComment() {
+		let comment = get(this.stagingComment);
+		if (!comment) {
+			return;
+		}
+
+		if (comment.text.trim() === '') {
+			this.stagingComment.set(null);
+			return;
+		}
+
+		await this.broker.createComment(comment.longitude, comment.latitude, comment.text);
+		this.stagingComment.set(null);
+	}
+
 	alert(message: string, timeout = 5000) {
 		return this.toast(message, 'error', timeout);
 	}
@@ -911,6 +1064,7 @@ export class EditorContext {
 	}
 
 	activateDialog(key: string) {
+		this.stagingComment.set(null);
 		if (get(isMobile) && key != '') {
 			this.deselectAll();
 		}

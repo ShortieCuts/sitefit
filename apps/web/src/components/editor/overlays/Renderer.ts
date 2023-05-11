@@ -397,11 +397,11 @@ export class RendererOverlay extends Overlay {
 			this.overlay.requestRedraw();
 		};
 
-		this.overlayView.draw = () => {
+		this.addDraw(() => {
 			for (let [id, ro] of this.renderedObjects.entries()) {
 				if (ro.mapUpdate) ro.mapUpdate(this, this.broker.project.objectsMap.get(id)!);
 			}
-		};
+		});
 
 		this.addUnsub(
 			this.editor.effectiveSelection.subscribe(() => {

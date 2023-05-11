@@ -103,7 +103,8 @@ export function isSetAccessLevel(
 
 type Refresh = {
   type: "refresh";
-  subject: "access";
+  subject: "access" | "replies" | "comments";
+  payload: any;
 };
 
 export function isRefresh(message: SocketMessage): message is Refresh {
@@ -187,10 +188,14 @@ export namespace SocketMessage {
     };
   }
 
-  export function refresh(subject: "access"): Refresh {
+  export function refresh(
+    subject: "access" | "replies" | "comments",
+    payload: any = null
+  ): Refresh {
     return {
       type: "refresh",
       subject,
+      payload,
     };
   }
 

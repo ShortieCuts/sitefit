@@ -4,8 +4,9 @@
 
 	export let user: PublicUserInfo;
 	$: photoURL = user?.photoURL || null;
-
 	export let ringColor: string = '#e5e7eb';
+
+	export let small = false;
 
 	function hashOfString(str: string) {
 		let hash = 0;
@@ -49,14 +50,16 @@
 	<img
 		referrerpolicy="no-referrer"
 		class="w-10 h-10 rounded-full border-[2px] shadow-md"
-		style="border-color: {ringColor};"
+		style="border-color: {ringColor}; {small ? 'width: 2rem; height: 2rem' : ''}"
 		src={photoURL}
 		alt="User profile"
 	/>
 {:else}
 	<div
 		class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase flex items-center flex-row justify-center"
-		style="background: {bgColor}; border-color: {ringColor};"
+		style="background: {bgColor}; border-color: {ringColor}; {small
+			? 'width: 2rem; height: 2rem'
+			: ''}"
 	>
 		{user.firstName?.[0] ?? ''}
 		{user.lastName?.[0] ?? ''}
