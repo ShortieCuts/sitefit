@@ -9,6 +9,7 @@
 	import { fade } from 'svelte/transition';
 	import ReplyComment from './ReplyComment.svelte';
 	import { auth } from 'src/store/auth';
+	import { get } from 'svelte/store';
 
 	const { broker, editor } = getSvelteContext();
 
