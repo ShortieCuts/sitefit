@@ -138,11 +138,13 @@ export async function checkRequestAuth(
           }
         } catch (e: any) {
           console.error(e);
+          console.error("Inner auth block: ", e.stack);
           return null;
         }
       }
     } catch (e: any) {
       console.error(e);
+      console.error("Outer auth block: ", e.stack);
       return null;
     }
 
@@ -181,6 +183,7 @@ export async function checkRequestAuth(
         }
       } catch (e: any) {
         console.log(e);
+        console.error(e.stack);
         return null;
       }
     } else {

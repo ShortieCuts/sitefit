@@ -11,7 +11,8 @@ import {
 	ObjectType,
 	Path,
 	type Object2DShape,
-	type ObjectID
+	type ObjectID,
+	Text
 } from 'core';
 import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { computeBounds } from '../overlays/Selection';
@@ -428,6 +429,7 @@ export const SelectTool = {
 		}
 
 		if (canChangeSelection) {
+			editor.editingObject.set(null);
 			if (!ev.shiftKey) {
 				if (hover) {
 					editor.select(hover);
@@ -449,11 +451,16 @@ export const SelectTool = {
 		} else {
 			if (Date.now() - clickTimer < 300) {
 				// Double click
-				console.log('double click');
 				if (hover) {
 					let obj = broker.project.objectsMap.get(hover);
-					if (obj && obj.type == 'group') {
-						editor.rootGroup.set(hover);
+					if (obj) {
+						if (obj.type == 'group') {
+							editor.rootGroup.set(hover);
+						} else {
+							setTimeout(() => {
+								editor.editingObject.set(hover);
+							}, 1);
+						}
 					}
 				}
 				hover = getObjectAtCursor(editor, broker, cursor);
@@ -522,6 +529,9 @@ export const SelectTool = {
 						} else if (obj.type == ObjectType.Circle) {
 							transaction.update(id, 'radius', structuredClone((obj as Circle).radius));
 							(obj as Circle).radius = (objOrig as Circle).radius;
+						} else if (obj.type == ObjectType.Text) {
+							transaction.update(id, 'size', structuredClone((obj as Text).size));
+							(obj as Text).size = (objOrig as Text).size;
 						}
 
 						obj.transform = objOrig.transform;
@@ -661,6 +671,7 @@ export const SelectTool = {
 								}
 								obj.transform.position[0] = 0;
 								obj.transform.position[1] = 0;
+								obj.transform.rotation = 0;
 							} else if (obj.type == ObjectType.Arc) {
 								let arc = obj as Arc;
 
@@ -672,9 +683,9 @@ export const SelectTool = {
 
 								arc.startAngle = startAngle - rotation;
 								arc.endAngle = endAngle - rotation;
+								obj.transform.rotation = 0;
 							}
 
-							obj.transform.rotation = 0;
 							obj.computeShape();
 
 							didApply = true;
@@ -832,6 +843,27 @@ export const SelectTool = {
 
 							if (direction[1] != 0) {
 								arc.transform.position[1] = newBoxTop + newRelativeY;
+							}
+						} else if (obj.type == ObjectType.Text) {
+							let text = obj as Text;
+							let originalText = originalObj as Text;
+
+							let newFontSize = originalText.size * Math.max(scaleX, scaleY);
+							if (direction[0] == 0) {
+								newFontSize = originalText.size * scaleY;
+							}
+
+							if (direction[1] == 0) {
+								newFontSize = originalText.size * scaleX;
+							}
+
+							text.size = newFontSize;
+							if (direction[0] != 0) {
+								text.transform.position[0] = newBoxLeft + newRelativeX;
+							}
+
+							if (direction[1] != 0) {
+								text.transform.position[1] = newBoxTop + newRelativeY;
 							}
 						}
 

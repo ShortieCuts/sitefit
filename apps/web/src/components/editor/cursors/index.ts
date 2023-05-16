@@ -13,6 +13,7 @@ import CursorComment from './comment.svg?url';
 import CursorPen from './pen.svg?url';
 import CursorCrosshair from './crosshair.svg?url';
 import CursorText from './text.svg?url';
+import CursorMeasurement from './measurement.svg?url';
 
 export const Cursors = {
 	default: CursorDefault,
@@ -29,5 +30,6 @@ export const Cursors = {
 	comment: CursorComment,
 	pen: CursorPen,
 	crosshair: CursorCrosshair,
-	text: CursorText
+	text: CursorText,
+	measurement: CursorMeasurement
 };

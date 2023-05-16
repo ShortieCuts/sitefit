@@ -4,6 +4,7 @@
 		faArrowsLeftRight,
 		faArrowsUpDown,
 		faCheck,
+		faComment,
 		faRemove,
 		faRotateLeft,
 		faRotateRight,
@@ -16,6 +17,7 @@
 	import { get } from 'svelte/store';
 	import { type ObjectID, type Object2D, makeObject } from 'core';
 	import Flatten from '@flatten-js/core';
+	import MobileCrosshair from './common/MobileCrosshair.svelte';
 
 	const { editor, broker } = getSvelteContext();
 	const { effectiveSelection, latitude, longitude } = editor;
@@ -23,13 +25,15 @@
 
 	$: hasSelection = $effectiveSelection.length > 0;
 
-	const { mobileToolMode } = editor;
+	const { mobileToolMode, activeTool } = editor;
 
 	let selectedSize = { width: 0, height: 0 };
 	let lastLongitude = $longitude;
 	let lastLatitude = $latitude;
 	let realLongitude = $longitude;
 	let realLatitude = $latitude;
+
+	let currentComment = '';
 
 	$: canWrite = $sessionAccess == 'WRITE';
 	$: {
@@ -126,6 +130,33 @@
 </script>
 
 {#if canWrite}
+	{#if $activeTool == 'comment'}
+		<MobileCrosshair />
+		<MobileDrawer>
+			<div>
+				<input type="text" class="w-full h-16 pl-4" autofocus bind:value={currentComment} />
+
+				<button
+					class="text-blue-500"
+					on:click={() => {
+						broker.createComment(get(editor.longitude), get(editor.latitude), currentComment);
+						currentComment = '';
+						editor.activeTool.set('');
+					}}><Fa icon={faCheck} /> Insert Comment</button
+				>
+			</div>
+			<div>
+				<button
+					on:click={() => {
+						editor.activeTool.set('');
+						currentComment = '';
+					}}
+					class="text-red-600"
+					style="justify-content: center;">Cancel</button
+				>
+			</div>
+		</MobileDrawer>
+	{/if}
 	{#if hasSelection}
 		{#if $mobileToolMode === ''}
 			<MobileDrawer>

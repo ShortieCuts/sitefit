@@ -2,8 +2,20 @@ import { getSvelteContext } from 'src/store/editor';
 import { Overlay } from './Overlay';
 import * as THREE from 'three';
 import { get } from 'svelte/store';
-import { Arc, Circle, Cornerstone, Group, Path, Text, type Object2D, type ObjectID } from 'core';
+import {
+	Arc,
+	Circle,
+	Cornerstone,
+	Group,
+	Path,
+	Text,
+	type Object2D,
+	type ObjectID,
+	ObjectType
+} from 'core';
 import type { Vector3 } from 'three';
+import Flatten from '@flatten-js/core';
+import { metersToFeetPrettyPrint } from '$lib/util/distance';
 
 const ACTIVE_COLOR = '#0c8ae5';
 
@@ -34,7 +46,9 @@ class RenderPath implements RenderObject2D {
 	line: THREE.Line;
 	filled: THREE.Mesh;
 
-	constructor(overlay: Overlay) {
+	textEl?: HTMLDivElement;
+
+	constructor(overlay: Overlay, obj: Path) {
 		let geo = new THREE.BufferGeometry();
 		geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(100 * 3), 3));
 
@@ -42,10 +56,40 @@ class RenderPath implements RenderObject2D {
 
 		let geo2 = new THREE.ShapeGeometry(new THREE.Shape());
 
-		this.line = new THREE.Line(
-			geo,
-			new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
-		);
+		if (obj.measurement) {
+			this.line = new THREE.Line(
+				geo,
+				new THREE.LineDashedMaterial({
+					color: '#ff0000',
+					opacity: 1,
+					transparent: false,
+					dashSize: 3,
+					gapSize: 2
+				})
+			);
+
+			this.textEl = document.createElement('div');
+			this.textEl.style.position = 'absolute';
+			this.textEl.style.top = '0';
+			this.textEl.style.left = '0';
+			this.textEl.style.fontFamily = 'sans-serif';
+			this.textEl.style.background = 'transparent';
+			this.textEl.style.fontSize = '12px';
+			this.textEl.style.fontWeight = 'bold';
+			this.textEl.style.pointerEvents = 'none';
+			this.textEl.style.transformOrigin = 'top left';
+			this.textEl.style.fontFamily = 'monospace';
+			this.textEl.style.lineHeight = '1em';
+			this.textEl.style.overflow = 'hidden';
+			this.textEl.style.resize = 'none';
+
+			overlay.map.getDiv().appendChild(this.textEl);
+		} else {
+			this.line = new THREE.Line(
+				geo,
+				new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+			);
+		}
 
 		this.filled = new THREE.Mesh(
 			geo2,
@@ -56,7 +100,7 @@ class RenderPath implements RenderObject2D {
 		overlay.overlay.scene.add(this.filled);
 	}
 
-	refresh(overlay: Overlay, obj: Path): void {
+	refresh(overlay: RendererOverlay, obj: Path): void {
 		let mat = this.line.material as THREE.MeshBasicMaterial;
 		let mat2 = this.filled.material as THREE.MeshBasicMaterial;
 		if (obj.style && obj.style.color) {
@@ -95,6 +139,8 @@ class RenderPath implements RenderObject2D {
 		this.line.geometry.computeBoundingSphere();
 		this.line.geometry.computeBoundingBox();
 
+		this.line.computeLineDistances();
+
 		this.line.position.setX(obj.transform.position[0]);
 		this.line.position.setZ(obj.transform.position[1]);
 		this.line.scale.setX(obj.transform.size[0]);
@@ -129,6 +175,50 @@ class RenderPath implements RenderObject2D {
 
 			this.filled.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 		}
+
+		if (this.textEl) {
+			let distance = 0;
+			if (obj.flatShape)
+				for (let shape of obj.flatShape) {
+					if (shape instanceof Flatten.Segment) {
+						distance += shape.length;
+					}
+				}
+
+			this.textEl.innerText = metersToFeetPrettyPrint(distance);
+		}
+		this.mapUpdate(overlay, obj);
+	}
+
+	mapUpdate(overlay: RendererOverlay, obj: Path): void {
+		if (!this.textEl) return;
+
+		const map = overlay.overlay.getMap();
+		let text = this.textEl.innerText;
+
+		if (!map) return;
+		let objBounds = obj.getBounds();
+		let center = [(objBounds.minX + objBounds.maxX) / 2, (objBounds.minY + objBounds.maxY) / 2];
+		center[0] += 2;
+		let p = overlay.editor.positionToLonLat(center[0], center[1]);
+		let p2 = overlay.editor.positionToLonLat(center[0] + 10, center[1]);
+
+		let proj = overlay.overlayView.getProjection();
+		if (!proj) return;
+		let pos = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
+		let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
+		if (!pos || !pos2) return;
+
+		let screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
+		screenSize = 16;
+
+		this.textEl.style.color = colorArrayToCss(obj.style.color);
+		this.textEl.style.fontSize = `${screenSize}px`;
+		this.textEl.style.width = `${screenSize * text.length * 0.5498070069642946}px`;
+		this.textEl.style.top = pos.y + 'px';
+		this.textEl.style.left = pos.x + 'px';
+
+		this.textEl.style.display = 'block';
 	}
 
 	setMaterial(mat: THREE.Material): void {
@@ -151,6 +241,8 @@ class RenderPath implements RenderObject2D {
 
 		overlay.overlay.scene.remove(this.filled);
 		this.filled.geometry.dispose();
+
+		if (this.textEl) this.textEl.remove();
 	}
 }
 
@@ -158,7 +250,7 @@ class RenderArc implements RenderObject2D {
 	active: boolean = false;
 	line: THREE.Line;
 
-	constructor(overlay: Overlay) {
+	constructor(overlay: Overlay, obj: Arc | Circle) {
 		this.line = new THREE.Line(
 			new THREE.BufferGeometry(),
 			new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
@@ -231,7 +323,7 @@ class RenderArc implements RenderObject2D {
 
 class RenderGroup implements RenderObject2D {
 	active: boolean = false;
-	constructor(overlay: Overlay) {}
+	constructor(overlay: Overlay, obj: Group) {}
 
 	refresh(overlay: Overlay, obj: Group): void {}
 
@@ -244,7 +336,7 @@ class RenderGroup implements RenderObject2D {
 
 class RenderCornerstone implements RenderObject2D {
 	active: boolean = false;
-	constructor(overlay: Overlay) {}
+	constructor(overlay: Overlay, obj: Cornerstone) {}
 
 	refresh(overlay: Overlay, obj: Group): void {}
 
@@ -261,31 +353,99 @@ function colorArrayToCss(color: number[]): string {
 
 class RenderText implements RenderObject2D {
 	active: boolean = false;
-	el: HTMLDivElement;
-	constructor(overlay: Overlay) {
-		this.el = document.createElement('div');
+	el: HTMLTextAreaElement;
+	constructor(overlay: RendererOverlay, obj: Text) {
+		this.el = document.createElement('textarea');
 		this.el.style.position = 'absolute';
 		this.el.style.top = '0';
 		this.el.style.left = '0';
 		this.el.style.fontFamily = 'sans-serif';
+		this.el.style.background = 'transparent';
 		this.el.style.fontSize = '12px';
 		this.el.style.fontWeight = 'bold';
 		this.el.style.pointerEvents = 'none';
 		this.el.style.transformOrigin = 'top left';
 		this.el.style.fontFamily = 'monospace';
 		this.el.style.lineHeight = '1em';
+		this.el.style.overflow = 'hidden';
+		this.el.style.resize = 'none';
+		this.el.readOnly = true;
 
 		overlay.map.getDiv().appendChild(this.el);
+		let unsaved = false;
+
+		const saveText = () => {
+			if (!unsaved) return;
+			unsaved = false;
+			let realObj = overlay.broker.project.objectsMap.get(obj.id);
+			if (realObj && overlay && realObj.type == ObjectType.Text) {
+				let textObj = realObj as Text;
+				let transaction = overlay.broker.project.createTransaction();
+				transaction.update(textObj.id, 'text', this.el.value);
+				overlay.broker.commitTransaction(transaction);
+			}
+		};
+
+		let objId = obj.id;
+		this.el.addEventListener('input', () => {
+			let realObj = overlay.broker.project.objectsMap.get(objId);
+			if (realObj && overlay && realObj.type == ObjectType.Text) {
+				let textObj = realObj as Text;
+				textObj.text = this.el.value;
+				textObj.computeShape();
+				this.refresh(overlay, textObj);
+				overlay.broker.needsRender.set(true);
+				unsaved = true;
+			}
+		});
+
+		this.el.addEventListener('change', (e) => {
+			saveText();
+		});
+
+		this.el.addEventListener('keydown', (e) => {
+			if (e.key == 'Enter' && !e.shiftKey) {
+				overlay.editor.editingObject.set(null);
+				saveText();
+			}
+		});
 	}
 
 	refresh(overlay: RendererOverlay, obj: Text): void {
-		this.el.innerText = obj.text;
+		this.el.value = obj.text;
+		this.el.style.width = obj.text.length + 'ch';
+
+		let lines = 0;
+		if (obj.maxWidth > 0) {
+			this.el.style.width = Math.min(obj.text.length, obj.maxWidth) + 'ch';
+			lines = Math.ceil(obj.text.length / obj.maxWidth);
+		}
+		let breakCount = obj.text.split('\n').length;
+		this.el.style.height = Math.max(lines, breakCount) + 'em';
 
 		this.mapUpdate(overlay, obj);
 		if (this.active) {
 			this.el.style.textShadow = `1px 0 1px ${ACTIVE_COLOR}, -1px 0 1px ${ACTIVE_COLOR}, 0px 1px 1px ${ACTIVE_COLOR}, 0 -1px 1px ${ACTIVE_COLOR}`;
 		} else {
 			this.el.style.textShadow = `none`;
+		}
+	}
+
+	setEditing(editing: boolean) {
+		if (editing) {
+			this.el.focus();
+			this.el.readOnly = false;
+			this.el.style.pointerEvents = 'auto';
+			this.el.style.setProperty('cursor', 'text', 'important');
+			this.el.style.userSelect = 'text';
+			this.el.style.zIndex = '1000';
+			this.el.select();
+		} else {
+			this.el.removeAttribute('contenteditable');
+			this.el.style.pointerEvents = 'none';
+			this.el.style.cursor = 'default';
+			this.el.style.userSelect = 'none';
+			this.el.style.zIndex = 'auto';
 		}
 	}
 
@@ -341,20 +501,20 @@ class RenderText implements RenderObject2D {
 	}
 }
 
-export function createRenderObject(overlay: Overlay, obj: Object2D): RenderObject2D {
+export function createRenderObject(overlay: RendererOverlay, obj: Object2D): RenderObject2D {
 	if (obj instanceof Path) {
-		return new RenderPath(overlay);
+		return new RenderPath(overlay, obj);
 	} else if (obj instanceof Group) {
-		return new RenderGroup(overlay);
+		return new RenderGroup(overlay, obj);
 	} else if (obj instanceof Arc || obj instanceof Circle) {
-		return new RenderArc(overlay);
+		return new RenderArc(overlay, obj);
 	} else if (obj instanceof Cornerstone) {
-		return new RenderCornerstone(overlay);
+		return new RenderCornerstone(overlay, obj);
 	} else if (obj instanceof Text) {
-		return new RenderText(overlay);
+		return new RenderText(overlay, obj);
 	} else {
 		console.error('Unsupported object type', obj);
-		return new RenderPath(overlay);
+		return new RenderPath(overlay, obj as Path);
 	}
 }
 
@@ -397,6 +557,31 @@ export class RendererOverlay extends Overlay {
 			this.overlay.requestRedraw();
 		};
 
+		const refreshEditing = () => {
+			let obj = get(this.editor.editingObject);
+
+			if (obj) {
+				let realObj = this.broker.project.objectsMap.get(obj);
+				if (!realObj) return;
+
+				let renderObj = this.renderedObjects.get(obj);
+
+				if (realObj.type == ObjectType.Text) {
+					let textObj = renderObj as RenderText;
+					textObj.setEditing(true);
+					console.log('editing text', textObj.el.innerText, textObj.el);
+				}
+			} else {
+				for (let [key, obj] of this.renderedObjects) {
+					if (obj instanceof RenderText) {
+						obj.setEditing(false);
+					}
+				}
+			}
+
+			this.overlay.requestRedraw();
+		};
+
 		this.addDraw(() => {
 			for (let [id, ro] of this.renderedObjects.entries()) {
 				if (ro.mapUpdate) ro.mapUpdate(this, this.broker.project.objectsMap.get(id)!);
@@ -406,6 +591,11 @@ export class RendererOverlay extends Overlay {
 		this.addUnsub(
 			this.editor.effectiveSelection.subscribe(() => {
 				refreshActive();
+			})
+		);
+		this.addUnsub(
+			this.editor.editingObject.subscribe(() => {
+				refreshEditing();
 			})
 		);
 

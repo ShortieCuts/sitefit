@@ -169,6 +169,66 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 
 		let unitScaleMeters = unitScale[units as number];
 
+		function transformDirectionVector(
+			ent: IEntity,
+			vertex: {
+				x: number;
+				y: number;
+			}
+		): {
+			x: number;
+			y: number;
+		} {
+			if (!dxf) return { x: 0, y: 0 };
+
+			let x = vertex.x;
+			let y = vertex.y;
+			if (ent.inPaperSpace) {
+				x -= dxf.header.$PLIMMIN.y;
+				y -= dxf.header.$PLIMMIN.x;
+
+				x = x / (dxf.header.$PLIMMAX.y - dxf.header.$PLIMMIN.y);
+				y = y / (dxf.header.$PLIMMAX.x - dxf.header.$PLIMMIN.x);
+			} else {
+				x -= dxf.header.$EXTMIN.x;
+				y -= dxf.header.$EXTMIN.y;
+
+				x = x / (dxf.header.$EXTMAX.x - dxf.header.$EXTMIN.x);
+				y = y / (dxf.header.$EXTMAX.y - dxf.header.$EXTMIN.y);
+			}
+			// Normalize using the viewport direction
+			let viewDirection = dxf.tables.viewPort.viewPorts[0].viewDirectionFromTarget;
+			let viewTarget = dxf.tables.viewPort.viewPorts[0].viewTarget;
+
+			let x2 = x;
+			let y2 = y;
+
+			// if (viewDirection.x === 0 && viewDirection.y === 0 && viewDirection.z === 1) {
+			// 	x = y2;
+			// 	y = x2;
+			// } else if (viewDirection.x === 0 && viewDirection.y === 0 && viewDirection.z === -1) {
+			// 	x = x2;
+			// 	y = -y2;
+			// } else if (viewDirection.x === 0 && viewDirection.y === 1 && viewDirection.z === 0) {
+			// 	x = x2;
+			// 	y = y2;
+			// } else if (viewDirection.x === 0 && viewDirection.y === -1 && viewDirection.z === 0) {
+			// 	x = x2;
+			// 	y = y2;
+			// } else if (viewDirection.x === 1 && viewDirection.y === 0 && viewDirection.z === 0) {
+			// 	x = y2;
+			// 	y = x2;
+			// } else if (viewDirection.x === -1 && viewDirection.y === 0 && viewDirection.z === 0) {
+			// 	x = -y2;
+			// 	y = x2;
+			// }
+
+			return {
+				x: x,
+				y: y
+			};
+		}
+
 		function transformCoords(
 			ent: IEntity,
 			vertex: {
@@ -355,13 +415,38 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 				let text = new Text();
 
 				text.transform = new Transform();
-				text.transform.position = [textEnt.startPoint.x, textEnt.startPoint.y];
+				let trans = transformCoords(ent, textEnt.startPoint);
+				text.transform.position = [trans.x, trans.z];
 				text.transform.size = [1, 1];
 				text.transform.rotation = 0;
 
 				text.text = textEnt.text;
 
 				obj = text;
+			} else if (ent.type == 'MTEXT') {
+				console.log('MTEXT', ent);
+				let textEnt = ent as IMtextEntity;
+				let text = new Text();
+
+				let trans = transformCoords(ent, textEnt.position);
+				text.transform = new Transform();
+				text.transform.position = [trans.x, trans.z];
+				text.transform.size = [1, 1];
+				text.transform.rotation = 0;
+				text.size = textEnt.height * unitScaleMeters;
+				text.maxWidth = textEnt.width * unitScaleMeters;
+
+				text.text = textEnt.text.replaceAll('\\P', '\n');
+
+				let dirVec = textEnt.directionVector;
+
+				let angle = Math.atan2(dirVec.x, dirVec.y); // We swap x and y because the viewDirection is strange
+
+				text.transform.rotation = angle;
+
+				obj = text;
+			} else {
+				console.log('Unhandled entity', ent);
 			}
 
 			if (!obj) obj = new Group();

@@ -1,4 +1,4 @@
-import { faPen } from '@fortawesome/free-solid-svg-icons';
+import { faCompass, faCompassDrafting, faPen } from '@fortawesome/free-solid-svg-icons';
 import type { EditorContext, ProjectBroker } from 'src/store/editor';
 import { get } from 'svelte/store';
 import { Material, Path } from 'core';
@@ -6,19 +6,20 @@ import { Material, Path } from 'core';
 let isDown = false;
 let clickMoving = false;
 let downPos: [number, number] = [0, 0];
-export const PenTool = {
-	icon: faPen,
-	key: 'pen',
+export const MeasurementTool = {
+	icon: faCompassDrafting,
+	key: 'measurement',
 	access: 'WRITE',
-	shortcut: 'v',
+	shortcut: 'm',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		if (!clickMoving) {
 			let obj = new Path();
 			obj.style = new Material();
-			obj.style.color = [0, 0, 0, 1];
+			obj.style.color = [80 / 255, 200 / 255, 255 / 255, 1];
 			obj.style.filled = false;
 			obj.style.type = 'color';
-			obj.name = 'Line';
+			obj.name = 'Ruler';
+			obj.measurement = true;
 			obj.closed = false;
 			obj.parent = undefined;
 			obj.segments.push(editor.getDesiredPosition());

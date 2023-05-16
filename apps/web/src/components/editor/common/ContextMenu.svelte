@@ -23,8 +23,10 @@
 	function handleTouchStart(e: TouchEvent) {
 		if (e.touches.length === 1) {
 			touchTimer = setTimeout(() => {
-				open = true;
-				position = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+				if (!$isMobile) {
+					open = true;
+					position = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+				}
 			}, 500);
 		}
 	}

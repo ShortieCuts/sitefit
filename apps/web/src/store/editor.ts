@@ -973,7 +973,10 @@ export class EditorContext {
 
 	screenScale: Writable<number> = writable(1);
 
+	focusComment: Writable<number> = writable(0);
+
 	rootGroup: Writable<ObjectID | null> = writable(null);
+	editingObject: Writable<ObjectID | null> = writable(null);
 
 	selection: Writable<ObjectID[]> = writable([]);
 	/** Includes the children of selected groups */
@@ -1123,6 +1126,20 @@ export class EditorContext {
 		let center = this.getBoundsCenter(bounds);
 
 		let [lon, lat] = this.positionToLonLat(center[0], center[1]);
+		let map = get(this.map);
+		if (!map) {
+			return;
+		}
+
+		if (zoom) {
+			map.setZoom(20);
+			map.panTo({ lat: lat, lng: lon });
+		} else {
+			map.setCenter({ lat: lat, lng: lon });
+		}
+	}
+
+	flyTo(lon: number, lat: number, zoom = false) {
 		let map = get(this.map);
 		if (!map) {
 			return;

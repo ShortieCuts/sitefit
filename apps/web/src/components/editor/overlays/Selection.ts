@@ -307,6 +307,9 @@ export class SelectionOverlay extends Overlay {
 			this.box.setVisible(false);
 		}
 
+		let globalShouldHandlesBeVisible =
+			access == 'WRITE' && !get(isMobile) && !get(this.editor.editingObject);
+
 		let sels = get(this.editor.effectiveSelection);
 		if (sels.length > 0) {
 			let objs = [];
@@ -330,16 +333,16 @@ export class SelectionOverlay extends Overlay {
 					)
 				);
 
-				this.selectionBox.setVisible(true, access == 'WRITE' && !get(isMobile));
+				this.selectionBox.setVisible(true, globalShouldHandlesBeVisible);
 			} else {
-				this.selectionBox?.setVisible(false, access == 'WRITE' && !get(isMobile));
+				this.selectionBox?.setVisible(false, globalShouldHandlesBeVisible);
 			}
 		} else {
-			this.selectionBox?.setVisible(false, access == 'WRITE' && !get(isMobile));
+			this.selectionBox?.setVisible(false, globalShouldHandlesBeVisible);
 		}
 
 		if (get(this.editor.translating)) {
-			this.selectionBox?.setVisible(false, access == 'WRITE' && !get(isMobile));
+			this.selectionBox?.setVisible(false, globalShouldHandlesBeVisible);
 		}
 
 		this.overlay.requestRedraw();

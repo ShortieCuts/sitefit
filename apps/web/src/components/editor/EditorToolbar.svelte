@@ -17,6 +17,7 @@
 	import { SelectTool } from './tools/select';
 	import { TextTool } from './tools/text';
 	import { compareAccess } from '$lib/util/access';
+	import { MeasurementTool } from './tools/measure';
 
 	const toolbarItems: {
 		icon: any;
@@ -26,7 +27,7 @@
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
-	}[] = [SelectTool, PanTool, CommentTool, PenTool, TextTool];
+	}[] = [SelectTool, PanTool, CommentTool, PenTool, TextTool, MeasurementTool];
 
 	const { editor, broker } = getSvelteContext();
 
@@ -82,6 +83,14 @@
 				editor.activeTool.set('pan');
 			}
 		}
+	}
+
+	$: {
+		$activeTool;
+		editor.guides.set({
+			lines: [],
+			points: []
+		});
 	}
 
 	function handleKeyUp(event: KeyboardEvent) {

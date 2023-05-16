@@ -12,7 +12,7 @@ let cachedDb: Kysely<DB> | null = null;
 let cachedTime: number = 0;
 
 export function db() {
-  if (cachedTime >= Date.now()) {
+  if (Date.now() >= cachedTime) {
     cachedDb = null;
   }
 

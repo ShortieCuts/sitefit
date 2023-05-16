@@ -190,9 +190,12 @@ export class EngineInstance {
           this.broken = true;
           console.log("Error parsing project: ", e);
         }
-
-        this.project = new Project(this.key);
-        this.project.deserialize(parsedVal);
+        try {
+          this.project = new Project(this.key);
+          this.project.deserialize(parsedVal);
+        } catch (e) {
+          console.log("Error deserializing project: ", e, e.stack);
+        }
       } else {
         this.project = new Project(this.key);
       }
@@ -339,8 +342,11 @@ export class EngineInstance {
 
   // Handle HTTP requests from clients.
   async fetch(request: Request, env: Env) {
+    console.log("Got request in durable object", request.url);
+
     return await handleErrors(request, async () => {
       let url = new URL(request.url);
+      console.log("Inside durable object", url);
 
       switch (url.pathname.split("/")[2]) {
         case "setId": {
@@ -359,9 +365,14 @@ export class EngineInstance {
           let ip = request.headers.get("CF-Connecting-IP");
 
           let pair = new WebSocketPair();
+          console.log("New pair", pair);
 
           if (!this.accessState) {
+            console.log("before access", this.accessState);
             await this.refreshAccess();
+            console.log("after access", this.accessState);
+          } else {
+            console.log("has access", this.accessState);
           }
 
           await this.handleSession(pair[1], ip);

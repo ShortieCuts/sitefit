@@ -33,7 +33,7 @@
 </script>
 
 <DialogSlideLeft>
-	<div class="flex flex-col max-h-full">
+	<div class="flex flex-col">
 		<div class="flex flex-row p-4">
 			<button
 				on:click={() => {
@@ -79,7 +79,7 @@
 				</Popover>
 			</button>
 		</div>
-		<div class="flex flex-col p-4 space-y-4 flex-1 overflow-auto">
+		<div class="flex flex-col p-4 space-y-4 flex-1">
 			{#each sortedComments as comment}
 				<RootComment {comment} />
 			{/each}

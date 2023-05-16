@@ -222,7 +222,7 @@
 						let normalized = broker.normalizeVector([vectorPos.x, vectorPos.z]);
 						let deltaX = 0;
 						let deltaY = 0;
-						if (get(editor.activeTool) == 'pen') {
+						if (get(editor.activeTool) == 'pen' || get(editor.activeTool) == 'measurement') {
 							if (!(ev.domEvent as MouseEvent).ctrlKey) {
 								let guides = calculateGuides(
 									editor,
@@ -478,6 +478,8 @@
 				currentCursor = Cursors.comment;
 			} else if ($activeTool == 'text') {
 				currentCursor = Cursors.text;
+			} else if ($activeTool == 'measurement') {
+				currentCursor = Cursors.measurement;
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 import { faComment } from '@fortawesome/free-solid-svg-icons';
 import type { EditorContext, ProjectBroker } from 'src/store/editor';
+import { isMobile } from 'src/store/responsive';
 import { get } from 'svelte/store';
 
 export const CommentTool = {
@@ -8,8 +9,9 @@ export const CommentTool = {
 	shortcut: 'c',
 	access: 'COMMENT',
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		if (get(isMobile)) return;
 		let latLon = get(editor.currentMousePosition);
-		console.log(latLon);
+
 		editor.stagingComment.set({
 			longitude: latLon[1],
 			latitude: latLon[0],

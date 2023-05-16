@@ -16,6 +16,7 @@ export function validateRequest<T>(
 			resolve(response);
 		} catch (err) {
 			console.error(err);
+			console.error(err.stack);
 			if (err instanceof z.ZodError) {
 				resolve(
 					new Response(JSON.stringify({ error: 'Invalid JSON input', details: err.issues }), {

@@ -244,11 +244,19 @@ export class Project implements Serializable {
   deserialize(data: any) {
     this.globalProperties = data.globalProperties ?? {};
 
-    this.objects = data.objects.map((object: any) => {
-      const obj = makeObject(object);
-      obj.deserialize(object);
-      return obj;
-    });
+    this.objects = data.objects
+      .map((object: any) => {
+        try {
+          const obj = makeObject(object);
+          obj.deserialize(object);
+          return obj;
+        } catch (e) {
+          console.error(e);
+
+          return null;
+        }
+      })
+      .filter((o) => o !== null) as Object2D[];
 
     this.objectsMap = new Map();
 

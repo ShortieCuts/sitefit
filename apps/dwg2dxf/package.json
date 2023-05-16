@@ -1,9 +1,7 @@
 {
   "name": "dwg2dxf",
   "version": "0.0.0",
-  "devDependencies": {
-    "wrangler": "2.1.13"
-  },
+  "devDependencies": {},
   "private": true,
   "scripts": {
     "start": "wrangler dev",

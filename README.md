@@ -1,5 +1,7 @@
 # cad-mapper
 
+[Ticket Kanban](https://github.com/orgs/ShortieCuts/projects/1)
+
 [Cloudflare](https://dash.cloudflare.com/d4ea528a4398361b4055258d1634ad6d)
 
 [GCP](https://console.cloud.google.com/welcome?project=cad-fitter)

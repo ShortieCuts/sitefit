@@ -202,6 +202,8 @@ export class Path extends Object2D implements Serializable {
   closed: boolean = false;
   width: number = 1;
 
+  measurement?: boolean = false;
+
   computeShape() {
     const m = this.getMatrix();
     let segs = [];
@@ -214,6 +216,7 @@ export class Path extends Object2D implements Serializable {
         this.segments[i - 1][0],
         this.segments[i - 1][1]
       ).transform(m);
+      console.log(this.segments);
       let p2 = point(this.segments[i][0], this.segments[i][1]).transform(m);
 
       if (i == 1) {
@@ -268,6 +271,7 @@ export class Path extends Object2D implements Serializable {
       bezierHandles: this.bezierHandles,
       width: this.width,
       closed: this.closed,
+      measurement: this.measurement,
     };
   }
 
@@ -278,6 +282,7 @@ export class Path extends Object2D implements Serializable {
     if ("bezierHandles" in data) this.bezierHandles = data.bezierHandles;
     if ("width" in data) this.width = data.width;
     if ("closed" in data) this.closed = data.closed;
+    if ("measurement" in data) this.measurement = data.measurement;
   }
 }
 
@@ -329,11 +334,27 @@ export class Text extends Object2D implements Serializable {
   type: ObjectType.Text = ObjectType.Text;
   text: string;
   size: number = 1;
+  maxWidth: number = 0;
 
   computeShape() {
+    const fontRatio = 0.5498070069642946; // Calculated by dividing the monospace font height by a single character width
     const m = this.getMatrix();
-    let width = this.text.length * 0.5498070069642946 * this.size;
+    let width = this.text.length * fontRatio * this.size;
     let height = this.size;
+
+    if (this.maxWidth > 0) {
+      height = Math.ceil(width / this.maxWidth) * this.size;
+      width = Math.min(width, this.maxWidth);
+    } else {
+      let lines = this.text.split("\n");
+      let longest = 0;
+      for (let line of lines) {
+        if (line.length > longest) longest = line.length;
+      }
+
+      width = longest * fontRatio * this.size;
+      height = lines.length * this.size;
+    }
     let topLeft = point(0, 0).transform(m);
     let topRight = point(width, 0).transform(m);
     let bottomLeft = point(0, height).transform(m);
@@ -349,6 +370,7 @@ export class Text extends Object2D implements Serializable {
       ...super.serialize(),
       text: this.text,
       size: this.size,
+      maxWidth: this.maxWidth ?? 0,
     };
   }
 
@@ -356,6 +378,8 @@ export class Text extends Object2D implements Serializable {
     super.deserialize(data);
     if ("text" in data) this.text = data.text;
     if ("size" in data) this.size = data.size;
+    if ("maxWidth" in data) this.maxWidth = data.maxWidth;
+    else this.maxWidth = 0;
   }
 }
 

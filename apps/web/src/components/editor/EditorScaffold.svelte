@@ -76,7 +76,8 @@
 
 	const { geo, heading } = broker.watchCornerstone();
 
-	const { activeDialog, effectiveSelection, selection, toasts, stagingComment } = editorContext;
+	const { activeDialog, effectiveSelection, selection, toasts, stagingComment, focusComment } =
+		editorContext;
 
 	let needsCornerstone = false;
 
@@ -463,6 +464,7 @@
 									data-longitude={comment.long}
 									data-latitude={comment.lat}
 									class="comment-wrap"
+									class:active={$focusComment == comment.id}
 									on:click={() => {
 										if ($activeDialog !== 'comments') editorContext.activateDialog('comments');
 										setTimeout(() => {
@@ -547,7 +549,7 @@
 		{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'right'}
 			<div
 				transition:fly={{ duration: 200, x: 40, opacity: 0 }}
-				class="dialog-slide bg-white w-[400px] fixed right-0 top-16 bottom-0 z-20 border-gray-200 border-t-[1px]"
+				class="dialog-slide bg-white overflow-auto w-[400px] fixed right-0 top-16 bottom-0 z-20 border-gray-200 border-t-[1px]"
 			>
 				<svelte:component this={dialogs[$activeDialog].component} />
 			</div>
@@ -791,7 +793,8 @@
 		pointer-events: auto;
 	}
 
-	.comment-wrap:hover {
+	.comment-wrap:hover,
+	.comment-wrap.active {
 		.comment-bulb {
 			transition: 0.2s;
 			// border-top-left-radius: 0px;

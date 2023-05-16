@@ -10,7 +10,7 @@
 	import ReplyComment from './ReplyComment.svelte';
 	import { auth } from 'src/store/auth';
 
-	const { broker } = getSvelteContext();
+	const { broker, editor } = getSvelteContext();
 
 	export let comment: ProjectComment;
 
@@ -59,12 +59,18 @@
 	on:click={() => {}}
 	on:keydown={(e) => {}}
 	on:focus={() => {
-		broker.markCommentRead(comment.id);
+		if (!comment.read) broker.markCommentRead(comment.id);
+		editor.flyTo(comment.long, comment.lat);
+		editor.focusComment.set(comment.id);
+	}}
+	on:blur={() => {
+		if (get(editor.focusComment) === comment.id) editor.focusComment.set(0);
 	}}
 >
 	<div
-		class="border-b border-gray-200 rounded-t-md bg-gray-50 flex flex-col px-4 py-2 relative group"
-		class:bg-blue-50={!comment.read}
+		class="border-b border-gray-200 rounded-t-md {comment.read
+			? 'bg-gray-50'
+			: 'bg-yellow-50'} flex flex-col px-4 py-2 relative group"
 		bind:this={commentEl}
 	>
 		<div class="flex flex-row items-center justify-between">

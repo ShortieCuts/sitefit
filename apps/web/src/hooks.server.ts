@@ -1,0 +1,34 @@
+import type { Handle } from '@sveltejs/kit';
+
+import {
+	GOOGLE_CLOUD_KEY,
+	FIREBASE_WEB_API_KEY,
+	PROJECT_ID,
+	DATABASE_URL,
+	DATABASE_HOST,
+	DATABASE_USER,
+	DATABASE_PASSWORD
+} from '$env/static/private';
+
+import {
+	SET_GOOGLE_CLOUD_KEY,
+	SET_FIREBASE_WEB_API_KEY,
+	SET_PROJECT_ID,
+	SET_DATABASE_URL,
+	SET_DATABASE_HOST,
+	SET_DATABASE_USER,
+	SET_DATABASE_PASSWORD
+} from 'secrets';
+
+export const handle = (async ({ event, resolve }) => {
+	SET_GOOGLE_CLOUD_KEY(GOOGLE_CLOUD_KEY);
+	SET_FIREBASE_WEB_API_KEY(FIREBASE_WEB_API_KEY);
+	SET_PROJECT_ID(PROJECT_ID);
+	SET_DATABASE_URL(DATABASE_URL);
+	SET_DATABASE_HOST(DATABASE_HOST);
+	SET_DATABASE_USER(DATABASE_USER);
+	SET_DATABASE_PASSWORD(DATABASE_PASSWORD);
+
+	const response = await resolve(event);
+	return response;
+}) satisfies Handle;

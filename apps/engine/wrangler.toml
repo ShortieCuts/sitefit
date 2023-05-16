@@ -3,7 +3,6 @@ name = "engine"
 main = "src/index.ts"
 compatibility_date = "2023-03-29"
 
-
 [vars]
 FIREBASE_WEB_API_KEY="AIzaSyBg0tTgVKWYZRHRRL53Y2u4wbqh9pebBzs"
 PROJECT_ID="cad-fitter"
