@@ -15,9 +15,9 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { getContext } from 'svelte';
 	import Fa from 'svelte-fa';
-	import { get, type Writable } from 'svelte/store';
+	import { get, writable, type Writable } from 'svelte/store';
 	import type { EditorLayerNode } from './EditorLayerNode';
-	import { getSvelteContext } from 'src/store/editor';
+	import { getSvelteContext, type ProjectAccessLevel } from 'src/store/editor';
 	import type { CadTreeNode } from '$lib/types/cad';
 	import ContextMenu from './ContextMenu.svelte';
 	import EditableLabel from './EditableLabel.svelte';
@@ -37,7 +37,11 @@
 	import { compareAccess } from '$lib/util/access';
 
 	const { editor, broker } = getSvelteContext();
-	const { sessionAccess } = broker;
+	let sessionAccess: Writable<ProjectAccessLevel> = writable('READ');
+
+	if (broker) {
+		sessionAccess = broker.sessionAccess;
+	}
 
 	const icons: {
 		[key: string]: any;

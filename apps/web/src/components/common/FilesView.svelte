@@ -1,25 +1,22 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
-	import ProjectNode from './ProjectNode.svelte';
-	import { getProjectsStore, refreshData } from 'src/store/projects';
+	import EditorCadNode from '../editor/common/EditorCadNode.svelte';
+	import { getCadsStore, refreshData } from 'src/store/cads';
 	import ContextMenu from '../editor/common/ContextMenu.svelte';
 	import Fa from 'svelte-fa';
-	import {
-		faFolderPlus,
-		faMapLocation,
-		faPlus,
-		faRefresh
-	} from '@fortawesome/free-solid-svg-icons';
-	import {
-		createProject,
-		createProjectFolder,
-		updateProjectFile,
-		updateProjectFolder
-	} from '$lib/client/api';
+	import { faArrowLeft, faFolderPlus, faPlus, faRefresh } from '@fortawesome/free-solid-svg-icons';
+	import { createCadFolder, updateCadFile, updateCadFolder } from '$lib/client/api';
 	import Draggable from '../editor/common/Draggable.svelte';
-	import type { ProjectTreeNode } from '$lib/types/project';
+	import type { CadTreeNode } from '$lib/types/cad';
 	import { isMobile } from 'src/store/responsive';
+	import TabWrap from '../editor/common/TabWrap.svelte';
+	import TabWrapTab from '../editor/common/TabWrapTab.svelte';
+	import { portal } from '$lib/util/actions';
+	import { getSvelteContext } from 'src/store/editor';
+	import DialogSlideLeft from 'src/components/common/DialogSlideLeft.svelte';
+
+	// const { editor } = getSvelteContext();
 
 	let toggleState = writable(new Map<string, boolean>());
 
@@ -29,11 +26,11 @@
 
 	setContext('newEditId', newEditId);
 
-	const projectStore = getProjectsStore();
+	const cadStore = getCadsStore();
 
 	let containerEl: HTMLElement;
 
-	function findChild(id: string, children: ProjectTreeNode[]): ProjectTreeNode | null {
+	function findChild(id: string, children: CadTreeNode[]): CadTreeNode | null {
 		for (let child of children) {
 			if (child.id === id) {
 				return child;
@@ -51,12 +48,10 @@
 
 <div
 	class="overflow-y-auto max-h-full h-full flex flex-col flex-shrink-0"
-	class:bg-white={$isMobile}
-	class:p-4={$isMobile}
 	class:pointer-events-auto={$isMobile}
 >
-	{#each $projectStore.children as node}
-		<ProjectNode {node} />
+	{#each $cadStore.children as node}
+		<EditorCadNode {node} />
 	{/each}
 	<div bind:this={containerEl} class="contents">
 		<Draggable
@@ -67,15 +62,15 @@
 			commit={async (from, to, bias) => {
 				if (!from) return;
 
-				let node = findChild(from, $projectStore.children);
+				let node = findChild(from, $cadStore.children);
 				if (!node) return;
 
 				if (node.type == 'folder') {
-					await updateProjectFolder(node.id, {
+					await updateCadFolder(node.id, {
 						parentId: ''
 					});
 				} else {
-					await updateProjectFile(node.id, {
+					await updateCadFile(node.id, {
 						parentId: ''
 					});
 				}
@@ -89,22 +84,7 @@
 	<ContextMenu el={containerEl}>
 		<button
 			on:click={async (e) => {
-				let res = await createProject({
-					name: 'New Project',
-					description: ''
-				});
-
-				let projectId = res.data.projectId;
-
-				await refreshData();
-				setTimeout(() => {
-					newEditId.set(projectId.toString());
-				}, 10);
-			}}><Fa icon={faMapLocation} /> New Project</button
-		>
-		<button
-			on:click={async (e) => {
-				let res = await createProjectFolder({
+				let res = await createCadFolder({
 					parentId: ''
 				});
 
