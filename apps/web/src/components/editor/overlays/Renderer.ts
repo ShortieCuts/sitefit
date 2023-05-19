@@ -21,12 +21,12 @@ const ACTIVE_COLOR = '#0c8ae5';
 
 export interface RenderObject2D {
 	active: boolean;
-	refresh(overlay: Overlay, obj: Object2D): void;
-	destroy(overlay: Overlay): void;
+	refresh(overlay: RendererOverlay, obj: Object2D): void;
+	destroy(overlay: RendererOverlay): void;
 	setMaterial(mat: THREE.Material): void;
 	translate(delta: Vector3): void;
 
-	mapUpdate?(overlay: Overlay, obj: Object2D): void;
+	mapUpdate?(overlay: RendererOverlay, obj: Object2D): void;
 }
 
 function randomColorHEX() {
@@ -48,7 +48,7 @@ class RenderPath implements RenderObject2D {
 
 	textEl?: HTMLDivElement;
 
-	constructor(overlay: Overlay, obj: Path) {
+	constructor(overlay: RendererOverlay, obj: Path) {
 		let geo = new THREE.BufferGeometry();
 		geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(100 * 3), 3));
 
@@ -112,12 +112,26 @@ class RenderPath implements RenderObject2D {
 			mat2.transparent = obj.style.color[3] < 1;
 			mat2.opacity = obj.style.color[3];
 
+			if (overlay.globalOpacity < 1) {
+				mat.transparent = true;
+				mat.opacity = overlay.globalOpacity;
+				mat2.transparent = true;
+				mat2.opacity = overlay.globalOpacity;
+			}
+
+			if (overlay.cadOverrideColor) {
+				mat.color.set(overlay.cadOverrideColor as any);
+				mat2.color.set(overlay.cadOverrideColor as any);
+			}
+
 			if (this.active) {
 				mat.color.set(ACTIVE_COLOR);
 			}
 		}
 
 		let arr = (this.line.geometry.attributes.position as any).array as Float32Array;
+		mat.needsUpdate = true;
+		mat2.needsUpdate = true;
 
 		let i = 0;
 		for (let p of obj.segments) {
@@ -259,7 +273,7 @@ class RenderArc implements RenderObject2D {
 		overlay.overlay.scene.add(this.line);
 	}
 
-	refresh(overlay: Overlay, obj: Arc | Circle): void {
+	refresh(overlay: RendererOverlay, obj: Arc | Circle): void {
 		let startAngle = 0;
 		let endAngle = Math.PI * 2;
 		if (obj instanceof Arc) {
@@ -279,6 +293,17 @@ class RenderArc implements RenderObject2D {
 				mat.color.set(ACTIVE_COLOR);
 			}
 		}
+
+		if (overlay.globalOpacity < 1) {
+			mat.transparent = true;
+			mat.opacity = overlay.globalOpacity;
+		}
+
+		if (overlay.cadOverrideColor) {
+			mat.color.set(overlay.cadOverrideColor as any);
+		}
+
+		mat.needsUpdate = true;
 
 		const curve = new THREE.EllipseCurve(
 			0,
@@ -415,6 +440,12 @@ class RenderText implements RenderObject2D {
 		this.el.value = obj.text;
 		this.el.style.width = obj.text.length + 'ch';
 
+		if (overlay.globalOpacity < 1) {
+			this.el.style.opacity = overlay.globalOpacity.toString();
+		} else {
+			this.el.style.opacity = obj.style.color[3].toString();
+		}
+
 		let lines = 0;
 		if (obj.maxWidth > 0) {
 			this.el.style.width = Math.min(obj.text.length, obj.maxWidth) + 'ch';
@@ -481,6 +512,9 @@ class RenderText implements RenderObject2D {
 
 		if (inViewport) {
 			this.el.style.color = colorArrayToCss(obj.style.color);
+			if (overlay.cadOverrideColor) {
+				this.el.style.color = overlay.cadOverrideColor;
+			}
 			this.el.style.fontSize = `${screenSize}px`;
 			this.el.style.width = `${screenSize * obj.text.length * 0.5498070069642946}px`;
 			this.el.style.top = pos.y + 'px';
@@ -522,6 +556,9 @@ export class RendererOverlay extends Overlay {
 	isDown: boolean = false;
 	heading: number = 0;
 	stagedObject: RenderObject2D | null = null;
+
+	globalOpacity: number = 1;
+	cadOverrideColor: string = '';
 
 	renderedObjects: Map<ObjectID, RenderObject2D> = new Map();
 
@@ -653,6 +690,33 @@ export class RendererOverlay extends Overlay {
 
 					this.overlay.requestRedraw();
 				}
+			})
+		);
+
+		const cadOpacity = this.broker.writableGlobalProperty<number>('cadOpacity', 1);
+		const cadOverrideColor = this.broker.writableGlobalProperty<string>('overrideCadColor', '');
+
+		this.globalOpacity = get(cadOpacity);
+		this.cadOverrideColor = get(cadOverrideColor);
+
+		this.addUnsub(
+			cadOpacity.subscribe((val) => {
+				this.globalOpacity = val;
+				for (let [key, obj] of this.renderedObjects) {
+					obj.refresh(this, this.broker.project.objectsMap.get(key)!);
+				}
+
+				this.overlay.requestRedraw();
+			})
+		);
+		this.addUnsub(
+			cadOverrideColor.subscribe((val) => {
+				this.cadOverrideColor = val;
+				for (let [key, obj] of this.renderedObjects) {
+					obj.refresh(this, this.broker.project.objectsMap.get(key)!);
+				}
+
+				this.overlay.requestRedraw();
 			})
 		);
 	}

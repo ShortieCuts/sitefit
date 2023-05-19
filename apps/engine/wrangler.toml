@@ -20,4 +20,4 @@ new_classes = ["EngineInstance"]
 [[r2_buckets]]
 binding = 'PROJECTS' # <~ valid JavaScript variable name
 bucket_name = 'projects'
-preview_bucket_name = 'projects-dev'
+preview_bucket_name = 'projects'

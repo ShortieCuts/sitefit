@@ -26,6 +26,7 @@ type Sync = {
   sessions: SessionShape[];
   project: any;
   selfUid: string;
+  broken: boolean;
 };
 
 export function isSync(message: SocketMessage): message is Sync {
@@ -139,11 +140,13 @@ export namespace SocketMessage {
     project: any;
     sessions: SessionShape[];
     selfUid: string;
+    broken: boolean;
   }): Sync {
     return {
       type: "sync",
       selfUid: a.selfUid,
       project: a.project,
+      broken: a.broken,
       sessions: a.sessions.map((s) => ({
         uid: s.uid,
         userId: s.userId,

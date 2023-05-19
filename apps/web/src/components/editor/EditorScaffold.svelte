@@ -72,7 +72,7 @@
 	setSvelteContext(broker, editorContext);
 
 	const { name } = broker.metadata;
-	const { loading, error, connected, rootComments } = broker;
+	const { loading, error, broken, connected, rootComments } = broker;
 
 	const { geo, heading } = broker.watchCornerstone();
 
@@ -109,6 +109,7 @@
 	let fileEl: HTMLInputElement | null = null;
 
 	let location: [number, number, number] = [0, 0, 0];
+	let locationMap: google.maps.Map | null = null;
 
 	function handleKeyboardShortcut(e: KeyboardEvent) {
 		if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -678,6 +679,18 @@
 	}}
 />
 
+{#if $broken}
+	<div
+		transition:fade={{ duration: 200 }}
+		class="fixed top-0 left-0 right-0 bottom-0 bg-gray-100 bg-opacity-25 flex items-center justify-center flex-col z-50 backdrop-blur-md"
+	>
+		<div class="rounded-lg bg-white bg-opacity-50 p-10 flex items-center justify-center flex-col">
+			<img src="/logo.svg" alt="logo" class="opacity-20" style="filter: grayscale(1)" />
+			<div class="text-2xl text-stone-700 mt-4">Part of this project is broken</div>
+			<p class="text-lg text-stone-600 mt-4">Please contact support if this issue persists</p>
+		</div>
+	</div>
+{/if}
 {#if !$connected}
 	<div
 		transition:fade={{ duration: 200 }}
@@ -747,7 +760,12 @@
 		>
 			<div class="flex-1 flex flex-col px-4">
 				<h2 class="flex mx-auto p-6 text-lg">Let's choose a site location.</h2>
-				<LocationInput bind:value={location} />
+				<LocationInput
+					bind:value={location}
+					on:placeChanged={() => {
+						if (locationMap) locationMap.setZoom(18);
+					}}
+				/>
 				<button class="btn btn-primary mt-auto mb-4" on:click={createCornerstone}>
 					Continue
 				</button>
@@ -759,7 +777,7 @@
 					<div class="w-[1000px] border-b-black border-b absolute" />
 					<div class="h-[1000px] border-r-black border-r absolute" />
 				</div>
-				<LocationMap bind:location />
+				<LocationMap bind:map={locationMap} bind:location />
 			</div>
 		</div>
 	</div>

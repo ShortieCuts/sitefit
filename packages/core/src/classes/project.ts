@@ -9,6 +9,9 @@ export type ProjectMapStyle = "google-simple" | "google-satellite";
 
 export type GlobalProjectProperties = {
   mapStyle?: ProjectMapStyle;
+  boundaryOpacity?: number;
+  cadOpacity?: number;
+  overrideCadColor?: string;
 };
 
 export type GlobalProjectPropertiesKey = keyof GlobalProjectProperties;

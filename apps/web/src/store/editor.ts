@@ -102,6 +102,7 @@ export class ProjectBroker {
 	loading: Writable<boolean> = writable(true);
 	pushing: Writable<boolean> = writable(false);
 	connected: Writable<boolean> = writable(false);
+	broken: Writable<boolean> = writable(false);
 	establishingConnection: boolean = false;
 
 	sessions: Writable<ProjectSession[]> = writable([]);
@@ -751,6 +752,7 @@ export class ProjectBroker {
 		this.project.deserialize(message.project);
 		this.markAllDirty();
 		this.synced.set(true);
+		this.broken.set(message.broken);
 		this.objectTreeWatcher.update((n) => n + 1);
 	}
 

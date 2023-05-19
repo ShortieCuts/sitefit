@@ -216,7 +216,7 @@ export class Path extends Object2D implements Serializable {
         this.segments[i - 1][0],
         this.segments[i - 1][1]
       ).transform(m);
-      console.log(this.segments);
+
       let p2 = point(this.segments[i][0], this.segments[i][1]).transform(m);
 
       if (i == 1) {

@@ -5,6 +5,8 @@
 
 	const dispatch = createEventDispatcher();
 
+	export let small = false;
+
 	export let value: [number, number, number, number] | undefined = [0, 0, 0, 1];
 
 	function valueToRGB(value: [number, number, number, number] | undefined) {
@@ -83,10 +85,12 @@
 				/>
 			</div>
 		</Popover>
-		{valueToHEX(value)}
-		<div class="border-l border-gray-200 mx-2" />
-		{value[3]}
-		<div class="pr-2" />
+		{#if !small}
+			{valueToHEX(value)}
+			<div class="border-l border-gray-200 mx-2" />
+			{value[3]}
+			<div class="pr-2" />
+		{/if}
 	{:else}
 		<div
 			class="w-4 h-4 m-1 rounded-md border border-gray-200"

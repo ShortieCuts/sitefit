@@ -2,9 +2,11 @@
 	import { faSearch } from '@fortawesome/free-solid-svg-icons';
 	import Fa from 'svelte-fa';
 	import LocationMap from './LocationMap.svelte';
-	import { onMount } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { Loader } from '@googlemaps/js-api-loader';
+
+	const dispatch = createEventDispatcher();
 
 	export let value: [number, number, number] = [0, 0, 0];
 	let search = '';
@@ -48,6 +50,8 @@
 					if (!place.geometry || !place.geometry.location) {
 						return;
 					}
+
+					dispatch('placeChanged', place.geometry.location);
 
 					value = [place.geometry.location.lng(), place.geometry.location.lat(), 0];
 				});

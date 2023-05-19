@@ -195,6 +195,7 @@ export class EngineInstance {
           this.project.deserialize(parsedVal);
         } catch (e) {
           console.log("Error deserializing project: ", e, e.stack);
+          this.broken = true;
         }
       } else {
         this.project = new Project(this.key);
@@ -389,6 +390,7 @@ export class EngineInstance {
   async syncAll(session: Session) {
     session.send(
       SocketMessage.sync({
+        broken: this.broken,
         selfUid: session.uid,
         project: this.project?.serialize() ?? {},
         sessions: this.sessions
@@ -477,6 +479,7 @@ export class EngineInstance {
 
     if (isWriteGlobalProperty(data)) {
       if (session.checkAccess("WRITE")) {
+        const clampedNumbers = ["cadOpacity", "boundaryOpacity"];
         if (data.key == "mapStyle") {
           if (["google-satellite", "google-simple"].includes(data.value)) {
             this.project.globalProperties.mapStyle = data.value;
@@ -484,6 +487,19 @@ export class EngineInstance {
             this.dirty = true;
             this.enqueueSave();
           }
+        } else if (data.key == "overrideCadColor") {
+          this.project.globalProperties.overrideCadColor = data.value;
+          this.enqueueBroadcast(data);
+          this.dirty = true;
+          this.enqueueSave();
+        } else if (clampedNumbers.includes(data.key)) {
+          this.project.globalProperties[data.key] = Math.max(
+            0,
+            Math.min(1, data.value)
+          );
+          this.enqueueBroadcast(data);
+          this.dirty = true;
+          this.enqueueSave();
         }
       }
     } else if (isCommitTransaction(data)) {
