@@ -76,8 +76,15 @@
 
 	const { geo, heading } = broker.watchCornerstone();
 
-	const { activeDialog, effectiveSelection, selection, toasts, stagingComment, focusComment } =
-		editorContext;
+	const {
+		activeDialog,
+		warnFarObject,
+		effectiveSelection,
+		selection,
+		toasts,
+		stagingComment,
+		focusComment
+	} = editorContext;
 
 	let needsCornerstone = false;
 
@@ -616,6 +623,35 @@
 			</div>
 		</div>
 	{/each}
+
+	{#if $warnFarObject}
+		<div
+			in:fly={{
+				y: 100
+			}}
+			out:fly={{
+				y: -100
+			}}
+			class="rounded-md bg-white border border-gray-200 flex flex-row shadow-md cursor-pointer"
+			on:click={() => {
+				let first = get(editorContext.farObjects)[0];
+				if (first) {
+					editorContext.select(first);
+					editorContext.flyToSelection();
+				}
+			}}
+			on:keydown={(e) => {}}
+		>
+			<div
+				class="flex-shrink-0 w-14 bg-gray-200 flex items-center justify-center text-lg opacity-50 text-yellow-500"
+			>
+				<Fa icon={faExclamationCircle} />
+			</div>
+			<div class="p-2" style="line-height: 1em">
+				One or more objects are far away from the cornerstone. This may cause rendering artifacts
+			</div>
+		</div>
+	{/if}
 </div>
 
 {#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'center'}

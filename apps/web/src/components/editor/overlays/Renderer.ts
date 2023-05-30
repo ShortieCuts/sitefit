@@ -25,6 +25,7 @@ export interface RenderObject2D {
 	destroy(overlay: RendererOverlay | HeadlessRenderer): void;
 	setMaterial(mat: THREE.Material): void;
 	translate(delta: Vector3): void;
+	getPosition(): Vector3;
 
 	mapUpdate?(overlay: RendererOverlay | HeadlessRenderer, obj: Object2D): void;
 }
@@ -98,6 +99,10 @@ class RenderPath implements RenderObject2D {
 
 		overlay.scene.add(this.line);
 		overlay.scene.add(this.filled);
+	}
+
+	getPosition(): THREE.Vector3 {
+		return this.line.position;
 	}
 
 	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Path): void {
@@ -279,6 +284,10 @@ class RenderArc implements RenderObject2D {
 		overlay.scene.add(this.line);
 	}
 
+	getPosition(): THREE.Vector3 {
+		return this.line.position;
+	}
+
 	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Arc | Circle): void {
 		let startAngle = 0;
 		let endAngle = Math.PI * 2;
@@ -363,6 +372,10 @@ class RenderGroup implements RenderObject2D {
 	translate(delta: Vector3): void {}
 
 	destroy(overlay: RendererOverlay | HeadlessRenderer): void {}
+
+	getPosition(): THREE.Vector3 {
+		return new THREE.Vector3(0, 0, 0);
+	}
 }
 
 class RenderCornerstone implements RenderObject2D {
@@ -376,6 +389,10 @@ class RenderCornerstone implements RenderObject2D {
 	translate(delta: Vector3): void {}
 
 	destroy(overlay: RendererOverlay | HeadlessRenderer): void {}
+
+	getPosition(): THREE.Vector3 {
+		return new THREE.Vector3(0, 0, 0);
+	}
 }
 
 function colorArrayToCss(color: number[]): string {
@@ -385,6 +402,7 @@ function colorArrayToCss(color: number[]): string {
 class RenderText implements RenderObject2D {
 	active: boolean = false;
 	el: HTMLTextAreaElement;
+	threePosition: THREE.Vector3 = new THREE.Vector3();
 	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Text) {
 		this.el = document.createElement('textarea');
 		this.el.style.position = 'absolute';
@@ -444,9 +462,15 @@ class RenderText implements RenderObject2D {
 		}
 	}
 
+	getPosition(): THREE.Vector3 {
+		return this.threePosition;
+	}
+
 	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Text): void {
 		this.el.value = obj.text;
 		this.el.style.width = obj.text.length + 'ch';
+
+		this.threePosition.set(obj.transform.position[0], 0, obj.transform.position[1]);
 
 		if (overlay.globalOpacity < 1) {
 			this.el.style.opacity = overlay.globalOpacity.toString();
@@ -758,6 +782,22 @@ export class RendererOverlay extends Overlay {
 					this.broker.needsRender.set(false);
 
 					this.overlay.requestRedraw();
+
+					let maxDist = 0;
+					let farObjects: ObjectID[] = [];
+					for (let [id, obj] of this.renderedObjects.entries()) {
+						let dist = obj.getPosition().distanceTo(new THREE.Vector3(0, 0, 0));
+						if (dist > maxDist) maxDist = dist;
+						if (dist > 10000) farObjects.push(id);
+					}
+
+					if (farObjects.length > 0) {
+						this.editor.warnFarObject.set(true);
+						this.editor.farObjects.set(farObjects);
+					} else {
+						this.editor.warnFarObject.set(false);
+						this.editor.farObjects.set([]);
+					}
 				}
 			})
 		);

@@ -955,6 +955,10 @@ export class EditorContext {
 	selectionStart: Writable<[number, number]> = writable([0, 0]);
 	hoveringObject: Writable<ObjectID> = writable('');
 
+	// This is written to by the renderer when using google
+	warnFarObject: Writable<boolean> = writable(false);
+	farObjects: Writable<ObjectID[]> = writable([]);
+
 	translating: Writable<boolean> = writable(false);
 	rotating: Writable<boolean> = writable(false);
 	scaling: Writable<boolean> = writable(false);
@@ -1342,12 +1346,32 @@ export class EditorContext {
 		this.effectiveSelection.set(Array.from(effectiveSelection));
 	}
 
+	canDeleteObject(id: ObjectID) {
+		let obj = this.broker.project.objectsMap.get(id);
+
+		if (!obj) {
+			return false;
+		}
+
+		if (obj.type === ObjectType.Cornerstone) {
+			return false;
+		}
+
+		return true;
+	}
+
 	deleteSelection(broker: ProjectBroker) {
 		let selection = get(this.effectiveSelection);
 
 		let transaction = broker.project.createTransaction();
 		for (let id of selection) {
-			transaction.delete(id);
+			if (this.canDeleteObject(id)) {
+				transaction.delete(id);
+			} else {
+				if (selection.length == 1) {
+					this.warn('You cannot delete this object');
+				}
+			}
 		}
 
 		this.selection.set([]);
