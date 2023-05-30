@@ -50,7 +50,8 @@ class DraggableInstance {
 
 if (browser) {
 	window.addEventListener('mouseup', (e) => {
-		if (e.target instanceof HTMLElement && e.target.closest('.draggable-node')) {
+		console.log(e);
+		if (!(e.target instanceof HTMLElement) || !e.target.closest('.draggable-node')) {
 			keys.forEach((key) => {
 				key.stopDragging();
 			});

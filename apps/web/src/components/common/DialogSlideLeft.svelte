@@ -7,6 +7,8 @@
 
 	let { editor } = getSvelteContext();
 
+	export let fullHeight = false;
+
 	export let name = '';
 </script>
 
@@ -27,7 +29,7 @@
 		<slot />
 	</div>
 {:else}
-	<div class="pt-2">
+	<div class:pt-2={!fullHeight} class:h-full={fullHeight}>
 		<slot />
 	</div>
 {/if}

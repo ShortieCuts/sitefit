@@ -4,14 +4,38 @@
 	import { getSvelteContext } from 'src/store/editor';
 	import type { ProjectMapStyle } from 'core';
 	import TransparencySvg from '../common/TransparencySvg.svelte';
-	import { get } from 'svelte/store';
+	import { get, writable } from 'svelte/store';
 	import ColorInput from '../common/ColorInput.svelte';
+	import { debouncify } from '$lib/util/debounce';
 
 	const { broker } = getSvelteContext();
 	const mapStyle = broker.writableGlobalProperty<ProjectMapStyle>('mapStyle', 'google-satellite');
 	const boundaryOpacity = broker.writableGlobalProperty<number>('boundaryOpacity', 1);
 	const cadOpacity = broker.writableGlobalProperty<number>('cadOpacity', 1);
 	const overrideCadColor = broker.writableGlobalProperty<string>('overrideCadColor', '');
+
+	const inverseCadOpacity = writable(0);
+	const inverseBoundaryOpacity = writable(0);
+
+	cadOpacity.subscribe((v) => {
+		inverseCadOpacity.set(1 - v);
+	});
+
+	inverseCadOpacity.subscribe((v) => {
+		debouncify(() => {
+			cadOpacity.set(1 - v);
+		}, 'cadOpacity');
+	});
+
+	boundaryOpacity.subscribe((v) => {
+		inverseBoundaryOpacity.set(1 - v);
+	});
+
+	inverseBoundaryOpacity.subscribe((v) => {
+		debouncify(() => {
+			boundaryOpacity.set(1 - v);
+		}, 'boundaryOpacity');
+	});
 
 	function setTo(mode: 'original' | 'black' | 'white' | 'custom') {
 		return () => {
@@ -88,9 +112,9 @@
 							min={0}
 							max={1}
 							step={0.01}
-							bind:value={$boundaryOpacity}
+							bind:value={$inverseBoundaryOpacity}
 						/>
-						<span class="text-left pl-1">{Math.floor($boundaryOpacity * 100)}%</span>
+						<span class="text-left pl-1">{Math.floor($inverseBoundaryOpacity * 100)}%</span>
 
 						<span>CAD</span>
 						<input
@@ -99,9 +123,9 @@
 							min={0}
 							max={1}
 							step={0.01}
-							bind:value={$cadOpacity}
+							bind:value={$inverseCadOpacity}
 						/>
-						<span class="text-left pl-1">{Math.floor($cadOpacity * 100)}%</span>
+						<span class="text-left pl-1">{Math.floor($inverseCadOpacity * 100)}%</span>
 					</div>
 				</div>
 			</div>

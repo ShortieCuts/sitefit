@@ -143,7 +143,7 @@
 
 {#if $isMobile}
 	<div
-		class="editor-toolbar flex md:flex-col w-full rounded-lg justify-center space-x-4 md:space-y-2 px-4"
+		class="editor-toolbar flex md:flex-col w-full rounded-lg justify-center space-x-1 md:space-y-2 md:space-x-4 px-4"
 	>
 		{#each navbarItems as item}
 			{#if compareAccess(item.access, $sessionAccess) && ((item.user && $auth.user) || !item.user)}

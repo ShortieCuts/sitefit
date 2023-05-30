@@ -16,15 +16,26 @@
 	import MobileDrawer from './MobileDrawer.svelte';
 	import { fade } from 'svelte/transition';
 	import { getSvelteContext } from 'src/store/editor';
-	import { writable } from 'svelte/store';
+	import { get, writable } from 'svelte/store';
+	import ModelViewer from '../common/ModelViewer.svelte';
 
-	let mode: '' | 'insert' = '';
+	let mode: '' | 'insert' | 'insertUpload' = '';
 
 	const { broker, editor } = getSvelteContext();
 
 	const { mobileToolMode } = editor ?? { mobileToolMode: writable('') };
 
 	const activeDialog = editor?.activeDialog ?? writable('');
+
+	if (editor) {
+		editor.uploadStatus.subscribe((status) => {
+			if (status == 'uploading') {
+				mode = '';
+			} else if (status == 'finished') {
+				mode = 'insertUpload';
+			}
+		});
+	}
 </script>
 
 {#if $isMobile && $mobileToolMode == ''}
@@ -91,7 +102,11 @@
 							editor.activateDialog('cads');
 						}}><Fa icon={faFileImport} /> Place a CAD on map</button
 					>
-					<button on:click={() => {}}><Fa icon={faFileUpload} /> Import New CAD to App</button>
+					<button
+						on:click={() => {
+							editor.openImportDialog();
+						}}><Fa icon={faFileUpload} /> Import New CAD to App</button
+					>
 				</div>
 				<div>
 					<button
@@ -100,6 +115,30 @@
 						}}
 						class="text-blue-600"
 						style="justify-content: center;">Cancel</button
+					>
+				</div>
+			</MobileDrawer>
+		{:else if mode == 'insertUpload'}
+			<MobileDrawer>
+				<div>
+					<ModelViewer fileId={get(editor.uploadId)} />
+				</div>
+				<div>
+					<button
+						on:click={() => {
+							mode = '';
+							let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
+							broker.placeCad(get(editor.uploadId), position);
+						}}><Fa icon={faFileImport} /> Place imported CAD</button
+					>
+				</div>
+				<div>
+					<button
+						on:click={() => {
+							mode = '';
+						}}
+						class="text-red-600"
+						style="justify-content: center;">Skip</button
 					>
 				</div>
 			</MobileDrawer>

@@ -21,12 +21,12 @@ const ACTIVE_COLOR = '#0c8ae5';
 
 export interface RenderObject2D {
 	active: boolean;
-	refresh(overlay: RendererOverlay, obj: Object2D): void;
-	destroy(overlay: RendererOverlay): void;
+	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Object2D): void;
+	destroy(overlay: RendererOverlay | HeadlessRenderer): void;
 	setMaterial(mat: THREE.Material): void;
 	translate(delta: Vector3): void;
 
-	mapUpdate?(overlay: RendererOverlay, obj: Object2D): void;
+	mapUpdate?(overlay: RendererOverlay | HeadlessRenderer, obj: Object2D): void;
 }
 
 function randomColorHEX() {
@@ -48,7 +48,7 @@ class RenderPath implements RenderObject2D {
 
 	textEl?: HTMLDivElement;
 
-	constructor(overlay: RendererOverlay, obj: Path) {
+	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Path) {
 		let geo = new THREE.BufferGeometry();
 		geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(100 * 3), 3));
 
@@ -83,7 +83,7 @@ class RenderPath implements RenderObject2D {
 			this.textEl.style.overflow = 'hidden';
 			this.textEl.style.resize = 'none';
 
-			overlay.map.getDiv().appendChild(this.textEl);
+			overlay.appendElement(this.textEl);
 		} else {
 			this.line = new THREE.Line(
 				geo,
@@ -96,11 +96,11 @@ class RenderPath implements RenderObject2D {
 			new THREE.MeshBasicMaterial({ color: '#ff0000', side: THREE.DoubleSide })
 		);
 
-		overlay.overlay.scene.add(this.line);
-		overlay.overlay.scene.add(this.filled);
+		overlay.scene.add(this.line);
+		overlay.scene.add(this.filled);
 	}
 
-	refresh(overlay: RendererOverlay, obj: Path): void {
+	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Path): void {
 		let mat = this.line.material as THREE.MeshBasicMaterial;
 		let mat2 = this.filled.material as THREE.MeshBasicMaterial;
 		if (obj.style && obj.style.color) {
@@ -204,27 +204,33 @@ class RenderPath implements RenderObject2D {
 		this.mapUpdate(overlay, obj);
 	}
 
-	mapUpdate(overlay: RendererOverlay, obj: Path): void {
+	mapUpdate(overlay: RendererOverlay | HeadlessRenderer, obj: Path): void {
 		if (!this.textEl) return;
 
-		const map = overlay.overlay.getMap();
 		let text = this.textEl.innerText;
 
-		if (!map) return;
 		let objBounds = obj.getBounds();
 		let center = [(objBounds.minX + objBounds.maxX) / 2, (objBounds.minY + objBounds.maxY) / 2];
-		center[0] += 2;
-		let p = overlay.editor.positionToLonLat(center[0], center[1]);
-		let p2 = overlay.editor.positionToLonLat(center[0] + 10, center[1]);
+		let pos = { x: center[0], y: center[1] };
 
-		let proj = overlay.overlayView.getProjection();
-		if (!proj) return;
-		let pos = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
-		let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
-		if (!pos || !pos2) return;
+		if (overlay instanceof RendererOverlay) {
+			const map = overlay.overlay.getMap();
+			if (!map) return;
+			center[0] += 2;
+			let p = overlay.editor.positionToLonLat(center[0], center[1]);
+			let p2 = overlay.editor.positionToLonLat(center[0] + 10, center[1]);
 
-		let screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
-		screenSize = 16;
+			let proj = overlay.overlayView.getProjection();
+			if (!proj) return;
+			let pos1 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
+			let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
+			if (!pos1 || !pos2) return;
+			pos.x = pos1.x;
+			pos.y = pos1.y;
+		}
+
+		// let screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
+		let screenSize = 16;
 
 		this.textEl.style.color = colorArrayToCss(obj.style.color);
 		this.textEl.style.fontSize = `${screenSize}px`;
@@ -249,11 +255,11 @@ class RenderPath implements RenderObject2D {
 		this.filled.position.add(delta);
 	}
 
-	destroy(overlay: Overlay): void {
-		overlay.overlay.scene.remove(this.line);
+	destroy(overlay: RendererOverlay | HeadlessRenderer): void {
+		overlay.scene.remove(this.line);
 		this.line.geometry.dispose();
 
-		overlay.overlay.scene.remove(this.filled);
+		overlay.scene.remove(this.filled);
 		this.filled.geometry.dispose();
 
 		if (this.textEl) this.textEl.remove();
@@ -264,16 +270,16 @@ class RenderArc implements RenderObject2D {
 	active: boolean = false;
 	line: THREE.Line;
 
-	constructor(overlay: Overlay, obj: Arc | Circle) {
+	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Arc | Circle) {
 		this.line = new THREE.Line(
 			new THREE.BufferGeometry(),
 			new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
 		);
 
-		overlay.overlay.scene.add(this.line);
+		overlay.scene.add(this.line);
 	}
 
-	refresh(overlay: RendererOverlay, obj: Arc | Circle): void {
+	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Arc | Circle): void {
 		let startAngle = 0;
 		let endAngle = Math.PI * 2;
 		if (obj instanceof Arc) {
@@ -340,36 +346,36 @@ class RenderArc implements RenderObject2D {
 		this.line.position.add(delta);
 	}
 
-	destroy(overlay: Overlay): void {
-		overlay.overlay.scene.remove(this.line);
+	destroy(overlay: RendererOverlay | HeadlessRenderer): void {
+		overlay.scene.remove(this.line);
 		this.line.geometry.dispose();
 	}
 }
 
 class RenderGroup implements RenderObject2D {
 	active: boolean = false;
-	constructor(overlay: Overlay, obj: Group) {}
+	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Group) {}
 
-	refresh(overlay: Overlay, obj: Group): void {}
+	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Group): void {}
 
 	setMaterial(mat: THREE.Material): void {}
 
 	translate(delta: Vector3): void {}
 
-	destroy(overlay: Overlay): void {}
+	destroy(overlay: RendererOverlay | HeadlessRenderer): void {}
 }
 
 class RenderCornerstone implements RenderObject2D {
 	active: boolean = false;
-	constructor(overlay: Overlay, obj: Cornerstone) {}
+	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Cornerstone) {}
 
-	refresh(overlay: Overlay, obj: Group): void {}
+	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Group): void {}
 
 	setMaterial(mat: THREE.Material): void {}
 
 	translate(delta: Vector3): void {}
 
-	destroy(overlay: Overlay): void {}
+	destroy(overlay: RendererOverlay | HeadlessRenderer): void {}
 }
 
 function colorArrayToCss(color: number[]): string {
@@ -379,7 +385,7 @@ function colorArrayToCss(color: number[]): string {
 class RenderText implements RenderObject2D {
 	active: boolean = false;
 	el: HTMLTextAreaElement;
-	constructor(overlay: RendererOverlay, obj: Text) {
+	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Text) {
 		this.el = document.createElement('textarea');
 		this.el.style.position = 'absolute';
 		this.el.style.top = '0';
@@ -396,47 +402,49 @@ class RenderText implements RenderObject2D {
 		this.el.style.resize = 'none';
 		this.el.readOnly = true;
 
-		overlay.map.getDiv().appendChild(this.el);
+		overlay.appendElement(this.el);
 		let unsaved = false;
 
-		const saveText = () => {
-			if (!unsaved) return;
-			unsaved = false;
-			let realObj = overlay.broker.project.objectsMap.get(obj.id);
-			if (realObj && overlay && realObj.type == ObjectType.Text) {
-				let textObj = realObj as Text;
-				let transaction = overlay.broker.project.createTransaction();
-				transaction.update(textObj.id, 'text', this.el.value);
-				overlay.broker.commitTransaction(transaction);
-			}
-		};
+		if (overlay instanceof RendererOverlay) {
+			const saveText = () => {
+				if (!unsaved) return;
+				unsaved = false;
+				let realObj = overlay.broker.project.objectsMap.get(obj.id);
+				if (realObj && overlay && realObj.type == ObjectType.Text) {
+					let textObj = realObj as Text;
+					let transaction = overlay.broker.project.createTransaction();
+					transaction.update(textObj.id, 'text', this.el.value);
+					overlay.broker.commitTransaction(transaction);
+				}
+			};
 
-		let objId = obj.id;
-		this.el.addEventListener('input', () => {
-			let realObj = overlay.broker.project.objectsMap.get(objId);
-			if (realObj && overlay && realObj.type == ObjectType.Text) {
-				let textObj = realObj as Text;
-				textObj.text = this.el.value;
-				textObj.computeShape();
-				this.refresh(overlay, textObj);
-				overlay.broker.needsRender.set(true);
-				unsaved = true;
-			}
-		});
+			let objId = obj.id;
+			this.el.addEventListener('input', () => {
+				let realObj = overlay.broker.project.objectsMap.get(objId);
+				if (realObj && overlay && realObj.type == ObjectType.Text) {
+					let textObj = realObj as Text;
+					textObj.text = this.el.value;
+					textObj.computeShape();
+					this.refresh(overlay, textObj);
+					overlay.broker.needsRender.set(true);
+					unsaved = true;
+				}
+			});
 
-		this.el.addEventListener('change', (e) => {
-			saveText();
-		});
-
-		this.el.addEventListener('keydown', (e) => {
-			if (e.key == 'Enter' && !e.shiftKey) {
-				overlay.editor.editingObject.set(null);
+			this.el.addEventListener('change', (e) => {
 				saveText();
-			}
-		});
+			});
+
+			this.el.addEventListener('keydown', (e) => {
+				if (e.key == 'Enter' && !e.shiftKey) {
+					overlay.editor.editingObject.set(null);
+					saveText();
+				}
+			});
+		}
 	}
 
-	refresh(overlay: RendererOverlay, obj: Text): void {
+	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Text): void {
 		this.el.value = obj.text;
 		this.el.style.width = obj.text.length + 'ch';
 
@@ -484,26 +492,44 @@ class RenderText implements RenderObject2D {
 
 	translate(delta: Vector3): void {}
 
-	destroy(overlay: Overlay): void {
+	destroy(overlay: RendererOverlay | HeadlessRenderer): void {
 		this.el.remove();
 	}
 
-	mapUpdate(overlay: RendererOverlay, obj: Text): void {
-		const map = overlay.overlay.getMap();
-		if (!map) return;
-		let p = overlay.editor.positionToLonLat(obj.transform.position[0], obj.transform.position[1]);
-		let p2 = overlay.editor.positionToLonLat(
-			obj.transform.position[0] + obj.size,
-			obj.transform.position[1]
-		);
+	mapUpdate(overlay: RendererOverlay | HeadlessRenderer, obj: Text): void {
+		let pos = { x: obj.transform.position[0], y: obj.transform.position[1] };
+		let screenSize = 16 * obj.size;
+		let heading = 0;
+		let anchorHeading = 0;
+		if (overlay instanceof RendererOverlay) {
+			const map = overlay.overlay.getMap();
+			if (!map) return;
 
-		let proj = overlay.overlayView.getProjection();
-		if (!proj) return;
-		let pos = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
-		let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
-		if (!pos || !pos2) return;
+			heading = map.getHeading() ?? 0;
+			anchorHeading = overlay.heading;
 
-		let screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
+			let p = overlay.editor.positionToLonLat(obj.transform.position[0], obj.transform.position[1]);
+			let p2 = overlay.editor.positionToLonLat(
+				obj.transform.position[0] + obj.size,
+				obj.transform.position[1]
+			);
+
+			let proj = overlay.overlayView.getProjection();
+			if (!proj) return;
+			let pos1 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
+			let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
+			if (!pos1 || !pos2) return;
+			pos.x = pos1.x;
+			pos.y = pos1.y;
+
+			screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
+		} else {
+			let vec = new THREE.Vector3(obj.transform.position[0], obj.transform.position[1], 0);
+			vec.project(overlay.scene.getObjectByName('camera') as THREE.Camera);
+			pos.x = -100;
+			pos.y = -100; // Move off screen for now
+		}
+
 		let inViewport =
 			pos.x + obj.text.length * screenSize * 0.5498070069642946 > 0 &&
 			pos.y + screenSize > 0 &&
@@ -520,9 +546,7 @@ class RenderText implements RenderObject2D {
 			this.el.style.top = pos.y + 'px';
 			this.el.style.left = pos.x + 'px';
 			let trans = `rotate(${
-				obj.transform.rotation * (180 / Math.PI) +
-				(map.getHeading() ?? 0) * -1 +
-				(overlay.heading ?? 0)
+				obj.transform.rotation * (180 / Math.PI) + heading * -1 + anchorHeading
 			}deg)`;
 
 			if (this.el.style.transform != trans) {
@@ -535,7 +559,10 @@ class RenderText implements RenderObject2D {
 	}
 }
 
-export function createRenderObject(overlay: RendererOverlay, obj: Object2D): RenderObject2D {
+export function createRenderObject(
+	overlay: RendererOverlay | HeadlessRenderer,
+	obj: Object2D
+): RenderObject2D {
 	if (obj instanceof Path) {
 		return new RenderPath(overlay, obj);
 	} else if (obj instanceof Group) {
@@ -556,6 +583,8 @@ export class RendererOverlay extends Overlay {
 	isDown: boolean = false;
 	heading: number = 0;
 	stagedObject: RenderObject2D | null = null;
+	previewObjects: RenderObject2D[] = [];
+	scene: THREE.Scene = new THREE.Scene();
 
 	globalOpacity: number = 1;
 	cadOverrideColor: string = '';
@@ -564,6 +593,8 @@ export class RendererOverlay extends Overlay {
 
 	init(): void {
 		super.init();
+
+		this.scene = this.overlay.scene;
 
 		const isChildOf = (parent: ObjectID, child: ObjectID): boolean => {
 			while (true) {
@@ -623,6 +654,11 @@ export class RendererOverlay extends Overlay {
 			for (let [id, ro] of this.renderedObjects.entries()) {
 				if (ro.mapUpdate) ro.mapUpdate(this, this.broker.project.objectsMap.get(id)!);
 			}
+
+			let previewObjects = get(this.editor.previewObjects);
+			for (let [i, ro] of this.previewObjects.entries()) {
+				if (ro.mapUpdate) ro.mapUpdate(this, previewObjects[i]!);
+			}
 		});
 
 		this.addUnsub(
@@ -658,6 +694,39 @@ export class RendererOverlay extends Overlay {
 					this.stagedObject = createRenderObject(this, newVal);
 					this.stagedObject.refresh(this, newVal);
 					this.overlay.requestRedraw();
+				}
+			})
+		);
+		this.addUnsub(
+			this.editor.previewObjects.subscribe((newVal) => {
+				for (let obj of this.previewObjects) {
+					obj.destroy(this);
+				}
+
+				this.previewObjects = [];
+
+				for (let obj of newVal) {
+					let renderObj = createRenderObject(this, obj);
+					renderObj.refresh(this, obj);
+					this.previewObjects.push(renderObj);
+				}
+
+				this.overlay.requestRedraw();
+			})
+		);
+
+		this.addUnsub(
+			this.editor.needsPreviewRender.subscribe((newVal) => {
+				if (newVal) {
+					let previewObjects = get(this.editor.previewObjects);
+					for (let [i, obj] of this.previewObjects.entries()) {
+						let realObj = previewObjects[i];
+						obj.refresh(this, realObj!);
+					}
+
+					this.overlay.requestRedraw();
+
+					this.editor.needsPreviewRender.set(false);
 				}
 			})
 		);
@@ -721,6 +790,12 @@ export class RendererOverlay extends Overlay {
 		);
 	}
 
+	appendElement(el: HTMLElement) {
+		if (this.map) {
+			this.map.getDiv().appendChild(el);
+		}
+	}
+
 	destroyObject(id: ObjectID) {
 		let obj = this.renderedObjects.get(id);
 		if (obj) {
@@ -730,4 +805,42 @@ export class RendererOverlay extends Overlay {
 	}
 
 	refresh(): void {}
+}
+
+export class HeadlessRenderer {
+	renderedObjects: Map<ObjectID, RenderObject2D> = new Map();
+	scene: THREE.Scene;
+	overlayElement: HTMLElement;
+
+	globalOpacity: number = 1;
+	cadOverrideColor: string = '';
+
+	constructor(scene: THREE.Scene, overlayElement: HTMLElement) {
+		this.scene = scene;
+		this.overlayElement = overlayElement;
+	}
+
+	appendElement(el: HTMLElement) {
+		this.overlayElement.appendChild(el);
+	}
+	render(objects: Object2D[]) {
+		for (let obj of objects) {
+			let doesExist = this.renderedObjects.has(obj.id);
+			if (doesExist) {
+				let renderObj = this.renderedObjects.get(obj.id)!;
+				renderObj.refresh(this, obj);
+			} else {
+				let renderObj = createRenderObject(this, obj);
+				this.renderedObjects.set(obj.id, renderObj);
+				renderObj.refresh(this, obj);
+			}
+		}
+
+		for (let [key, obj] of this.renderedObjects) {
+			if (!objects.find((v) => v.id === key)) {
+				obj.destroy(this);
+				this.renderedObjects.delete(key);
+			}
+		}
+	}
 }

@@ -9,12 +9,12 @@
 </script>
 
 {#if $isMobile}
-	<div class="flex flex-row overflow-x-auto flex-nowrap space-x-4 no-scrollbars">
+	<div class="flex flex-row overflow-x-auto flex-nowrap justify-center space-x-4 no-scrollbars">
 		{#each groups as group}
 			<button
 				class="flex flex-row items-center justify-center px-4 py-1 bg-white border-gray-600 border-[1px] rounded-md cursor-pointer"
 				class:bg-gray-600={activeGroup === group}
-				class:text-white={activeGroup === group}
+				class:text-blue-500={activeGroup === group}
 				on:click={() => (activeGroup = group)}
 			>
 				{group}

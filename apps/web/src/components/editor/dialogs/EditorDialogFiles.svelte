@@ -47,6 +47,6 @@
 	}
 </script>
 
-<DialogSlideLeft name="Insert CAD">
+<DialogSlideLeft fullHeight name="Insert CAD">
 	<FilesView />
 </DialogSlideLeft>

@@ -271,6 +271,11 @@
 		}
 		broker.dispose();
 	});
+
+	$: {
+		fileEl;
+		editorContext.fileInput.set(fileEl);
+	}
 </script>
 
 <svelte:head>
@@ -569,7 +574,9 @@
 
 <div
 	class="toasts w-[300px] fixed bottom-10 z-20 h-auto rounded-lg space-y-2 px-2 transition-all"
-	style="right: {!$isMobile && $effectiveSelection.length > 0 ? '340px' : '2.5rem'}"
+	style="right: {!$isMobile && $effectiveSelection.length > 0 ? '340px' : '2.5rem'}; {$isMobile
+		? 'bottom: 5rem'
+		: ''}"
 >
 	{#each $toasts as toast (toast.id)}
 		<div
@@ -732,7 +739,20 @@
 	</div>
 {/if}
 
-<input type="file" accept=".dwg" bind:this={fileEl} style="display: none" on:change={() => {}} />
+<input
+	id="import-file"
+	type="file"
+	accept=".dwg"
+	bind:this={fileEl}
+	style="display: none"
+	on:change={async () => {
+		if (fileEl && fileEl.files && fileEl.files.length > 0) {
+			await processCadUploads(editorContext, fileEl.files);
+
+			await refreshData();
+		}
+	}}
+/>
 
 {#if fileDragging}
 	<div

@@ -35,6 +35,7 @@
 	import { portal } from '$lib/util/actions';
 	import { fly, slide } from 'svelte/transition';
 	import { compareAccess } from '$lib/util/access';
+	import ModelViewer from 'src/components/common/ModelViewer.svelte';
 
 	const { editor, broker } = getSvelteContext();
 	let sessionAccess: Writable<ProjectAccessLevel> = writable('READ');
@@ -243,11 +244,13 @@
 		<button><Fa icon={faTrash} /> Delete</button>
 	</ContextMenu>
 </div>
-{#if $isMobile && selected}
+{#if selected}
 	<div
 		transition:fly={{ y: 400, duration: 200 }}
-		use:portal={'root'}
-		class="bg-gray-100 py-4 border-t-2 border-gray-200 fixed bottom-0 left-0 w-full z-50"
+		use:portal={$isMobile ? 'root' : 'drawer'}
+		class="bg-gray-100 py-4 border-t-2 border-gray-200 {$isMobile
+			? 'fixed'
+			: 'absolute'} bottom-0 left-0 w-full z-50"
 	>
 		{#if node.type == 'folder'}
 			<TabWrap names={['Actions', 'Details']}>
@@ -293,7 +296,9 @@
 						><Fa class="pr-4" icon={faTrash} /> Delete</button
 					></TabWrapTab
 				>
-				<TabWrapTab class="bg-blue-500" tab={1}>Preview</TabWrapTab>
+				<TabWrapTab class="bg-white" tab={1}>
+					<ModelViewer fileId={node.id} />
+				</TabWrapTab>
 				<TabWrapTab class="" tab={2}>
 					{#if node.file}
 						<p class="px-4 pb-2">

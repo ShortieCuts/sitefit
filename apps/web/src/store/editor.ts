@@ -930,6 +930,9 @@ export class EditorContext {
 	latitude: Writable<number> = writable(0);
 	zoom: Writable<number> = writable(0);
 
+	previewObjects: Writable<Object2D[]> = writable([]);
+	needsPreviewRender: Writable<boolean> = writable(false);
+
 	viewBounds: Writable<{
 		minX: number;
 		minY: number;
@@ -988,6 +991,11 @@ export class EditorContext {
 
 	broker: ProjectBroker;
 
+	fileInput: Writable<HTMLInputElement | null> = writable(null);
+	uploadStatus: Writable<'idle' | 'uploading' | 'processing' | 'finished'> = writable('idle');
+	uploadCounter: Writable<number> = writable(0);
+	uploadId: Writable<string> = writable('');
+
 	toasts: Writable<
 		{
 			id: string;
@@ -1010,6 +1018,13 @@ export class EditorContext {
 
 	constructor(broker: ProjectBroker) {
 		this.broker = broker;
+	}
+
+	openImportDialog() {
+		let el = get(this.fileInput);
+		if (el) {
+			el.click();
+		}
 	}
 
 	guard(p: Promise<any>) {

@@ -311,22 +311,26 @@ export async function processCadUploads(
 	targetFolder: number | null = null
 ): Promise<string[]> {
 	let promises: Promise<string>[] = [];
+	editor.uploadStatus.set('idle');
 
 	for (let f of files) {
 		if (f.name.endsWith('.dwg')) {
 			promises.push(
 				new Promise((resolve, reject) => {
 					let uploadToast = editor.info("Uploading '" + f.name + "'...", 50000);
+					editor.uploadStatus.set('uploading');
 					let reader = new FileReader();
 					reader.onload = async (e) => {
 						let data = e.target?.result;
 						if (data) {
 							uploadToast();
 							let convertToast = editor.info("Converting '" + f.name + "'...", 50000);
+							editor.uploadStatus.set('processing');
 							try {
 								let dxf = await convertDwgToDxf(f);
 								convertToast();
 								let createToast = editor.info("Finalizing '" + f.name + "'...", 50000);
+
 								let cad = await createCad({
 									data: dxf,
 									description: '',
@@ -339,10 +343,14 @@ export async function processCadUploads(
 
 								createToast();
 								editor.info("Finished '" + f.name + "'");
+								editor.uploadStatus.set('finished');
+								editor.uploadId.set(cad.data.cadId);
+								editor.uploadCounter.update((x) => x + 1);
 								resolve(cad.data.cadId);
 							} catch (e) {
 								convertToast();
 								editor.alert("Failed to convert '" + f.name + "'");
+								editor.uploadStatus.set('idle');
 							}
 						} else {
 							reject();

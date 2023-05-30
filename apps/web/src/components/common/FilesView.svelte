@@ -6,17 +6,22 @@
 	import ContextMenu from '../editor/common/ContextMenu.svelte';
 	import Fa from 'svelte-fa';
 	import { faArrowLeft, faFolderPlus, faPlus, faRefresh } from '@fortawesome/free-solid-svg-icons';
-	import { createCadFolder, updateCadFile, updateCadFolder } from '$lib/client/api';
+	import {
+		createCadFolder,
+		processCadUploads,
+		updateCadFile,
+		updateCadFolder
+	} from '$lib/client/api';
 	import Draggable from '../editor/common/Draggable.svelte';
 	import type { CadTreeNode } from '$lib/types/cad';
 	import { isMobile } from 'src/store/responsive';
 	import TabWrap from '../editor/common/TabWrap.svelte';
 	import TabWrapTab from '../editor/common/TabWrapTab.svelte';
-	import { portal } from '$lib/util/actions';
+	import { createPortal, portal } from '$lib/util/actions';
 	import { getSvelteContext } from 'src/store/editor';
 	import DialogSlideLeft from 'src/components/common/DialogSlideLeft.svelte';
 
-	// const { editor } = getSvelteContext();
+	const { editor } = getSvelteContext();
 
 	let toggleState = writable(new Map<string, boolean>());
 
@@ -26,9 +31,13 @@
 
 	setContext('newEditId', newEditId);
 
+	let selectedId = writable('');
+	setContext('selectedId', selectedId);
+
 	const cadStore = getCadsStore();
 
 	let containerEl: HTMLElement;
+	let fileDragging = false;
 
 	function findChild(id: string, children: CadTreeNode[]): CadTreeNode | null {
 		for (let child of children) {
@@ -48,7 +57,41 @@
 
 <div
 	class="overflow-y-auto max-h-full h-full flex flex-col flex-shrink-0"
+	class:bg-gray-100={fileDragging}
+	class:outline={fileDragging}
+	class:outline-1={fileDragging}
+	class:outline-blue-500={fileDragging}
+	class:-outline-offset-1={fileDragging}
 	class:pointer-events-auto={$isMobile}
+	on:dragenter={(e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		fileDragging = true;
+	}}
+	on:dragover={(e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		fileDragging = true;
+	}}
+	on:drop={async (e) => {
+		if (!editor) return;
+		e.preventDefault();
+		e.stopPropagation();
+		fileDragging = false;
+
+		if (e.dataTransfer) {
+			const files = e.dataTransfer.files;
+
+			await processCadUploads(editor, files, null);
+
+			await refreshData();
+		}
+	}}
+	on:dragleave={(e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		fileDragging = false;
+	}}
 >
 	{#each $cadStore.children as node}
 		<EditorCadNode {node} />
@@ -102,4 +145,6 @@
 			}}><Fa icon={faRefresh} /> Refresh</button
 		>
 	</ContextMenu>
+
+	<div class="absolute bottom-0 w-full" use:createPortal={'drawer'} />
 </div>

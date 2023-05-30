@@ -15,6 +15,10 @@
 	import Flatten from '@flatten-js/core';
 	import { GuidesOverlay } from './overlays/Guides';
 	import { calculateGuides } from './tools/select';
+	import { getDraggable } from 'src/store/draggable';
+	import { faTextHeight } from '@fortawesome/free-solid-svg-icons';
+	import { translateDXF } from '$lib/util/dxf';
+	import type { Object2D } from 'core';
 
 	const { editor, broker } = getSvelteContext();
 	const { geo, heading } = broker.watchCornerstone();
@@ -48,6 +52,11 @@
 				draggableCursor: $activeTool == 'pan' ? 'grab' : 'default'
 			});
 	}
+
+	let filesDraggable = getDraggable('files');
+
+	let previewCad = '';
+	let previewCadOffsets = { x: 0, y: 0 };
 
 	function rebuildOverlays(map: google.maps.Map) {
 		if (!referenceOverlay || !overlayView) return;
@@ -254,6 +263,68 @@
 
 					if (editor.currentToolHandlers) {
 						editor.currentToolHandlers.onMove(e, editor, broker);
+					}
+
+					if (get(filesDraggable.dragging)) {
+						let draggingCad = get(filesDraggable.payload);
+
+						if (previewCad != draggingCad) {
+							previewCad = draggingCad;
+							(async () => {
+								let rawDXF = await fetch('/api/cad/' + previewCad).then((res) => res.text());
+
+								if (!get(filesDraggable.dragging)) {
+									return;
+								}
+
+								let objects = translateDXF(rawDXF);
+
+								if (!objects) {
+									return;
+								}
+
+								let bounds = computeBoundsMulti(objects);
+
+								previewCadOffsets = {
+									x: (bounds.maxX + bounds.minX) / 2,
+									y: (bounds.maxY + bounds.minY) / 2
+								};
+
+								editor.previewObjects.set(objects);
+								for (let object of objects) {
+									(object as any).$originalPosition = [
+										object.transform.position[0],
+										object.transform.position[1]
+									];
+								}
+
+								for (let object of objects) {
+									let anyObj = object as any;
+									object.transform.position[0] =
+										anyObj.$originalPosition[0] + editor.desiredPosition[0] - previewCadOffsets.x;
+									object.transform.position[1] =
+										anyObj.$originalPosition[1] + editor.desiredPosition[1] - previewCadOffsets.y;
+								}
+
+								editor.needsPreviewRender.set(true);
+							})();
+						}
+
+						let objects = get(editor.previewObjects);
+						for (let object of objects) {
+							let anyObj = object as any;
+							object.transform.position[0] =
+								anyObj.$originalPosition[0] + editor.desiredPosition[0] - previewCadOffsets.x;
+							object.transform.position[1] =
+								anyObj.$originalPosition[1] + editor.desiredPosition[1] - previewCadOffsets.y;
+						}
+
+						editor.needsPreviewRender.set(true);
+					} else {
+						if (previewCad) {
+							previewCad = '';
+							editor.previewObjects.set([]);
+						}
 					}
 				});
 
@@ -542,6 +613,60 @@
 			observer = null;
 		}
 	});
+
+	let insideMap = false;
+	let lastDraggableCad: string | null = null;
+	function handleMouseEnter(e: MouseEvent) {
+		let dragging = get(filesDraggable.payload);
+
+		insideMap = true;
+	}
+
+	function handleMouseLeave(e: MouseEvent) {
+		let dragging = get(filesDraggable.payload);
+
+		insideMap = false;
+
+		editor.previewObjects.set([]);
+		editor.needsPreviewRender.set(true);
+		previewCad = '';
+	}
+
+	filesDraggable.dragging.subscribe((newVal) => {
+		if (newVal) {
+			lastDraggableCad = get(filesDraggable.payload);
+		}
+		if (!newVal) {
+			editor.previewObjects.set([]);
+			editor.needsPreviewRender.set(true);
+
+			if (insideMap && lastDraggableCad) {
+				let currentMouseLatLon = get(editor.currentMousePosition);
+				let position = editor.lonLatToPosition(currentMouseLatLon[1], currentMouseLatLon[0]);
+
+				broker.placeCad(lastDraggableCad, position);
+			}
+		}
+	});
+
+	function computeBoundsMulti(objects: Object2D[]) {
+		let box = {
+			minX: Infinity,
+			minY: Infinity,
+			maxX: -Infinity,
+			maxY: -Infinity
+		};
+
+		for (let obj of objects) {
+			let bounds = obj.getBounds();
+			box.maxX = Math.max(box.maxX, bounds.maxX);
+			box.maxY = Math.max(box.maxY, bounds.maxY);
+			box.minX = Math.min(box.minX, bounds.minX);
+			box.minY = Math.min(box.minY, bounds.minY);
+		}
+
+		return box;
+	}
 </script>
 
 <svelte:window on:mousewheel|capture={handleMouseWheel} />
@@ -554,6 +679,8 @@
 	bind:this={containerEl}
 	on:mousedown={handleMouseDown}
 	on:mouseup={handleMouseUp}
+	on:mouseenter={handleMouseEnter}
+	on:mouseleave={handleMouseLeave}
 />
 
 <div
