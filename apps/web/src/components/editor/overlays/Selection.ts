@@ -26,7 +26,8 @@ class OutlinedBox {
 			new THREE.MeshBasicMaterial({
 				color: innerColor as THREE.ColorRepresentation,
 				opacity: innerOpacity,
-				transparent: true
+				transparent: true,
+				depthTest: false
 			})
 		);
 		let geo = new THREE.BufferGeometry().setFromPoints([
@@ -200,7 +201,7 @@ class OutlinedGeometry {
 				color: '#0c8ce9',
 				opacity: 1,
 				linewidth: 1,
-				transparent: false,
+				transparent: true,
 				depthTest: false
 			})
 		);

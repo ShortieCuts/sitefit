@@ -36,6 +36,7 @@ export enum ObjectType {
   Circle = "circle",
   Waypoint = "waypoint",
   Cornerstone = "cornerstone",
+  SVG = "svg",
 }
 
 export type Object2DGuides = {
@@ -149,10 +150,15 @@ export class Object2D implements Serializable {
   }
 
   getMatrix(): Flatten.Matrix {
-    return matrix(1, 0, 0, 1, 0, 0)
-      .translate(this.transform.position[0], this.transform.position[1])
-      .rotate(this.transform.rotation)
-      .scale(this.transform.size[0], this.transform.size[1]);
+    try {
+      return matrix(1, 0, 0, 1, 0, 0)
+        .translate(this.transform.position[0], this.transform.position[1])
+        .rotate(this.transform.rotation)
+        .scale(this.transform.size[0], this.transform.size[1]);
+    } catch (e) {
+      console.error(e);
+      return matrix(1, 0, 0, 1, 0, 0);
+    }
   }
 
   serialize() {
@@ -179,6 +185,14 @@ export class Object2D implements Serializable {
       if (!this.transform) {
         this.transform = new Transform();
       }
+
+      if (invalidNumber(this.transform.position[0]))
+        this.transform.position[0] = 0;
+      if (invalidNumber(this.transform.position[1]))
+        this.transform.position[1] = 0;
+      if (invalidNumber(this.transform.rotation)) this.transform.rotation = 0;
+      if (invalidNumber(this.transform.size[0])) this.transform.size[0] = 1;
+      if (invalidNumber(this.transform.size[1])) this.transform.size[1] = 1;
     }
     if ("visible" in data) this.visible = data.visible;
     if ("locked" in data) this.locked = data.locked;
@@ -187,6 +201,10 @@ export class Object2D implements Serializable {
     if ("style" in data) this.style = data.style;
     if ("order" in data) this.order = data.order;
   }
+}
+
+function invalidNumber(n: any) {
+  return typeof n !== "number" || isNaN(n) || !isFinite(n);
 }
 
 export class BezierHandle {
@@ -205,45 +223,51 @@ export class Path extends Object2D implements Serializable {
   measurement?: boolean = false;
 
   computeShape() {
-    const m = this.getMatrix();
-    let segs = [];
-    let points: Flatten.Point[] = [];
+    try {
+      const m = this.getMatrix();
+      let segs = [];
+      let points: Flatten.Point[] = [];
 
-    for (let i = 0; i < this.segments.length; i++) {
-      if (i == 0) continue;
+      for (let i = 0; i < this.segments.length; i++) {
+        if (i == 0) continue;
 
-      let p1 = point(
-        this.segments[i - 1][0],
-        this.segments[i - 1][1]
-      ).transform(m);
+        let p1 = point(
+          this.segments[i - 1][0],
+          this.segments[i - 1][1]
+        ).transform(m);
 
-      let p2 = point(this.segments[i][0], this.segments[i][1]).transform(m);
+        let p2 = point(this.segments[i][0], this.segments[i][1]).transform(m);
 
-      if (i == 1) {
-        points.push(p1);
+        if (i == 1) {
+          points.push(p1);
+        }
+
+        points.push(p2);
+        segs.push(new Flatten.Segment(p1, p2));
       }
 
-      points.push(p2);
-      segs.push(new Flatten.Segment(p1, p2));
+      if (this.closed) {
+        let p1 = point(
+          this.segments[this.segments.length - 1][0],
+          this.segments[this.segments.length - 1][1]
+        ).transform(m);
+
+        let p2 = point(this.segments[0][0], this.segments[0][1]).transform(m);
+
+        segs.push(new Flatten.Segment(p1, p2));
+
+        points.push(p2);
+      }
+      if (this.style && this.style.filled) {
+        let poly = new Flatten.Polygon(points);
+        segs.push(poly);
+      }
+      this.flatShape = segs;
+    } catch (e) {
+      console.error(e);
+
+      this.flatShape = [];
     }
-
-    if (this.closed) {
-      let p1 = point(
-        this.segments[this.segments.length - 1][0],
-        this.segments[this.segments.length - 1][1]
-      ).transform(m);
-
-      let p2 = point(this.segments[0][0], this.segments[0][1]).transform(m);
-
-      segs.push(new Flatten.Segment(p1, p2));
-
-      points.push(p2);
-    }
-    if (this.style && this.style.filled) {
-      let poly = new Flatten.Polygon(points);
-      segs.push(poly);
-    }
-    this.flatShape = segs;
   }
 
   getGuides(): Object2DGuides {
@@ -300,6 +324,48 @@ export class Group extends Object2D implements Serializable {
   deserialize(data: any) {
     super.deserialize(data);
     if ("iconKind" in data) this.iconKind = data.iconKind;
+  }
+}
+
+export class SVG extends Object2D implements Serializable {
+  type: ObjectType.SVG = ObjectType.SVG;
+  svg: string;
+  sourceWidth: number;
+  sourceHeight: number;
+
+  computeShape() {
+    const m = this.getMatrix();
+    let segs = [];
+
+    let topLeft = point(0, 0).transform(m);
+    let topRight = point(this.sourceWidth, 0).transform(m);
+    let bottomLeft = point(0, this.sourceHeight).transform(m);
+    let bottomRight = point(this.sourceWidth, this.sourceHeight).transform(m);
+
+    let poly = new Flatten.Polygon([
+      topLeft,
+      topRight,
+      bottomRight,
+      bottomLeft,
+    ]);
+    segs.push(poly);
+    this.flatShape = segs;
+  }
+
+  serialize() {
+    return {
+      ...super.serialize(),
+      svg: this.svg,
+      sourceWidth: this.sourceWidth,
+      sourceHeight: this.sourceHeight,
+    };
+  }
+
+  deserialize(data: any) {
+    super.deserialize(data);
+    if ("svg" in data) this.svg = data.svg;
+    if ("sourceWidth" in data) this.sourceWidth = data.sourceWidth;
+    if ("sourceHeight" in data) this.sourceHeight = data.sourceHeight;
   }
 }
 
@@ -568,7 +634,10 @@ export function makeObject(data: any) {
     obj = new Waypoint();
   } else if (data.type == "cornerstone") {
     obj = new Cornerstone();
+  } else if (data.type == "svg") {
+    obj = new SVG();
   }
+
   return obj;
 }
 
@@ -651,4 +720,5 @@ export const ObjectProperties: {
       type: "geo",
     },
   ],
+  [ObjectType.SVG]: [],
 };

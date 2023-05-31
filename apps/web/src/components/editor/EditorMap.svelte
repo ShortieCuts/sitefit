@@ -549,7 +549,7 @@
 				currentCursor = Cursors.comment;
 			} else if ($activeTool == 'text') {
 				currentCursor = Cursors.text;
-			} else if ($activeTool == 'measurement') {
+			} else if ($activeTool == 'measurement' || $activeTool == 'area') {
 				currentCursor = Cursors.measurement;
 			}
 		}
@@ -645,6 +645,7 @@
 				let position = editor.lonLatToPosition(currentMouseLatLon[1], currentMouseLatLon[0]);
 
 				broker.placeCad(lastDraggableCad, position);
+				lastDraggableCad = null;
 			}
 		}
 	});

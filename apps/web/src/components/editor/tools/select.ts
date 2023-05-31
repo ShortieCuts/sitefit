@@ -12,7 +12,8 @@ import {
 	Path,
 	type Object2DShape,
 	type ObjectID,
-	Text
+	Text,
+	SVG
 } from 'core';
 import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { computeBounds } from '../overlays/Selection';
@@ -864,6 +865,18 @@ export const SelectTool = {
 
 							if (direction[1] != 0) {
 								text.transform.position[1] = newBoxTop + newRelativeY;
+							}
+						} else if (obj.type == ObjectType.SVG) {
+							let svg = obj as SVG;
+							let originalSVG = originalObj as SVG;
+
+							if (direction[0] != 0) {
+								svg.transform.position[0] = newBoxLeft + newRelativeX;
+								svg.transform.size[0] = originalSVG.transform.size[0] * scaleX;
+							}
+							if (direction[1] != 0) {
+								svg.transform.position[1] = newBoxTop + newRelativeY;
+								svg.transform.size[1] = originalSVG.transform.size[1] * scaleY;
 							}
 						}
 

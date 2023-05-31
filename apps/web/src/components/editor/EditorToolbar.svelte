@@ -18,16 +18,19 @@
 	import { TextTool } from './tools/text';
 	import { compareAccess } from '$lib/util/access';
 	import { MeasurementTool } from './tools/measure';
+	import { AreaTool } from './tools/area';
 
 	const toolbarItems: {
 		icon: any;
 		key: string;
 		shortcut: string;
 		access: ProjectAccessLevel;
+		hidden?: boolean;
+		commit?: (editor: EditorContext, broker: ProjectBroker) => void;
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
-	}[] = [SelectTool, PanTool, CommentTool, PenTool, TextTool, MeasurementTool];
+	}[] = [SelectTool, PanTool, CommentTool, PenTool, TextTool, MeasurementTool, AreaTool];
 
 	const { editor, broker } = getSvelteContext();
 
@@ -44,12 +47,14 @@
 		if (tool) {
 			if (editor.currentToolHandlers) {
 				editor.currentToolHandlers.onUp(new MouseEvent('mouseup'), editor, broker);
+				editor.currentToolHandlers.commit(editor, broker);
 			}
 
 			editor.currentToolHandlers = {
 				onDown: tool.onDown,
 				onUp: tool.onUp,
-				onMove: tool.onMove
+				onMove: tool.onMove,
+				commit: tool.commit ?? ((editor, broker) => {})
 			};
 		} else {
 			editor.currentToolHandlers = null;
@@ -82,6 +87,13 @@
 				lastPanKey = $activeTool;
 				editor.activeTool.set('pan');
 			}
+		}
+
+		if (event.key === 'Enter') {
+			if (editor.currentToolHandlers) {
+				editor.currentToolHandlers.commit(editor, broker);
+			}
+			editor.activeTool.set('select');
 		}
 	}
 
@@ -117,18 +129,20 @@
 	style={shiftRight ? `left: calc(400px + 1rem);` : ``}
 >
 	{#each toolbarItems as item}
-		{#if compareAccess(item.access, $sessionAccess)}
-			<button
-				class="text-white w-10 h-10 flex items-center justify-center rounded-lg hover:bg-blue-400 cursor-default bg-black bg-opacity-30"
-				class:bg-blue-500={$activeTool === item.key}
-				style={$activeTool === item.key ? '--tw-bg-opacity: 1' : ''}
-				on:click={() => {
-					editor.activeTool.set(item.key);
-					editor.stagingComment.set(null);
-				}}
-			>
-				<Fa icon={item.icon} />
-			</button>
+		{#if !item.hidden}
+			{#if compareAccess(item.access, $sessionAccess)}
+				<button
+					class="text-white w-10 h-10 flex items-center justify-center rounded-lg hover:bg-blue-400 cursor-default bg-black bg-opacity-30"
+					class:bg-blue-500={$activeTool === item.key}
+					style={$activeTool === item.key ? '--tw-bg-opacity: 1' : ''}
+					on:click={() => {
+						editor.activeTool.set(item.key);
+						editor.stagingComment.set(null);
+					}}
+				>
+					<Fa icon={item.icon} />
+				</button>
+			{/if}
 		{/if}
 	{/each}
 </div>

@@ -1,4 +1,4 @@
-export function metersToFeetPrettyPrint(meters: number) {
+export function metersToFeetPrettyPrint(meters: number, includeInches: boolean = true) {
 	let feet = meters * 3.28084;
 	let inchesPerFoot = 12;
 	let feetInt = Math.floor(feet);
@@ -9,5 +9,14 @@ export function metersToFeetPrettyPrint(meters: number) {
 	if (inchesFracStr == '00') {
 		inchesFracStr = '';
 	}
-	return `${feetInt}' ${inchesInt}${inchesFracStr}"`;
+	if (includeInches) {
+		return `${feetInt}' ${inchesInt}${inchesFracStr}"`;
+	} else {
+		return `${feetInt}'`;
+	}
+}
+
+export function metersAreaToFootArea(meters: number) {
+	let feet = meters * 10.764;
+	return feet.toFixed(1).replace(/\.0$/, '') + "' ft²";
 }

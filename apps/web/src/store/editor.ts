@@ -1015,6 +1015,7 @@ export class EditorContext {
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
+		commit: (editor: EditorContext, broker: ProjectBroker) => void;
 	} | null = null;
 
 	currentMousePosition: Writable<[number, number]> = writable([0, 0]);
@@ -1123,7 +1124,10 @@ export class EditorContext {
 		let angle = get(heading);
 		let mat = Flatten.matrix(1, 0, 0, 1, 0, 0);
 		mat = mat.rotate(-angle * (Math.PI / 180));
-		let v2 = Flatten.point(x, -y).transform(mat);
+		let v2 = Flatten.point(0, 0);
+		try {
+			v2 = Flatten.point(x, -y).transform(mat);
+		} catch (e) {}
 		x = v2.x;
 		y = v2.y;
 		let radius = 6371010.0;

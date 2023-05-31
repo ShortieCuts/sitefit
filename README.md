@@ -13,3 +13,19 @@
 [Architecture](https://www.figma.com/file/UGtYy5IRUIgfMrciJ3cSnj/CAD-Mapper-Arch?node-id=0-1&t=Xbw9WobAJoiIPhuL-0)
 
 [UI Design](https://www.figma.com/file/JN26dTj0w1Lh3KqPDKFIGz/Mobile-CAD-App-Prototype?t=oCg83Uay6AxBFLla-0)
+
+## Development
+
+Running locally:
+terminal 1 (main web app):
+
+```bash
+npm run dev
+```
+
+terminal 2 (durable objects):
+
+```bash
+cd apps/engine
+npm run dev
+```

@@ -11,11 +11,14 @@ import {
 	Text,
 	type Object2D,
 	type ObjectID,
-	ObjectType
+	ObjectType,
+	SVG
 } from 'core';
 import type { Vector3 } from 'three';
 import Flatten from '@flatten-js/core';
-import { metersToFeetPrettyPrint } from '$lib/util/distance';
+import { metersAreaToFootArea, metersToFeetPrettyPrint } from '$lib/util/distance';
+import createDOMPurify from 'dompurify';
+import { colorArrayToCss } from '$lib/util/color';
 
 const ACTIVE_COLOR = '#0c8ae5';
 
@@ -40,6 +43,11 @@ function randomColorHEX() {
 }
 function colorArrayToThreeColor(arr: [number, number, number, number]): THREE.Color {
 	return new THREE.Color(arr[0], arr[1], arr[2]);
+}
+
+let DOMPurify: any = null;
+if (typeof window !== 'undefined') {
+	DOMPurify = createDOMPurify(window);
 }
 
 class RenderPath implements RenderObject2D {
@@ -78,11 +86,27 @@ class RenderPath implements RenderObject2D {
 			this.textEl.style.fontSize = '12px';
 			this.textEl.style.fontWeight = 'bold';
 			this.textEl.style.pointerEvents = 'none';
-			this.textEl.style.transformOrigin = 'top left';
+			this.textEl.style.transformOrigin = 'center';
 			this.textEl.style.fontFamily = 'monospace';
 			this.textEl.style.lineHeight = '1em';
-			this.textEl.style.overflow = 'hidden';
+			this.textEl.style.overflow = 'visible';
+			this.textEl.style.height = '0px';
+			this.textEl.style.width = '0px';
+			this.textEl.style.background = 'red';
+			this.textEl.style.display = 'flex';
+			this.textEl.style.alignItems = 'center';
+			this.textEl.style.justifyContent = 'center';
+			this.textEl.style.whiteSpace = 'nowrap';
+
 			this.textEl.style.resize = 'none';
+
+			let childDiv = document.createElement('div');
+			childDiv.style.background = 'white';
+			childDiv.style.padding = '2px 4px';
+			childDiv.style.borderRadius = '2px';
+			childDiv.style.border = `2px dashed ${colorArrayToCss(obj.style.color)}`;
+
+			this.textEl.appendChild(childDiv);
 
 			overlay.appendElement(this.textEl);
 		} else {
@@ -108,6 +132,7 @@ class RenderPath implements RenderObject2D {
 	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Path): void {
 		let mat = this.line.material as THREE.MeshBasicMaterial;
 		let mat2 = this.filled.material as THREE.MeshBasicMaterial;
+
 		if (obj.style && obj.style.color) {
 			mat.color.set(colorArrayToThreeColor(obj.style.color));
 			mat2.color.set(colorArrayToThreeColor(obj.style.color));
@@ -188,6 +213,12 @@ class RenderPath implements RenderObject2D {
 			this.filled.geometry = geo;
 
 			this.filled.position.setX(obj.transform.position[0]);
+			if (obj.measurement) {
+				this.filled.position.setY(0.01);
+				this.line.visible = true;
+				mat2.opacity = 0.1;
+				mat2.transparent = true;
+			}
 			this.filled.position.setZ(obj.transform.position[1]);
 			this.filled.scale.setX(obj.transform.size[0]);
 			this.filled.scale.setZ(obj.transform.size[1]);
@@ -197,14 +228,39 @@ class RenderPath implements RenderObject2D {
 
 		if (this.textEl) {
 			let distance = 0;
+			let area = 0;
 			if (obj.flatShape)
 				for (let shape of obj.flatShape) {
 					if (shape instanceof Flatten.Segment) {
 						distance += shape.length;
 					}
+					if (shape instanceof Flatten.Polygon) {
+						area += shape.area();
+					}
 				}
 
-			this.textEl.innerText = metersToFeetPrettyPrint(distance);
+			let childDiv = this.textEl.querySelector('div');
+			if (childDiv) {
+				if (obj.style.filled) {
+					childDiv.innerText = metersAreaToFootArea(area);
+					// childDiv.innerText = area.toFixed(2) + 'm';
+				} else {
+					childDiv.innerText = metersToFeetPrettyPrint(distance);
+					// childDiv.innerText = distance.toFixed(2) + 'm';
+				}
+			}
+
+			if (obj.measurement) {
+				let matDashed = this.line.material as THREE.LineDashedMaterial;
+				// Make sure the line starts and ends with a dash
+
+				let dashSize = 0.5;
+				let gapSize = 0.5;
+
+				let dashCount = Math.ceil(distance / (dashSize + gapSize));
+				matDashed.dashSize = distance / dashCount;
+				matDashed.gapSize = matDashed.dashSize;
+			}
 		}
 		this.mapUpdate(overlay, obj);
 	}
@@ -218,32 +274,51 @@ class RenderPath implements RenderObject2D {
 		let center = [(objBounds.minX + objBounds.maxX) / 2, (objBounds.minY + objBounds.maxY) / 2];
 		let pos = { x: center[0], y: center[1] };
 
+		let angle = 0;
+		let lineSize = 16;
 		if (overlay instanceof RendererOverlay) {
 			const map = overlay.overlay.getMap();
 			if (!map) return;
 			center[0] += 2;
-			let p = overlay.editor.positionToLonLat(center[0], center[1]);
-			let p2 = overlay.editor.positionToLonLat(center[0] + 10, center[1]);
+			let p = overlay.editor.positionToLonLat(objBounds.minX, objBounds.minY);
+			let p2 = overlay.editor.positionToLonLat(objBounds.maxX, objBounds.maxY);
 
 			let proj = overlay.overlayView.getProjection();
 			if (!proj) return;
 			let pos1 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
 			let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
 			if (!pos1 || !pos2) return;
-			pos.x = pos1.x;
-			pos.y = pos1.y;
+			lineSize = Math.sqrt(Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2));
+			pos.x = (pos1.x + pos2.x) / 2;
+			pos.y = (pos1.y + pos2.y) / 2;
 		}
 
-		// let screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
+		if (obj.segments.length == 2) {
+			let p1 = obj.segments[0];
+			let p2 = obj.segments[1];
+			angle = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+			if (angle > Math.PI / 2) angle -= Math.PI;
+			if (angle < -Math.PI / 2) angle += Math.PI;
+		}
+
 		let screenSize = 16;
 
-		this.textEl.style.color = colorArrayToCss(obj.style.color);
-		this.textEl.style.fontSize = `${screenSize}px`;
-		this.textEl.style.width = `${screenSize * text.length * 0.5498070069642946}px`;
+		if (obj.style.color) this.textEl.style.color = colorArrayToCss(obj.style.color);
+		let fontAspectRatio = 0.5498070069642946;
+		let charCount = text.length;
+
+		// Algebra: text.length * fontAspectRatio * fontSize = lineSize;
+		let lineGap = 20;
+		let fontSize = (lineSize - lineGap * 2) / (text.length * fontAspectRatio);
+
+		this.textEl.style.fontSize = `${Math.min(fontSize, 18)}px`;
+		// this.textEl.style.width = `${screenSize * text.length * 0.5498070069642946}px`;
 		this.textEl.style.top = pos.y + 'px';
 		this.textEl.style.left = pos.x + 'px';
 
-		this.textEl.style.display = 'block';
+		this.textEl.style.transform = `rotate(${angle}rad)`;
+
+		this.textEl.style.display = 'flex';
 	}
 
 	setMaterial(mat: THREE.Material): void {
@@ -395,10 +470,6 @@ class RenderCornerstone implements RenderObject2D {
 	}
 }
 
-function colorArrayToCss(color: number[]): string {
-	return `rgba(${color[0] * 255}, ${color[1] * 255}, ${color[2] * 255}, ${color[3]})`;
-}
-
 class RenderText implements RenderObject2D {
 	active: boolean = false;
 	el: HTMLTextAreaElement;
@@ -475,7 +546,8 @@ class RenderText implements RenderObject2D {
 		if (overlay.globalOpacity < 1) {
 			this.el.style.opacity = overlay.globalOpacity.toString();
 		} else {
-			this.el.style.opacity = obj.style.color[3].toString();
+			if (obj.style.color) this.el.style.opacity = obj.style.color[3].toString();
+			else this.el.style.opacity = '1';
 		}
 
 		let lines = 0;
@@ -583,6 +655,137 @@ class RenderText implements RenderObject2D {
 	}
 }
 
+class RenderSVG implements RenderObject2D {
+	active: boolean = false;
+	el: HTMLDivElement;
+	threePosition: THREE.Vector3 = new THREE.Vector3();
+	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: SVG) {
+		this.el = document.createElement('div');
+		this.el.classList.add('render-object-svg');
+		this.el.style.position = 'absolute';
+		this.el.style.top = '0';
+		this.el.style.left = '0';
+
+		this.el.style.pointerEvents = 'none';
+		this.el.style.transformOrigin = 'top left';
+		this.el.style.fontFamily = 'monospace';
+		this.el.style.lineHeight = '1em';
+		this.el.style.overflow = 'hidden';
+
+		this.refresh(overlay, obj);
+
+		overlay.appendElement(this.el);
+	}
+
+	getPosition(): THREE.Vector3 {
+		return this.threePosition;
+	}
+
+	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: SVG): void {
+		let clean = DOMPurify.sanitize(obj.svg);
+		this.el.innerHTML = clean;
+		this.el.querySelectorAll('path').forEach((path) => {
+			path.style.stroke = 'none';
+			path.style.fill = colorArrayToCss(obj.style.color);
+		});
+
+		this.threePosition.set(obj.transform.position[0], 0, obj.transform.position[1]);
+
+		if (overlay.globalOpacity < 1) {
+			this.el.style.opacity = overlay.globalOpacity.toString();
+		} else {
+			if (obj.style.color) this.el.style.opacity = obj.style.color[3].toString();
+			else this.el.style.opacity = '1';
+		}
+
+		this.mapUpdate(overlay, obj);
+		if (this.active) {
+			this.el.querySelectorAll('path').forEach((path) => {
+				path.style.stroke = ACTIVE_COLOR;
+				path.style.strokeWidth = '1';
+			});
+		} else {
+			this.el.querySelectorAll('path').forEach((path) => {
+				path.style.stroke = 'none';
+			});
+		}
+	}
+
+	setMaterial(mat: THREE.Material): void {}
+
+	translate(delta: Vector3): void {}
+
+	destroy(overlay: RendererOverlay | HeadlessRenderer): void {
+		this.el.remove();
+	}
+
+	mapUpdate(overlay: RendererOverlay | HeadlessRenderer, obj: SVG): void {
+		let pos = { x: obj.transform.position[0], y: obj.transform.position[1] };
+		let screenSize = 16;
+		let heading = 0;
+		let anchorHeading = 0;
+		if (overlay instanceof RendererOverlay) {
+			const map = overlay.overlay.getMap();
+			if (!map) return;
+
+			heading = map.getHeading() ?? 0;
+			anchorHeading = overlay.heading;
+
+			let p = overlay.editor.positionToLonLat(obj.transform.position[0], obj.transform.position[1]);
+			let p2 = overlay.editor.positionToLonLat(
+				obj.transform.position[0] + obj.sourceWidth,
+				obj.transform.position[1]
+			);
+
+			let proj = overlay.overlayView.getProjection();
+			if (!proj) return;
+			let pos1 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
+			let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
+			if (!pos1 || !pos2) return;
+			pos.x = pos1.x;
+			pos.y = pos1.y;
+
+			screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
+		} else {
+			let vec = new THREE.Vector3(obj.transform.position[0], obj.transform.position[1], 0);
+			vec.project(overlay.scene.getObjectByName('camera') as THREE.Camera);
+			pos.x = -100;
+			pos.y = -100; // Move off screen for now
+		}
+
+		let inViewport =
+			pos.x + screenSize &&
+			pos.y + screenSize > 0 &&
+			pos.x < window.innerWidth &&
+			pos.y < window.innerHeight;
+
+		if (inViewport) {
+			// this.el.style.color = colorArrayToCss(obj.style.color);
+			// if (overlay.cadOverrideColor) {
+			// 	this.el.style.color = overlay.cadOverrideColor;
+			// }
+			// this.el.style.fontSize = `${screenSize}px`;
+			if (this.el.firstChild && this.el.firstChild instanceof SVGElement) {
+				this.el.firstChild.style.width = `${screenSize}px`;
+				this.el.firstChild.style.height = `${(obj.sourceHeight / obj.sourceWidth) * screenSize}px`;
+
+				this.el.style.top = pos.y + 'px';
+				this.el.style.left = pos.x + 'px';
+				let trans = `rotate(${obj.transform.rotation * (180 / Math.PI)}deg) scaleX(${
+					obj.transform.size[0]
+				}) scaleY(${obj.transform.size[1]}) rotate(${heading * -1 + anchorHeading}deg)`;
+
+				if (this.el.style.transform != trans) {
+					this.el.style.transform = trans;
+				}
+				this.el.style.display = 'block';
+			}
+		} else {
+			this.el.style.display = 'none';
+		}
+	}
+}
+
 export function createRenderObject(
 	overlay: RendererOverlay | HeadlessRenderer,
 	obj: Object2D
@@ -597,6 +800,8 @@ export function createRenderObject(
 		return new RenderCornerstone(overlay, obj);
 	} else if (obj instanceof Text) {
 		return new RenderText(overlay, obj);
+	} else if (obj instanceof SVG) {
+		return new RenderSVG(overlay, obj);
 	} else {
 		console.error('Unsupported object type', obj);
 		return new RenderPath(overlay, obj as Path);

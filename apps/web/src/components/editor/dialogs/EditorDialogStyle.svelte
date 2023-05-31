@@ -14,14 +14,19 @@
 	const cadOpacity = broker.writableGlobalProperty<number>('cadOpacity', 1);
 	const overrideCadColor = broker.writableGlobalProperty<string>('overrideCadColor', '');
 
-	const inverseCadOpacity = writable(0);
-	const inverseBoundaryOpacity = writable(0);
-
+	const inverseCadOpacity = writable(1 - get(cadOpacity));
+	const inverseBoundaryOpacity = writable(1 - get(boundaryOpacity));
+	let skipCadOpacityUpdate = false;
 	cadOpacity.subscribe((v) => {
 		inverseCadOpacity.set(1 - v);
+		skipCadOpacityUpdate = true;
 	});
 
 	inverseCadOpacity.subscribe((v) => {
+		if (skipCadOpacityUpdate) {
+			skipCadOpacityUpdate = false;
+			return;
+		}
 		debouncify(() => {
 			cadOpacity.set(1 - v);
 		}, 'cadOpacity');

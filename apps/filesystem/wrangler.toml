@@ -9,4 +9,4 @@ AUTH_TOKEN="44bc8e68-8f9c-4ba1-ac3a-e3876627d107"
 [[r2_buckets]]
 binding = 'CADS'
 bucket_name = 'cads'
-preview_bucket_name = 'cads-dev'
+preview_bucket_name = 'cads'

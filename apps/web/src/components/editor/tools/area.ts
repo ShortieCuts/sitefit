@@ -8,11 +8,12 @@ let clickMoving = false;
 let downPos: [number, number] = [0, 0];
 let active = false;
 let committed = false;
-export const MeasurementTool = {
+export const AreaTool = {
 	icon: faCompassDrafting,
-	key: 'measurement',
+	key: 'area',
 	access: 'WRITE',
-	shortcut: 'm',
+	shortcut: 'n',
+	hidden: true,
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		committed = false;
 		active = true;
@@ -22,10 +23,12 @@ export const MeasurementTool = {
 			obj.style.color = [80 / 255, 200 / 255, 255 / 255, 1];
 			obj.style.filled = false;
 			obj.style.type = 'color';
-			obj.name = 'Ruler';
+			obj.name = 'Area';
 			obj.measurement = true;
+			obj.style.filled = true;
 			obj.closed = false;
 			obj.parent = undefined;
+			obj.closed = true;
 			obj.segments.push(editor.getDesiredPosition());
 			downPos = [...editor.getDesiredPosition()];
 
@@ -72,14 +75,8 @@ export const MeasurementTool = {
 		} else if (!committed) {
 			let dx = downPos[0] - editor.getDesiredPosition()[0];
 			let dy = downPos[1] - editor.getDesiredPosition()[1];
-			if (Math.sqrt(dx * dx + dy * dy) < 0.01) {
-				clickMoving = true;
-			} else {
-				isDown = false;
 
-				let id = broker.commitStagedObject();
-				if (id) editor.select(id);
-			}
+			clickMoving = true;
 		}
 	},
 	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
