@@ -167,6 +167,12 @@
 					window.location.href = `/project/${node.id}`;
 				}
 			}}
+			on:click={() => {
+				if (node.children && node.children.length > 0) {
+					$toggleState.set(node.id, true);
+					$toggleState = $toggleState;
+				}
+			}}
 		>
 			{#if node.children && node.children.length > 0}
 				<button

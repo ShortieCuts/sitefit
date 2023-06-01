@@ -179,6 +179,12 @@
 			}}
 			class="layer-item cursor-default ellipsis-wrapper flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent w-full"
 			class:bg-blue-500={fileDragging}
+			on:click={() => {
+				if (node.children && node.children.length > 0) {
+					$toggleState.set(node.id, true);
+					$toggleState = $toggleState;
+				}
+			}}
 		>
 			{#if node.children && node.children.length > 0}
 				<button
