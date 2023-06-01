@@ -10,6 +10,8 @@
 
 	export let readonly = false;
 
+	export let doubleclick = false;
+
 	let dispatch = createEventDispatcher();
 
 	function commit() {
@@ -49,7 +51,7 @@
 <div
 	class="click-editable {clazz}"
 	on:dblclick={() => {
-		editing = true;
+		if (doubleclick) editing = true;
 	}}
 >
 	{#if editing}
