@@ -923,7 +923,7 @@ function mirrorArc(startAngle: number, endAngle: number, mirrorX: boolean, mirro
 }
 
 export class EditorContext {
-	activeTool: Writable<string> = writable('select');
+	activeTool: Writable<string> = writable('pan');
 	activeDialog: Writable<string> = writable('');
 
 	longitude: Writable<number> = writable(0);

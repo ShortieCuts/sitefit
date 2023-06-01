@@ -83,7 +83,8 @@
 		selection,
 		toasts,
 		stagingComment,
-		focusComment
+		focusComment,
+		activeTool
 	} = editorContext;
 
 	let needsCornerstone = false;
@@ -291,7 +292,9 @@
 
 <div class="editor-scaffold h-full flex flex-col select-none">
 	{#if !$isMobile}
-		<div class="editor-bar h-16 min-h-[4rem] bg-white flex flex-row border-b-[1px] border-gray-200">
+		<div
+			class="editor-bar z-20 h-16 min-h-[4rem] bg-white flex flex-row border-b-[1px] border-gray-200"
+		>
 			<div class="editor-bar-left flex-1 justify-start flex flex-row items-center pl-2">
 				<div class="flex flex-row">
 					<div class="flex flex-row items-center cursor-pointer">
@@ -381,6 +384,20 @@
 			{/if}
 		{/if}
 		<div class="editor-viewport h-full w-full relative">
+			{#if $activeTool == 'pan' && $selection.length > 0}
+				<div
+					transition:fly={{ y: -100 }}
+					class="absolute top-4 left-[50%] z-10 rounded-lg bg-white shadow-lg p-2"
+					style="transform: translate(-50%, 0)"
+				>
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							$activeTool = 'select';
+						}}>Edit Mode</button
+					>
+				</div>
+			{/if}
 			{#if !$isMobile}
 				<EditorToolbar />
 			{:else}

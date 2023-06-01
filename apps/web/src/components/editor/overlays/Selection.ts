@@ -244,6 +244,11 @@ export class SelectionOverlay extends Overlay {
 			})
 		);
 		this.addUnsub(
+			this.editor.activeTool.subscribe(() => {
+				this.refresh();
+			})
+		);
+		this.addUnsub(
 			this.editor.translating.subscribe(() => {
 				this.refresh();
 			})
@@ -309,7 +314,11 @@ export class SelectionOverlay extends Overlay {
 		}
 
 		let globalShouldHandlesBeVisible =
-			access == 'WRITE' && !get(isMobile) && !get(this.editor.editingObject);
+			(access == 'WRITE' &&
+				!get(isMobile) &&
+				!get(this.editor.editingObject) &&
+				get(this.editor.activeTool) == 'select') ||
+			get(this.editor.activeTool) == 'pan';
 
 		let sels = get(this.editor.effectiveSelection);
 		if (sels.length > 0) {

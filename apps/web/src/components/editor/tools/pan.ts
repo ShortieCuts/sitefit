@@ -1,11 +1,67 @@
 import { faHand } from '@fortawesome/free-solid-svg-icons';
+import { ascendToRoot, getObjectAtCursor, selectDown, selectMove, selectUp } from './select';
+import type { EditorContext, ProjectBroker } from 'src/store/editor';
+import { get } from 'svelte/store';
+import { Cursors } from '../cursors';
 
+let downPosition: [number, number] = [0, 0];
 export const PanTool = {
 	icon: faHand,
 	access: 'READ',
 	key: 'pan',
 	shortcut: 'p',
-	onDown: (ev: MouseEvent) => {},
-	onUp: (ev: MouseEvent) => {},
-	onMove: (ev: MouseEvent) => {}
+	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		downPosition = [ev.clientX, ev.clientY];
+
+		let cursor = get(editor.currentMousePositionRelative);
+		let hover = getObjectAtCursor(editor, broker, cursor);
+
+		if (hover) {
+			hover = ascendToRoot(editor, broker, hover);
+			if (get(editor.hoveringObject) == hover) {
+				if (get(editor.selection).includes(hover)) {
+					selectDown(ev, editor, broker);
+				}
+			}
+		} else {
+			if (get(editor.selectToolCursor) != Cursors.default) {
+				selectDown(ev, editor, broker);
+			}
+		}
+	},
+	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		let dx = downPosition[0] - ev.clientX;
+		let dy = downPosition[1] - ev.clientY;
+		if (Math.sqrt(dx * dx + dy * dy) < 0.01) {
+			let cursor = get(editor.currentMousePositionRelative);
+			let hover = getObjectAtCursor(editor, broker, cursor);
+			if (hover) {
+				hover = ascendToRoot(editor, broker, hover);
+				editor.selection.set([hover]);
+
+				editor.computeEffectiveSelection(broker);
+				editor.rootGroup.set(null);
+			} else {
+				editor.selection.set([]);
+				editor.computeEffectiveSelection(broker);
+				editor.rootGroup.set(null);
+			}
+		}
+
+		selectUp(ev, editor, broker);
+	},
+	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		// Hover object highlight
+		// let cursor = get(editor.currentMousePositionRelative);
+		// let hover = getObjectAtCursor(editor, broker, cursor);
+
+		// if (hover) {
+		// 	hover = ascendToRoot(editor, broker, hover);
+		// 	if (get(editor.hoveringObject) !== hover) editor.hoveringObject.set(hover);
+		// } else {
+		// 	if (get(editor.hoveringObject) !== '') editor.hoveringObject.set('');
+		// }
+
+		selectMove(ev, editor, broker);
+	}
 };

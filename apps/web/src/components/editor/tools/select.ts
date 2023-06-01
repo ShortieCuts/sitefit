@@ -335,761 +335,755 @@ export function calculateGuides(
 	};
 }
 
-export const SelectTool = {
-	icon: faArrowPointer,
-	access: 'READ',
-	key: 'select',
-	shortcut: 's',
-	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
-		if (get(isMobile)) {
-			let toolMode = get(editor.mobileToolMode);
-			if (toolMode == 'transform') {
-				return;
-			}
-			// Search through top-level objects to select
-			let target = get(editor.currentMousePositionRelative);
-			let minSize = Infinity;
-			let currentObj: string | null = null;
-			for (let obj of broker.project.objects) {
-				if (!obj.parent) {
-					let bounds = broker.project.computeBounds(obj.id);
-					if (
-						target[0] > bounds.minX &&
-						target[0] < bounds.maxX &&
-						target[1] > bounds.minY &&
-						target[1] < bounds.maxY
-					) {
-						let area = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
-						console.log('select size', area);
-						if (area < minSize) {
-							minSize = area;
-							currentObj = obj.id;
-						}
+export function selectDown(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
+	if (get(isMobile)) {
+		let toolMode = get(editor.mobileToolMode);
+		if (toolMode == 'transform') {
+			return;
+		}
+		// Search through top-level objects to select
+		let target = get(editor.currentMousePositionRelative);
+		let minSize = Infinity;
+		let currentObj: string | null = null;
+		for (let obj of broker.project.objects) {
+			if (!obj.parent) {
+				let bounds = broker.project.computeBounds(obj.id);
+				if (
+					target[0] > bounds.minX &&
+					target[0] < bounds.maxX &&
+					target[1] > bounds.minY &&
+					target[1] < bounds.maxY
+				) {
+					let area = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
+					console.log('select size', area);
+					if (area < minSize) {
+						minSize = area;
+						currentObj = obj.id;
 					}
 				}
 			}
-
-			if (currentObj) {
-				editor.select(currentObj);
-				editor.activateDialog('');
-			} else {
-				editor.deselectAll();
-			}
-
-			return;
 		}
 
-		editor.selectionStart.set(get(editor.currentMousePosition));
-
-		if (get(editor.canScale)) {
-			// Do scaling
-			editor.canScale.set(false);
-			editor.scaling.set(true);
-			lastPosition = get(editor.currentMousePositionRelative);
-
-			computeStartBox(editor, broker);
-
-			return;
-		} else if (get(editor.canRotate)) {
-			// Do rotate
-			editor.canRotate.set(false);
-			editor.rotating.set(true);
-			lastPosition = get(editor.currentMousePositionRelative);
-
-			computeStartBox(editor, broker);
-
-			return;
+		if (currentObj) {
+			editor.select(currentObj);
+			editor.activateDialog('');
+		} else {
+			editor.deselectAll();
 		}
 
-		editor.selectionDown.set(true);
+		return;
+	}
 
-		let cursor = get(editor.currentMousePositionRelative);
-		let hover = getObjectAtCursor(editor, broker, cursor);
+	editor.selectionStart.set(get(editor.currentMousePosition));
 
-		let canChangeSelection = true;
+	if (get(editor.canScale)) {
+		// Do scaling
+		editor.canScale.set(false);
+		editor.scaling.set(true);
+		lastPosition = get(editor.currentMousePositionRelative);
 
-		if (hover || get(editor.canTranslate)) {
-			let sels = get(editor.effectiveSelection);
+		computeStartBox(editor, broker);
 
-			if (hover) {
-				hover = ascendToRoot(editor, broker, hover);
-				if (sels.includes(hover)) {
-					canChangeSelection = false;
-				}
-			}
-			if (get(editor.canTranslate)) {
+		return;
+	} else if (get(editor.canRotate)) {
+		// Do rotate
+		editor.canRotate.set(false);
+		editor.rotating.set(true);
+		lastPosition = get(editor.currentMousePositionRelative);
+
+		computeStartBox(editor, broker);
+
+		return;
+	}
+
+	editor.selectionDown.set(true);
+
+	let cursor = get(editor.currentMousePositionRelative);
+	let hover = getObjectAtCursor(editor, broker, cursor);
+
+	let canChangeSelection = true;
+
+	if (hover || get(editor.canTranslate)) {
+		let sels = get(editor.effectiveSelection);
+
+		if (hover) {
+			hover = ascendToRoot(editor, broker, hover);
+			if (sels.includes(hover)) {
 				canChangeSelection = false;
-				editor.selectToolCursor.set(Cursors.grabbing);
 			}
-			editor.canTranslate.set(false);
-
-			startTransform(editor, broker);
-			editor.translating.set(true);
-			editor.selectionDown.set(false);
-			lastPosition = get(editor.currentMousePositionRelative);
 		}
+		if (get(editor.canTranslate)) {
+			canChangeSelection = false;
+			editor.selectToolCursor.set(Cursors.grabbing);
+		}
+		editor.canTranslate.set(false);
 
-		if (canChangeSelection) {
-			editor.editingObject.set(null);
-			if (!ev.shiftKey) {
-				if (hover) {
-					editor.select(hover);
-				} else {
-					// We don't reset the root until mouse up
-					let cacheRoot = get(editor.rootGroup);
-					editor.deselectAll();
-					editor.rootGroup.set(cacheRoot);
-					needsRootReset = true;
-				}
+		startTransform(editor, broker);
+		editor.translating.set(true);
+		editor.selectionDown.set(false);
+		lastPosition = get(editor.currentMousePositionRelative);
+	}
+
+	if (canChangeSelection) {
+		editor.editingObject.set(null);
+		if (!ev.shiftKey) {
+			if (hover) {
+				editor.select(hover);
 			} else {
-				if (hover) {
-					editor.selection.set([...get(editor.selection), hover]);
-
-					editor.computeEffectiveSelection(broker);
-					editor.rootGroup.set(null);
-				}
+				// We don't reset the root until mouse up
+				let cacheRoot = get(editor.rootGroup);
+				editor.deselectAll();
+				editor.rootGroup.set(cacheRoot);
+				needsRootReset = true;
 			}
 		} else {
-			if (Date.now() - clickTimer < 300) {
-				// Double click
-				if (hover) {
-					let obj = broker.project.objectsMap.get(hover);
-					if (obj) {
-						if (obj.type == 'group') {
-							editor.rootGroup.set(hover);
-						} else {
-							setTimeout(() => {
-								editor.editingObject.set(hover);
-							}, 1);
-						}
-					}
-				}
-				hover = getObjectAtCursor(editor, broker, cursor);
-				if (hover) {
-					hover = ascendToRoot(editor, broker, hover);
-					editor.select(hover);
-					editor.hoveringObject.set(hover);
-				}
+			if (hover) {
+				editor.selection.set([...get(editor.selection), hover]);
+
+				editor.computeEffectiveSelection(broker);
+				editor.rootGroup.set(null);
 			}
 		}
-		clickTimer = Date.now();
-		computeStartBox(editor, broker);
-	},
-	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
-		editor.guides.set({
-			lines: [],
-			points: []
-		});
-		if (needsRootReset) {
-			editor.rootGroup.set(null);
-			needsRootReset = false;
-		}
-		editor.selectionDown.set(false);
-
-		let isTranslating = get(editor.translating);
-		let isRotating = get(editor.rotating);
-		let isScaling = get(editor.scaling);
-
-		if (isTranslating || isRotating || isScaling) {
-			// Apply our transformations
-			editor.translating.set(false);
-			editor.rotating.set(false);
-			editor.scaling.set(false);
-			if (isTranslating) {
-				let transaction = broker.project.createTransaction();
-				let sels = get(editor.effectiveSelection);
-				for (let id of sels) {
-					let obj = broker.project.objectsMap.get(id);
-					let objOrig = transformStartObjects.get(id);
-					if (obj && objOrig) {
-						transaction.update(id, 'transform', structuredClone(obj.transform));
-						obj.transform = objOrig.transform;
+	} else {
+		if (Date.now() - clickTimer < 300) {
+			// Double click
+			if (hover) {
+				let obj = broker.project.objectsMap.get(hover);
+				if (obj) {
+					if (obj.type == 'group') {
+						editor.rootGroup.set(hover);
+					} else {
+						setTimeout(() => {
+							editor.editingObject.set(hover);
+						}, 1);
 					}
 				}
-				if (get(editor.selectToolCursor) == Cursors.grabbing) {
-					editor.selectToolCursor.set(Cursors.grab);
-				}
-				broker.commitTransaction(transaction);
-			} else if (isScaling) {
-				let sels = get(editor.effectiveSelection);
-				let transaction = broker.project.createTransaction();
-				for (let id of sels) {
-					let obj = broker.project.objectsMap.get(id);
-					let objOrig = transformStartObjects.get(id);
-					if (obj && objOrig) {
-						transaction.update(id, 'transform', structuredClone(obj.transform));
-						if (obj.type == ObjectType.Path) {
-							transaction.update(id, 'segments', structuredClone((obj as Path).segments));
-						} else if (obj.type == ObjectType.Arc) {
-							transaction.update(id, 'radius', structuredClone((obj as Arc).radius));
-							transaction.update(id, 'startAngle', structuredClone((obj as Arc).startAngle));
-							transaction.update(id, 'endAngle', structuredClone((obj as Arc).endAngle));
-							(obj as Arc).radius = (objOrig as Arc).radius;
-							(obj as Arc).startAngle = (objOrig as Arc).startAngle;
-							(obj as Arc).endAngle = (objOrig as Arc).endAngle;
-						} else if (obj.type == ObjectType.Circle) {
-							transaction.update(id, 'radius', structuredClone((obj as Circle).radius));
-							(obj as Circle).radius = (objOrig as Circle).radius;
-						} else if (obj.type == ObjectType.Text) {
-							transaction.update(id, 'size', structuredClone((obj as Text).size));
-							(obj as Text).size = (objOrig as Text).size;
-						}
-
-						obj.transform = objOrig.transform;
-						if (obj.type == ObjectType.Path) {
-							(obj as Path).segments = (objOrig as Path).segments;
-						}
-					}
-				}
-				broker.commitTransaction(transaction);
-			} else if (isRotating) {
-				let sels = get(editor.effectiveSelection);
-				let transaction = broker.project.createTransaction();
-				for (let id of sels) {
-					let obj = broker.project.objectsMap.get(id);
-					let objOrig = transformStartObjects.get(id);
-					if (obj && objOrig) {
-						transaction.update(id, 'transform', structuredClone(obj.transform));
-
-						obj.transform = objOrig.transform;
-					}
-				}
-				broker.commitTransaction(transaction);
+			}
+			hover = getObjectAtCursor(editor, broker, cursor);
+			if (hover) {
+				hover = ascendToRoot(editor, broker, hover);
+				editor.select(hover);
+				editor.hoveringObject.set(hover);
 			}
 		}
-	},
-	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
-		let access = get(broker.sessionAccess);
+	}
+	clickTimer = Date.now();
+	computeStartBox(editor, broker);
+}
 
-		// Check for object intersection with cursor
+export function selectUp(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
+	editor.guides.set({
+		lines: [],
+		points: []
+	});
+	if (needsRootReset) {
+		editor.rootGroup.set(null);
+		needsRootReset = false;
+	}
+	editor.selectionDown.set(false);
 
-		let isTranslating = get(editor.translating);
-		let isRotating = get(editor.rotating);
-		let isScaling = get(editor.scaling);
+	let isTranslating = get(editor.translating);
+	let isRotating = get(editor.rotating);
+	let isScaling = get(editor.scaling);
 
-		if (access === 'WRITE' && (isTranslating || isScaling || isRotating)) {
-			// Transforming
-			let currentMousePosition = get(editor.currentMousePositionRelative);
-
-			let rootDeltaX = currentMousePosition[0] - lastPosition[0];
-			let rootDeltaY = currentMousePosition[1] - lastPosition[1];
+	if (isTranslating || isRotating || isScaling) {
+		// Apply our transformations
+		editor.translating.set(false);
+		editor.rotating.set(false);
+		editor.scaling.set(false);
+		if (isTranslating) {
+			let transaction = broker.project.createTransaction();
 			let sels = get(editor.effectiveSelection);
+			for (let id of sels) {
+				let obj = broker.project.objectsMap.get(id);
+				let objOrig = transformStartObjects.get(id);
+				if (obj && objOrig) {
+					transaction.update(id, 'transform', structuredClone(obj.transform));
+					obj.transform = objOrig.transform;
+				}
+			}
+			if (get(editor.selectToolCursor) == Cursors.grabbing) {
+				editor.selectToolCursor.set(Cursors.grab);
+			}
+			broker.commitTransaction(transaction);
+		} else if (isScaling) {
+			let sels = get(editor.effectiveSelection);
+			let transaction = broker.project.createTransaction();
+			for (let id of sels) {
+				let obj = broker.project.objectsMap.get(id);
+				let objOrig = transformStartObjects.get(id);
+				if (obj && objOrig) {
+					transaction.update(id, 'transform', structuredClone(obj.transform));
+					if (obj.type == ObjectType.Path) {
+						transaction.update(id, 'segments', structuredClone((obj as Path).segments));
+					} else if (obj.type == ObjectType.Arc) {
+						transaction.update(id, 'radius', structuredClone((obj as Arc).radius));
+						transaction.update(id, 'startAngle', structuredClone((obj as Arc).startAngle));
+						transaction.update(id, 'endAngle', structuredClone((obj as Arc).endAngle));
+						(obj as Arc).radius = (objOrig as Arc).radius;
+						(obj as Arc).startAngle = (objOrig as Arc).startAngle;
+						(obj as Arc).endAngle = (objOrig as Arc).endAngle;
+					} else if (obj.type == ObjectType.Circle) {
+						transaction.update(id, 'radius', structuredClone((obj as Circle).radius));
+						(obj as Circle).radius = (objOrig as Circle).radius;
+					} else if (obj.type == ObjectType.Text) {
+						transaction.update(id, 'size', structuredClone((obj as Text).size));
+						(obj as Text).size = (objOrig as Text).size;
+					}
 
-			if (isTranslating) {
-				if (ev.shiftKey) {
-					if (Math.abs(rootDeltaX) > Math.abs(rootDeltaY)) {
-						rootDeltaY = 0;
-					} else {
-						rootDeltaX = 0;
+					obj.transform = structuredClone(objOrig.transform);
+					if (obj.type == ObjectType.Path) {
+						(obj as Path).segments = structuredClone((objOrig as Path).segments);
 					}
 				}
-				for (let id of sels) {
-					let obj = broker.project.objectsMap.get(id);
-					let origObj = transformStartObjects.get(id);
-					if (obj && origObj) {
-						obj.transform.position[0] = origObj.transform.position[0] + rootDeltaX;
-						obj.transform.position[1] = origObj.transform.position[1] + rootDeltaY;
-						obj.computeShape();
-						broker.markObjectDirty(id);
-					}
+			}
+			broker.commitTransaction(transaction);
+		} else if (isRotating) {
+			let sels = get(editor.effectiveSelection);
+			let transaction = broker.project.createTransaction();
+			for (let id of sels) {
+				let obj = broker.project.objectsMap.get(id);
+				let objOrig = transformStartObjects.get(id);
+				if (obj && objOrig) {
+					transaction.update(id, 'transform', structuredClone(obj.transform));
+
+					obj.transform = objOrig.transform;
 				}
+			}
+			broker.commitTransaction(transaction);
+		}
+	}
+}
 
-				let deltaX = 0;
-				let deltaY = 0;
+export function selectMove(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
+	let access = get(broker.sessionAccess);
 
-				if (!ev.ctrlKey) {
-					let guides = calculateGuides(editor, broker);
+	// Check for object intersection with cursor
 
-					if (guides.lines.length > 0 || guides.points.length > 0) {
-						editor.guides.set({
-							lines: guides.lines.map((l) => [
-								[l.start.x, l.start.y],
-								[l.end.x, l.end.y]
-							]),
-							points: guides.points.map((p) => [p.x, p.y])
-						});
-						deltaX = guides.translation[0];
-						deltaY = guides.translation[1];
-					} else {
-						editor.guides.set({
-							lines: [],
-							points: []
-						});
-					}
+	let isTranslating = get(editor.translating);
+	let isRotating = get(editor.rotating);
+	let isScaling = get(editor.scaling);
+
+	if (access === 'WRITE' && (isTranslating || isScaling || isRotating)) {
+		// Transforming
+		let currentMousePosition = get(editor.currentMousePositionRelative);
+
+		let rootDeltaX = currentMousePosition[0] - lastPosition[0];
+		let rootDeltaY = currentMousePosition[1] - lastPosition[1];
+		let sels = get(editor.effectiveSelection);
+
+		if (isTranslating) {
+			if (ev.shiftKey) {
+				if (Math.abs(rootDeltaX) > Math.abs(rootDeltaY)) {
+					rootDeltaY = 0;
+				} else {
+					rootDeltaX = 0;
+				}
+			}
+			for (let id of sels) {
+				let obj = broker.project.objectsMap.get(id);
+				let origObj = transformStartObjects.get(id);
+				if (obj && origObj) {
+					obj.transform.position[0] = origObj.transform.position[0] + rootDeltaX;
+					obj.transform.position[1] = origObj.transform.position[1] + rootDeltaY;
+					obj.computeShape();
+					broker.markObjectDirty(id);
+				}
+			}
+
+			let deltaX = 0;
+			let deltaY = 0;
+
+			if (!ev.ctrlKey) {
+				let guides = calculateGuides(editor, broker);
+
+				if (guides.lines.length > 0 || guides.points.length > 0) {
+					editor.guides.set({
+						lines: guides.lines.map((l) => [
+							[l.start.x, l.start.y],
+							[l.end.x, l.end.y]
+						]),
+						points: guides.points.map((p) => [p.x, p.y])
+					});
+					deltaX = guides.translation[0];
+					deltaY = guides.translation[1];
 				} else {
 					editor.guides.set({
 						lines: [],
 						points: []
 					});
 				}
-
-				if (ev.shiftKey) {
-					if (Math.abs(rootDeltaX) > Math.abs(rootDeltaY)) {
-						deltaY = 0;
-					} else {
-						deltaX = 0;
-					}
-				}
-
-				if (deltaX != 0 || deltaY != 0) {
-					for (let id of sels) {
-						let obj = broker.project.objectsMap.get(id);
-						let origObj = transformStartObjects.get(id);
-						if (obj && origObj) {
-							obj.transform.position[0] += deltaX;
-							obj.transform.position[1] += deltaY;
-							obj.computeShape();
-							broker.markObjectDirty(id);
-						}
-					}
-				}
-
-				broker.needsRender.set(true);
-			} else if (isScaling) {
-				let sels = get(editor.effectiveSelection);
-				let objs = [];
-				let didApply = false;
-				for (let id of sels) {
-					let obj = broker.project.objectsMap.get(id);
-					if (obj) {
-						objs.push(obj);
-
-						if (obj.transform.rotation != 0) {
-							// Apply transform
-							let rotation = obj.transform.rotation;
-							let translation = point(obj.transform.position[0], obj.transform.position[1]);
-
-							let mat = matrix(1, 0, 0, 1, 0, 0)
-								.translate(translation.x, translation.y)
-								.rotate(rotation);
-							if (obj.type == ObjectType.Path) {
-								let path = obj as Path;
-								for (let seg of path.segments) {
-									let p = point(seg[0], seg[1]);
-									p = p.transform(mat);
-									seg[0] = p.x;
-									seg[1] = p.y;
-								}
-								obj.transform.position[0] = 0;
-								obj.transform.position[1] = 0;
-								obj.transform.rotation = 0;
-							} else if (obj.type == ObjectType.Arc) {
-								let arc = obj as Arc;
-
-								// Apply start/end angles
-								let startAngle = arc.startAngle;
-								let endAngle = arc.endAngle;
-								let center = point(arc.transform.position[0], arc.transform.position[1]);
-								let radius = arc.radius;
-
-								arc.startAngle = startAngle - rotation;
-								arc.endAngle = endAngle - rotation;
-								obj.transform.rotation = 0;
-							}
-
-							obj.computeShape();
-
-							didApply = true;
-						}
-					}
-				}
-
-				if (didApply) {
-					computeStartBox(editor, broker);
-				}
-				let box = computeBounds(objs);
-
-				if (!transformStartBox) return;
-				let direction = get(editor.scaleDirection);
-				if (ev.shiftKey) {
-					let widthRatio = transformStartBox.width / transformStartBox.height;
-					let heightRatio = transformStartBox.height / transformStartBox.width;
-
-					if (direction[0] == 1 && direction[1] == 1) {
-						let dx = currentMousePosition[0] - transformStartBox.high.x;
-						let dy = currentMousePosition[1] - transformStartBox.high.y;
-						if (dy > dx) {
-							currentMousePosition[0] = dy * widthRatio + transformStartBox.high.x;
-						} else {
-							currentMousePosition[1] = dx * heightRatio + transformStartBox.high.y;
-						}
-					} else if (direction[0] == -1 && direction[1] == -1) {
-						let dx = currentMousePosition[0] - transformStartBox.low.x;
-						let dy = currentMousePosition[1] - transformStartBox.low.y;
-						if (dy < dx) {
-							currentMousePosition[0] = dy * widthRatio + transformStartBox.low.x;
-						} else {
-							currentMousePosition[1] = dx * heightRatio + transformStartBox.low.y;
-						}
-					} else if (direction[0] == 1 && direction[1] == -1) {
-						let dx = currentMousePosition[0] - transformStartBox.high.x;
-						let dy = currentMousePosition[1] - transformStartBox.low.y;
-						if (Math.abs(dy) > Math.abs(dx)) {
-							currentMousePosition[0] = dy * widthRatio * -1 + transformStartBox.high.x;
-						} else {
-							currentMousePosition[1] = dx * heightRatio * -1 + transformStartBox.low.y;
-						}
-					} else if (direction[0] == -1 && direction[1] == 1) {
-						let dx = currentMousePosition[0] - transformStartBox.low.x;
-						let dy = currentMousePosition[1] - transformStartBox.high.y;
-						if (Math.abs(dy) > Math.abs(dx)) {
-							currentMousePosition[0] = dy * widthRatio * -1 + transformStartBox.low.x;
-						} else {
-							currentMousePosition[1] = dx * heightRatio * -1 + transformStartBox.high.y;
-						}
-					}
-				}
-
-				let deltaScaleX =
-					(currentMousePosition[0] - transformStartBox.low.x) / transformStartBox.width;
-
-				let deltaScaleY =
-					(currentMousePosition[1] - transformStartBox.low.y) / transformStartBox.height;
-
-				for (let id of sels) {
-					let obj = broker.project.objectsMap.get(id);
-					let originalObj = transformStartObjects.get(id);
-					if (obj && originalObj) {
-						function normalizeX(x: number) {
-							if (!obj) return 0;
-							return x - obj.transform.position[0];
-						}
-
-						function normalizeY(y: number) {
-							if (!obj) return 0;
-							return y - obj.transform.position[1];
-						}
-						let width = transformStartBox.width;
-						let height = transformStartBox.height;
-						let relativeX = (originalObj.transform.position[0] - transformStartBox.low.x) / width;
-						let relativeY = (originalObj.transform.position[1] - transformStartBox.low.y) / height;
-
-						let newBoxWidth = width + currentMousePosition[0] - transformStartBox.high.x;
-						let newBoxHeight = height + currentMousePosition[1] - transformStartBox.high.y;
-
-						let newBoxLeft = transformStartBox.low.x;
-						if (direction[0] == -1) {
-							newBoxLeft = currentMousePosition[0];
-							newBoxWidth = width - currentMousePosition[0] + transformStartBox.low.x;
-						}
-
-						let newBoxTop = transformStartBox.low.y;
-						if (direction[1] == -1) {
-							newBoxTop = currentMousePosition[1];
-							newBoxHeight = height - currentMousePosition[1] + transformStartBox.low.y;
-						}
-
-						let scaleX = Math.abs(newBoxWidth / width);
-						let scaleY = Math.abs(newBoxHeight / height);
-
-						let newRelativeX = relativeX * newBoxWidth;
-						let newRelativeY = relativeY * newBoxHeight;
-
-						if (obj.type == ObjectType.Path) {
-							let path = obj as Path;
-							let originalPath = originalObj as Path;
-							for (let i = 0; i < path.segments.length; i++) {
-								let relativeX =
-									originalPath.segments[i][0] + obj.transform.position[0] - transformStartBox.low.x;
-								let relativeY =
-									originalPath.segments[i][1] + obj.transform.position[1] - transformStartBox.low.y;
-
-								if (direction[0] == 0) {
-									// No op
-								} else if (direction[0] > 0) {
-									// Scale right
-									path.segments[i][0] = normalizeX(
-										transformStartBox.low.x + relativeX * deltaScaleX
-									);
-								} else {
-									// Scale left and lock right edge
-									path.segments[i][0] = normalizeX(
-										transformStartBox.low.x +
-											relativeX * (1 - deltaScaleX) +
-											deltaScaleX * transformStartBox.width
-									);
-								}
-
-								if (direction[1] == 0) {
-									// No op
-								} else if (direction[1] > 0) {
-									// Scale down
-									path.segments[i][1] = normalizeY(
-										transformStartBox.low.y + relativeY * deltaScaleY
-									);
-								} else {
-									// Scale up and lock bottom edge
-									path.segments[i][1] = normalizeY(
-										transformStartBox.low.y +
-											relativeY * (1 - deltaScaleY) +
-											deltaScaleY * transformStartBox.height
-									);
-								}
-							}
-						} else if (obj.type == ObjectType.Arc || obj.type == ObjectType.Circle) {
-							let arc = obj as Arc | Circle;
-							let originalArc = originalObj as Arc | Circle;
-
-							arc.radius = originalArc.radius * Math.max(scaleX, scaleY);
-							if (direction[0] == 0) {
-								arc.radius = originalArc.radius * scaleY;
-							}
-							if (direction[1] == 0) {
-								arc.radius = originalArc.radius * scaleX;
-							}
-
-							if (direction[0] != 0) {
-								arc.transform.position[0] = newBoxLeft + newRelativeX;
-							}
-
-							if (direction[1] != 0) {
-								arc.transform.position[1] = newBoxTop + newRelativeY;
-							}
-						} else if (obj.type == ObjectType.Text) {
-							let text = obj as Text;
-							let originalText = originalObj as Text;
-
-							let newFontSize = originalText.size * Math.max(scaleX, scaleY);
-							if (direction[0] == 0) {
-								newFontSize = originalText.size * scaleY;
-							}
-
-							if (direction[1] == 0) {
-								newFontSize = originalText.size * scaleX;
-							}
-
-							text.size = newFontSize;
-							if (direction[0] != 0) {
-								text.transform.position[0] = newBoxLeft + newRelativeX;
-							}
-
-							if (direction[1] != 0) {
-								text.transform.position[1] = newBoxTop + newRelativeY;
-							}
-						} else if (obj.type == ObjectType.SVG) {
-							let svg = obj as SVG;
-							let originalSVG = originalObj as SVG;
-
-							if (direction[0] != 0) {
-								svg.transform.position[0] = newBoxLeft + newRelativeX;
-								svg.transform.size[0] = originalSVG.transform.size[0] * scaleX;
-							}
-							if (direction[1] != 0) {
-								svg.transform.position[1] = newBoxTop + newRelativeY;
-								svg.transform.size[1] = originalSVG.transform.size[1] * scaleY;
-							}
-						}
-
-						obj.computeShape();
-						broker.markObjectDirty(id);
-					}
-				}
-
-				broker.needsRender.set(true);
-			} else if (isRotating) {
-				if (!transformStartBox) return;
-				function dot(a: [number, number], b: [number, number]) {
-					return a[0] * b[0] + a[1] * b[1];
-				}
-
-				function cross(a: [number, number], b: [number, number]) {
-					return a[0] * b[1] - a[1] * b[0];
-				}
-
-				function length(a: [number, number]) {
-					return Math.sqrt(dot(a, a));
-				}
-				function sub(a: [number, number], b: [number, number]): [number, number] {
-					return [a[0] - b[0], a[1] - b[1]];
-				}
-				let center: [number, number] = [transformStartBox.center.x, transformStartBox.center.y];
-
-				let lastRel = sub(lastPosition, center);
-				lastRel = [lastRel[0] / length(lastRel), lastRel[1] / length(lastRel)];
-				let currentRel = sub(currentMousePosition, center);
-				currentRel = [currentRel[0] / length(currentRel), currentRel[1] / length(currentRel)];
-				let deltaAngle = Math.atan2(cross(lastRel, currentRel), dot(lastRel, currentRel));
-				if (ev.shiftKey) {
-					deltaAngle = Math.round(deltaAngle / (Math.PI / 4)) * (Math.PI / 4);
-				}
-				let rotationMatrix = matrix(1, 0, 0, 1, 0, 0).rotate(deltaAngle);
-				let centerPoint = transformStartBox.center;
-
-				// lastPosition = [...currentMousePosition];
-				if (isNaN(deltaAngle)) return;
-
-				let sels = get(editor.effectiveSelection);
-
-				for (let id of sels) {
-					let obj = broker.project.objectsMap.get(id);
-					let originalObj = transformStartObjects.get(id);
-					if (obj && originalObj) {
-						// Rotate about center point
-						let objectAnchorPoint = point(
-							originalObj.transform.position[0],
-							originalObj.transform.position[1]
-						);
-						let objPoint = point(
-							objectAnchorPoint.x - centerPoint.x,
-							objectAnchorPoint.y - centerPoint.y
-						);
-						obj.transform.rotation = originalObj.transform.rotation + deltaAngle;
-
-						let rotatedPoint = objPoint.transform(rotationMatrix);
-						obj.transform.position[0] = rotatedPoint.x + centerPoint.x;
-						obj.transform.position[1] = rotatedPoint.y + centerPoint.y;
-
-						obj.computeShape();
-						broker.markObjectDirty(id);
-					}
-				}
-				broker.needsRender.set(true);
+			} else {
+				editor.guides.set({
+					lines: [],
+					points: []
+				});
 			}
-		} else {
-			// Not transforming
-			let cursor = get(editor.currentMousePositionRelative);
 
-			// Corner grabbing cursor
+			if (ev.shiftKey) {
+				if (Math.abs(rootDeltaX) > Math.abs(rootDeltaY)) {
+					deltaY = 0;
+				} else {
+					deltaX = 0;
+				}
+			}
+
+			if (deltaX != 0 || deltaY != 0) {
+				for (let id of sels) {
+					let obj = broker.project.objectsMap.get(id);
+					let origObj = transformStartObjects.get(id);
+					if (obj && origObj) {
+						obj.transform.position[0] += deltaX;
+						obj.transform.position[1] += deltaY;
+						obj.computeShape();
+						broker.markObjectDirty(id);
+					}
+				}
+			}
+
+			broker.needsRender.set(true);
+		} else if (isScaling) {
 			let sels = get(editor.effectiveSelection);
 			let objs = [];
+			let didApply = false;
 			for (let id of sels) {
 				let obj = broker.project.objectsMap.get(id);
-				if (obj) objs.push(obj);
+				if (obj) {
+					objs.push(obj);
+
+					if (obj.transform.rotation != 0) {
+						// Apply transform
+						let rotation = obj.transform.rotation;
+						let translation = point(obj.transform.position[0], obj.transform.position[1]);
+
+						let mat = matrix(1, 0, 0, 1, 0, 0)
+							.translate(translation.x, translation.y)
+							.rotate(rotation);
+						if (obj.type == ObjectType.Path) {
+							let path = obj as Path;
+							for (let seg of path.segments) {
+								let p = point(seg[0], seg[1]);
+								p = p.transform(mat);
+								seg[0] = p.x;
+								seg[1] = p.y;
+							}
+							obj.transform.position[0] = 0;
+							obj.transform.position[1] = 0;
+							obj.transform.rotation = 0;
+						} else if (obj.type == ObjectType.Arc) {
+							let arc = obj as Arc;
+
+							// Apply start/end angles
+							let startAngle = arc.startAngle;
+							let endAngle = arc.endAngle;
+							let center = point(arc.transform.position[0], arc.transform.position[1]);
+							let radius = arc.radius;
+
+							arc.startAngle = startAngle - rotation;
+							arc.endAngle = endAngle - rotation;
+							obj.transform.rotation = 0;
+						}
+
+						obj.computeShape();
+
+						didApply = true;
+					}
+				}
+			}
+
+			if (didApply) {
+				computeStartBox(editor, broker);
 			}
 			let box = computeBounds(objs);
-			if (access == 'WRITE' && (box.width > 0 || box.height > 0)) {
-				needsRootReset = false;
-				let cursorPoint = point(cursor[0], cursor[1]);
 
-				let setCursor = false;
-				let canScale = false;
-				let canRotate = false;
-				let canTranslate = false;
-				let scaleDirection: [number, number] = [0, 0];
+			if (!transformStartBox) return;
+			let direction = get(editor.scaleDirection);
+			if (ev.shiftKey) {
+				let widthRatio = transformStartBox.width / transformStartBox.height;
+				let heightRatio = transformStartBox.height / transformStartBox.width;
 
-				let dist = get(editor.screenScale);
-
-				let topMid = point(box.center.x, box.low.y);
-
-				let topLeft = point(box.low.x, box.low.y);
-				let topRight = point(box.high.x, box.low.y);
-				let bottomLeft = point(box.low.x, box.high.y);
-				let bottomRight = point(box.high.x, box.high.y);
-
-				let rotateDistance = dist;
-				let topLeftRotate = point(box.low.x - rotateDistance, box.low.y - rotateDistance);
-				let topRightRotate = point(box.high.x + rotateDistance, box.low.y - rotateDistance);
-				let bottomRightRotate = point(box.high.x + rotateDistance, box.high.y + rotateDistance);
-				let bottomLeftRotate = point(box.low.x - rotateDistance, box.high.y + rotateDistance);
-
-				if (
-					(Math.abs(box.low.x - cursor[0]) < dist || Math.abs(box.high.x - cursor[0]) < dist) &&
-					cursor[1] > box.low.y &&
-					cursor[1] < box.high.y
-				) {
-					editor.selectToolCursor.set(Cursors.ew);
-					canScale = true;
-					scaleDirection = [Math.abs(box.low.x - cursor[0]) < dist ? -1 : 1, 0];
-					setCursor = true;
+				if (direction[0] == 1 && direction[1] == 1) {
+					let dx = currentMousePosition[0] - transformStartBox.high.x;
+					let dy = currentMousePosition[1] - transformStartBox.high.y;
+					if (dy > dx) {
+						currentMousePosition[0] = dy * widthRatio + transformStartBox.high.x;
+					} else {
+						currentMousePosition[1] = dx * heightRatio + transformStartBox.high.y;
+					}
+				} else if (direction[0] == -1 && direction[1] == -1) {
+					let dx = currentMousePosition[0] - transformStartBox.low.x;
+					let dy = currentMousePosition[1] - transformStartBox.low.y;
+					if (dy < dx) {
+						currentMousePosition[0] = dy * widthRatio + transformStartBox.low.x;
+					} else {
+						currentMousePosition[1] = dx * heightRatio + transformStartBox.low.y;
+					}
+				} else if (direction[0] == 1 && direction[1] == -1) {
+					let dx = currentMousePosition[0] - transformStartBox.high.x;
+					let dy = currentMousePosition[1] - transformStartBox.low.y;
+					if (Math.abs(dy) > Math.abs(dx)) {
+						currentMousePosition[0] = dy * widthRatio * -1 + transformStartBox.high.x;
+					} else {
+						currentMousePosition[1] = dx * heightRatio * -1 + transformStartBox.low.y;
+					}
+				} else if (direction[0] == -1 && direction[1] == 1) {
+					let dx = currentMousePosition[0] - transformStartBox.low.x;
+					let dy = currentMousePosition[1] - transformStartBox.high.y;
+					if (Math.abs(dy) > Math.abs(dx)) {
+						currentMousePosition[0] = dy * widthRatio * -1 + transformStartBox.low.x;
+					} else {
+						currentMousePosition[1] = dx * heightRatio * -1 + transformStartBox.high.y;
+					}
 				}
+			}
 
-				if (
-					(Math.abs(box.low.y - cursor[1]) < dist || Math.abs(box.high.y - cursor[1]) < dist) &&
-					cursor[0] > box.low.x &&
-					cursor[0] < box.high.x
-				) {
-					editor.selectToolCursor.set(Cursors.ns);
-					canScale = true;
-					scaleDirection = [0, Math.abs(box.low.y - cursor[1]) < dist ? -1 : 1];
-					setCursor = true;
-				}
+			let deltaScaleX =
+				(currentMousePosition[0] - transformStartBox.low.x) / transformStartBox.width;
 
-				if (topLeft.distanceTo(cursorPoint)[0] < dist) {
-					editor.selectToolCursor.set(Cursors.nwse);
-					canScale = true;
-					scaleDirection = [-1, -1];
-					setCursor = true;
-				}
+			let deltaScaleY =
+				(currentMousePosition[1] - transformStartBox.low.y) / transformStartBox.height;
 
-				if (topRight.distanceTo(cursorPoint)[0] < dist) {
-					editor.selectToolCursor.set(Cursors.nesw);
-					canScale = true;
-					scaleDirection = [1, -1];
-					setCursor = true;
-				}
+			for (let id of sels) {
+				let obj = broker.project.objectsMap.get(id);
+				let originalObj = transformStartObjects.get(id);
+				if (obj && originalObj) {
+					function normalizeX(x: number) {
+						if (!obj) return 0;
+						return x - obj.transform.position[0];
+					}
 
-				if (bottomLeft.distanceTo(cursorPoint)[0] < dist) {
-					editor.selectToolCursor.set(Cursors.nesw);
-					canScale = true;
-					scaleDirection = [-1, 1];
-					setCursor = true;
-				}
+					function normalizeY(y: number) {
+						if (!obj) return 0;
+						return y - obj.transform.position[1];
+					}
+					let width = transformStartBox.width;
+					let height = transformStartBox.height;
+					let relativeX = (originalObj.transform.position[0] - transformStartBox.low.x) / width;
+					let relativeY = (originalObj.transform.position[1] - transformStartBox.low.y) / height;
 
-				if (bottomRight.distanceTo(cursorPoint)[0] < dist) {
-					editor.selectToolCursor.set(Cursors.nwse);
-					canScale = true;
-					scaleDirection = [1, 1];
-					setCursor = true;
-				}
+					let newBoxWidth = width + currentMousePosition[0] - transformStartBox.high.x;
+					let newBoxHeight = height + currentMousePosition[1] - transformStartBox.high.y;
 
-				if (topLeftRotate.distanceTo(cursorPoint)[0] < dist) {
-					editor.selectToolCursor.set(Cursors.rtl);
-					canRotate = true;
-					setCursor = true;
-				}
+					let newBoxLeft = transformStartBox.low.x;
+					if (direction[0] == -1) {
+						newBoxLeft = currentMousePosition[0];
+						newBoxWidth = width - currentMousePosition[0] + transformStartBox.low.x;
+					}
 
-				if (topRightRotate.distanceTo(cursorPoint)[0] < dist) {
-					editor.selectToolCursor.set(Cursors.rtr);
-					canRotate = true;
-					setCursor = true;
-				}
+					let newBoxTop = transformStartBox.low.y;
+					if (direction[1] == -1) {
+						newBoxTop = currentMousePosition[1];
+						newBoxHeight = height - currentMousePosition[1] + transformStartBox.low.y;
+					}
 
-				if (bottomLeftRotate.distanceTo(cursorPoint)[0] < dist) {
-					editor.selectToolCursor.set(Cursors.rbl);
-					canRotate = true;
-					setCursor = true;
-				}
+					let scaleX = Math.abs(newBoxWidth / width);
+					let scaleY = Math.abs(newBoxHeight / height);
 
-				if (bottomRightRotate.distanceTo(cursorPoint)[0] < dist) {
-					editor.selectToolCursor.set(Cursors.rbr);
-					canRotate = true;
-					setCursor = true;
-				}
-				if (
-					cursor[0] > topMid.x - dist * 1.5 &&
-					cursor[0] < topMid.x + dist * 1.5 &&
-					cursor[1] > topMid.y - dist &&
-					cursor[1] < topMid.y + dist
-				) {
-					editor.selectToolCursor.set(Cursors.grab);
+					let newRelativeX = relativeX * newBoxWidth;
+					let newRelativeY = relativeY * newBoxHeight;
 
-					canScale = false;
-					canRotate = false;
-					canTranslate = true;
-					setCursor = true;
-				}
+					if (obj.type == ObjectType.Path) {
+						let path = obj as Path;
+						let originalPath = originalObj as Path;
+						for (let i = 0; i < path.segments.length; i++) {
+							let relativeX =
+								originalPath.segments[i][0] + obj.transform.position[0] - transformStartBox.low.x;
+							let relativeY =
+								originalPath.segments[i][1] + obj.transform.position[1] - transformStartBox.low.y;
 
-				if (!setCursor) {
-					editor.selectToolCursor.set(Cursors.default);
-				}
+							if (direction[0] == 0) {
+								// No op
+							} else if (direction[0] > 0) {
+								// Scale right
+								path.segments[i][0] = normalizeX(transformStartBox.low.x + relativeX * deltaScaleX);
+							} else {
+								// Scale left and lock right edge
+								path.segments[i][0] = normalizeX(
+									transformStartBox.low.x +
+										relativeX * (1 - deltaScaleX) +
+										deltaScaleX * transformStartBox.width
+								);
+							}
 
-				if (canRotate) {
-					editor.canRotate.set(canRotate);
-					editor.canScale.set(false);
-					editor.canTranslate.set(false);
-				} else if (canScale) {
-					editor.canScale.set(canScale);
-					editor.canRotate.set(false);
-					editor.canTranslate.set(false);
-				} else {
-					editor.canTranslate.set(canTranslate);
-					editor.canScale.set(false);
-					editor.canRotate.set(false);
+							if (direction[1] == 0) {
+								// No op
+							} else if (direction[1] > 0) {
+								// Scale down
+								path.segments[i][1] = normalizeY(transformStartBox.low.y + relativeY * deltaScaleY);
+							} else {
+								// Scale up and lock bottom edge
+								path.segments[i][1] = normalizeY(
+									transformStartBox.low.y +
+										relativeY * (1 - deltaScaleY) +
+										deltaScaleY * transformStartBox.height
+								);
+							}
+						}
+					} else if (obj.type == ObjectType.Arc || obj.type == ObjectType.Circle) {
+						let arc = obj as Arc | Circle;
+						let originalArc = originalObj as Arc | Circle;
+
+						arc.radius = originalArc.radius * Math.max(scaleX, scaleY);
+						if (direction[0] == 0) {
+							arc.radius = originalArc.radius * scaleY;
+						}
+						if (direction[1] == 0) {
+							arc.radius = originalArc.radius * scaleX;
+						}
+
+						if (direction[0] != 0) {
+							arc.transform.position[0] = newBoxLeft + newRelativeX;
+						}
+
+						if (direction[1] != 0) {
+							arc.transform.position[1] = newBoxTop + newRelativeY;
+						}
+					} else if (obj.type == ObjectType.Text) {
+						let text = obj as Text;
+						let originalText = originalObj as Text;
+
+						let newFontSize = originalText.size * Math.max(scaleX, scaleY);
+						if (direction[0] == 0) {
+							newFontSize = originalText.size * scaleY;
+						}
+
+						if (direction[1] == 0) {
+							newFontSize = originalText.size * scaleX;
+						}
+
+						text.size = newFontSize;
+						if (direction[0] != 0) {
+							text.transform.position[0] = newBoxLeft + newRelativeX;
+						}
+
+						if (direction[1] != 0) {
+							text.transform.position[1] = newBoxTop + newRelativeY;
+						}
+					} else if (obj.type == ObjectType.SVG) {
+						let svg = obj as SVG;
+						let originalSVG = originalObj as SVG;
+
+						if (direction[0] != 0) {
+							svg.transform.position[0] = newBoxLeft + newRelativeX;
+							svg.transform.size[0] = originalSVG.transform.size[0] * scaleX;
+						}
+						if (direction[1] != 0) {
+							svg.transform.position[1] = newBoxTop + newRelativeY;
+							svg.transform.size[1] = originalSVG.transform.size[1] * scaleY;
+						}
+					}
+
+					obj.computeShape();
+					broker.markObjectDirty(id);
 				}
-				editor.scaleDirection.set(scaleDirection);
-			} else {
+			}
+
+			broker.needsRender.set(true);
+		} else if (isRotating) {
+			if (!transformStartBox) return;
+			function dot(a: [number, number], b: [number, number]) {
+				return a[0] * b[0] + a[1] * b[1];
+			}
+
+			function cross(a: [number, number], b: [number, number]) {
+				return a[0] * b[1] - a[1] * b[0];
+			}
+
+			function length(a: [number, number]) {
+				return Math.sqrt(dot(a, a));
+			}
+			function sub(a: [number, number], b: [number, number]): [number, number] {
+				return [a[0] - b[0], a[1] - b[1]];
+			}
+			let center: [number, number] = [transformStartBox.center.x, transformStartBox.center.y];
+
+			let lastRel = sub(lastPosition, center);
+			lastRel = [lastRel[0] / length(lastRel), lastRel[1] / length(lastRel)];
+			let currentRel = sub(currentMousePosition, center);
+			currentRel = [currentRel[0] / length(currentRel), currentRel[1] / length(currentRel)];
+			let deltaAngle = Math.atan2(cross(lastRel, currentRel), dot(lastRel, currentRel));
+			if (ev.shiftKey) {
+				deltaAngle = Math.round(deltaAngle / (Math.PI / 4)) * (Math.PI / 4);
+			}
+			let rotationMatrix = matrix(1, 0, 0, 1, 0, 0).rotate(deltaAngle);
+			let centerPoint = transformStartBox.center;
+
+			// lastPosition = [...currentMousePosition];
+			if (isNaN(deltaAngle)) return;
+
+			let sels = get(editor.effectiveSelection);
+
+			for (let id of sels) {
+				let obj = broker.project.objectsMap.get(id);
+				let originalObj = transformStartObjects.get(id);
+				if (obj && originalObj) {
+					// Rotate about center point
+					let objectAnchorPoint = point(
+						originalObj.transform.position[0],
+						originalObj.transform.position[1]
+					);
+					let objPoint = point(
+						objectAnchorPoint.x - centerPoint.x,
+						objectAnchorPoint.y - centerPoint.y
+					);
+					obj.transform.rotation = originalObj.transform.rotation + deltaAngle;
+
+					let rotatedPoint = objPoint.transform(rotationMatrix);
+					obj.transform.position[0] = rotatedPoint.x + centerPoint.x;
+					obj.transform.position[1] = rotatedPoint.y + centerPoint.y;
+
+					obj.computeShape();
+					broker.markObjectDirty(id);
+				}
+			}
+			broker.needsRender.set(true);
+		}
+	} else {
+		// Not transforming
+		let cursor = get(editor.currentMousePositionRelative);
+
+		// Corner grabbing cursor
+		let sels = get(editor.effectiveSelection);
+		let objs = [];
+		for (let id of sels) {
+			let obj = broker.project.objectsMap.get(id);
+			if (obj) objs.push(obj);
+		}
+		let box = computeBounds(objs);
+		if (access == 'WRITE' && (box.width > 0 || box.height > 0)) {
+			needsRootReset = false;
+			let cursorPoint = point(cursor[0], cursor[1]);
+
+			let setCursor = false;
+			let canScale = false;
+			let canRotate = false;
+			let canTranslate = false;
+			let scaleDirection: [number, number] = [0, 0];
+
+			let dist = get(editor.screenScale);
+
+			let topMid = point(box.center.x, box.low.y);
+
+			let topLeft = point(box.low.x, box.low.y);
+			let topRight = point(box.high.x, box.low.y);
+			let bottomLeft = point(box.low.x, box.high.y);
+			let bottomRight = point(box.high.x, box.high.y);
+
+			let rotateDistance = dist;
+			let topLeftRotate = point(box.low.x - rotateDistance, box.low.y - rotateDistance);
+			let topRightRotate = point(box.high.x + rotateDistance, box.low.y - rotateDistance);
+			let bottomRightRotate = point(box.high.x + rotateDistance, box.high.y + rotateDistance);
+			let bottomLeftRotate = point(box.low.x - rotateDistance, box.high.y + rotateDistance);
+
+			if (
+				(Math.abs(box.low.x - cursor[0]) < dist || Math.abs(box.high.x - cursor[0]) < dist) &&
+				cursor[1] > box.low.y &&
+				cursor[1] < box.high.y
+			) {
+				editor.selectToolCursor.set(Cursors.ew);
+				canScale = true;
+				scaleDirection = [Math.abs(box.low.x - cursor[0]) < dist ? -1 : 1, 0];
+				setCursor = true;
+			}
+
+			if (
+				(Math.abs(box.low.y - cursor[1]) < dist || Math.abs(box.high.y - cursor[1]) < dist) &&
+				cursor[0] > box.low.x &&
+				cursor[0] < box.high.x
+			) {
+				editor.selectToolCursor.set(Cursors.ns);
+				canScale = true;
+				scaleDirection = [0, Math.abs(box.low.y - cursor[1]) < dist ? -1 : 1];
+				setCursor = true;
+			}
+
+			if (topLeft.distanceTo(cursorPoint)[0] < dist) {
+				editor.selectToolCursor.set(Cursors.nwse);
+				canScale = true;
+				scaleDirection = [-1, -1];
+				setCursor = true;
+			}
+
+			if (topRight.distanceTo(cursorPoint)[0] < dist) {
+				editor.selectToolCursor.set(Cursors.nesw);
+				canScale = true;
+				scaleDirection = [1, -1];
+				setCursor = true;
+			}
+
+			if (bottomLeft.distanceTo(cursorPoint)[0] < dist) {
+				editor.selectToolCursor.set(Cursors.nesw);
+				canScale = true;
+				scaleDirection = [-1, 1];
+				setCursor = true;
+			}
+
+			if (bottomRight.distanceTo(cursorPoint)[0] < dist) {
+				editor.selectToolCursor.set(Cursors.nwse);
+				canScale = true;
+				scaleDirection = [1, 1];
+				setCursor = true;
+			}
+
+			if (topLeftRotate.distanceTo(cursorPoint)[0] < dist) {
+				editor.selectToolCursor.set(Cursors.rtl);
+				canRotate = true;
+				setCursor = true;
+			}
+
+			if (topRightRotate.distanceTo(cursorPoint)[0] < dist) {
+				editor.selectToolCursor.set(Cursors.rtr);
+				canRotate = true;
+				setCursor = true;
+			}
+
+			if (bottomLeftRotate.distanceTo(cursorPoint)[0] < dist) {
+				editor.selectToolCursor.set(Cursors.rbl);
+				canRotate = true;
+				setCursor = true;
+			}
+
+			if (bottomRightRotate.distanceTo(cursorPoint)[0] < dist) {
+				editor.selectToolCursor.set(Cursors.rbr);
+				canRotate = true;
+				setCursor = true;
+			}
+			if (
+				cursor[0] > topMid.x - dist * 1.5 &&
+				cursor[0] < topMid.x + dist * 1.5 &&
+				cursor[1] > topMid.y - dist &&
+				cursor[1] < topMid.y + dist
+			) {
+				editor.selectToolCursor.set(Cursors.grab);
+
+				canScale = false;
+				canRotate = false;
+				canTranslate = true;
+				setCursor = true;
+			}
+
+			if (!setCursor) {
 				editor.selectToolCursor.set(Cursors.default);
 			}
+
+			if (canRotate) {
+				editor.canRotate.set(canRotate);
+				editor.canScale.set(false);
+				editor.canTranslate.set(false);
+			} else if (canScale) {
+				editor.canScale.set(canScale);
+				editor.canRotate.set(false);
+				editor.canTranslate.set(false);
+			} else {
+				editor.canTranslate.set(canTranslate);
+				editor.canScale.set(false);
+				editor.canRotate.set(false);
+			}
+			editor.scaleDirection.set(scaleDirection);
+		} else {
+			editor.selectToolCursor.set(Cursors.default);
+		}
+		if (!get(editor.selectionDown) && !(isTranslating || isScaling || isRotating)) {
 			// Hover object highlight
 			let hover = getObjectAtCursor(editor, broker, cursor);
 
@@ -1099,10 +1093,25 @@ export const SelectTool = {
 			} else {
 				if (get(editor.hoveringObject) !== '') editor.hoveringObject.set('');
 			}
-
-			let overlay = get(editor.overlay);
-			if (get(editor.selectionDown)) if (overlay) computeSelectionBox(editor, broker, overlay);
 		}
+
+		let overlay = get(editor.overlay);
+		if (get(editor.selectionDown)) if (overlay) computeSelectionBox(editor, broker, overlay);
+	}
+}
+
+export const SelectTool = {
+	icon: faArrowPointer,
+	access: 'READ',
+	key: 'select',
+	shortcut: 's',
+	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) =>
+		selectDown(ev, editor, broker),
+	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		selectUp(ev, editor, broker);
+	},
+	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		selectMove(ev, editor, broker);
 	}
 };
 
@@ -1202,7 +1211,7 @@ function computeSelectionBox(
 
 function computeSelectionCenter(editor: EditorContext, broker: ProjectBroker): [number, number] {}
 
-function getObjectAtCursor(
+export function getObjectAtCursor(
 	editor: EditorContext,
 	broker: ProjectBroker,
 	cursor: [number, number]
@@ -1241,7 +1250,7 @@ function getObjectAtCursor(
 	return topObject;
 }
 
-function ascendToRoot(editor: EditorContext, broker: ProjectBroker, id: ObjectID) {
+export function ascendToRoot(editor: EditorContext, broker: ProjectBroker, id: ObjectID) {
 	if (id) {
 		let parentToHover = id;
 		let rootGroup = get(editor.rootGroup);

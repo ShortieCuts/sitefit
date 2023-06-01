@@ -23,7 +23,15 @@
 	const { editor, broker } = getSvelteContext();
 	const { geo, heading } = broker.watchCornerstone();
 
-	const { activeTool, selectToolCursor } = editor;
+	const {
+		activeTool,
+		selectToolCursor,
+		hoveringObject,
+		selection,
+		translating,
+		scaling,
+		rotating
+	} = editor;
 	const mapStyle = broker.writableGlobalProperty('mapStyle', 'google-satellite');
 
 	let containerEl: HTMLElement | null = null;
@@ -40,7 +48,18 @@
 
 	let origin = { lat: 0, lng: 0 };
 
-	$: canDrag = $isMobile || $activeTool == 'pan' || $isScrolling ? true : $middleMouseDown;
+	$: hoverSelected = $hoveringObject && $selection.includes($hoveringObject);
+	$: transformHover = $selectToolCursor != Cursors.default;
+	$: transforming = $translating || $scaling || $rotating;
+	$: {
+		console.log($activeTool, transforming, transformHover, hoverSelected);
+	}
+	$: canDrag =
+		$isMobile ||
+		($activeTool == 'pan' && !hoverSelected && !transformHover && !transforming) ||
+		$isScrolling
+			? true
+			: $middleMouseDown;
 
 	$: {
 		canDrag;
@@ -498,6 +517,9 @@
 				}, 100);
 			}
 		} else {
+			if (get(activeTool) == 'pan') {
+				return;
+			}
 			if (!map) return;
 			let center = map.getCenter();
 			let bounds = map.getBounds() ?? new google.maps.LatLngBounds();
@@ -542,7 +564,10 @@
 			if ($activeTool == 'select') {
 				currentCursor = $selectToolCursor;
 			} else if ($activeTool == 'pan') {
-				currentCursor = $leftMouseDown ? Cursors.grabbing : Cursors.grab;
+				currentCursor = $selectToolCursor;
+				if (currentCursor == Cursors.default) {
+					currentCursor = $leftMouseDown ? Cursors.grabbing : Cursors.grab;
+				}
 			} else if ($activeTool == 'pen') {
 				currentCursor = Cursors.pen;
 			} else if ($activeTool == 'comment') {
