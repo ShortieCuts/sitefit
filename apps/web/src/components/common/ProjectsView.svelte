@@ -55,6 +55,39 @@
 	class:p-4={$isMobile}
 	class:pointer-events-auto={$isMobile}
 >
+	<div class="flex flex-row px-6 py-2 space-x-4">
+		<button
+			class="btn"
+			on:click={async (e) => {
+				let res = await createProject({
+					name: 'New Project',
+					description: ''
+				});
+
+				let projectId = res.data.projectId;
+
+				await refreshData();
+				setTimeout(() => {
+					newEditId.set(projectId.toString());
+				}, 10);
+			}}><Fa icon={faMapLocation} /> New Project</button
+		>
+		<button
+			class="btn"
+			on:click={async (e) => {
+				let res = await createProjectFolder({
+					parentId: ''
+				});
+
+				let folderId = res.data.folderId;
+
+				await refreshData();
+				setTimeout(() => {
+					newEditId.set(folderId.toString());
+				}, 10);
+			}}><Fa icon={faFolderPlus} /> New folder</button
+		>
+	</div>
 	{#each $projectStore.children as node}
 		<ProjectNode {node} />
 	{/each}

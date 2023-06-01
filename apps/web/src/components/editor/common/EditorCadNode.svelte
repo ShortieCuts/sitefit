@@ -236,7 +236,7 @@
 			<button
 				on:click={() => {
 					let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
-
+					console.log('Make from context');
 					broker.placeCad(node.id, position);
 					editor.activateDialog('');
 				}}><Fa icon={faPlus} /> Place on map</button

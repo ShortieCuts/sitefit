@@ -725,7 +725,7 @@
 			if (insideMap && lastDraggableCad) {
 				let currentMouseLatLon = get(editor.currentMousePosition);
 				let position = editor.lonLatToPosition(currentMouseLatLon[1], currentMouseLatLon[0]);
-
+				// console.log(position, insideMap, lastDraggableCad);
 				broker.placeCad(lastDraggableCad, position);
 				lastDraggableCad = null;
 			}
