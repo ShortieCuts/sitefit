@@ -124,7 +124,7 @@
 			return;
 		}
 
-		if (e.code == 'KeyZ' && e.ctrlKey) {
+		if (e.code == 'KeyZ' && (e.ctrlKey || e.metaKey)) {
 			if (e.shiftKey) {
 				broker.commitRedo();
 			} else {
