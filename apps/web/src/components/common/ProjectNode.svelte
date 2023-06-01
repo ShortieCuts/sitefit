@@ -38,6 +38,7 @@
 	import { fly, slide } from 'svelte/transition';
 	import TabWrap from '../editor/common/TabWrap.svelte';
 	import TabWrapTab from '../editor/common/TabWrapTab.svelte';
+	import EllipsisButton from '../editor/common/EllipsisButton.svelte';
 
 	const icons: {
 		[key: string]: any;
@@ -159,7 +160,7 @@
 	>
 		<button
 			bind:this={nodeElement}
-			class="layer-item cursor-default flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent w-full"
+			class="layer-item ellipsis-wrapper cursor-default flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent w-full"
 			class:text-blue-500={isActive}
 			on:dblclick={() => {
 				if (node.type == 'project') {
@@ -199,9 +200,12 @@
 					}}
 				/>
 				{#if isActive}
-					<span class="ml-2 h-6 flex items-center justify-center text-xs"> active project </span>
+					<span class="ml-2 mr-6 h-6 flex items-center justify-center text-xs">
+						active project
+					</span>
 				{/if}
 			</span>
+			<EllipsisButton />
 		</button>
 	</Draggable>
 

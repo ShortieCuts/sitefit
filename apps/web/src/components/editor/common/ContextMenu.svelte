@@ -65,6 +65,10 @@
 		if (e.button != 0) {
 			open = false;
 		}
+
+		if (e.button == 0 && e.target.closest('[data-context]') && !e.target.closest('.context-menu')) {
+			open = false;
+		}
 	}}
 	on:click={(e) => {
 		if ($isMobile) {

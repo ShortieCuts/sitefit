@@ -36,6 +36,7 @@
 	import { fly, slide } from 'svelte/transition';
 	import { compareAccess } from '$lib/util/access';
 	import ModelViewer from 'src/components/common/ModelViewer.svelte';
+	import EllipsisButton from './EllipsisButton.svelte';
 
 	const { editor, broker } = getSvelteContext();
 	let sessionAccess: Writable<ProjectAccessLevel> = writable('READ');
@@ -176,7 +177,7 @@
 					fileDragging = false;
 				}
 			}}
-			class="layer-item cursor-default flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent w-full"
+			class="layer-item cursor-default ellipsis-wrapper flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent w-full"
 			class:bg-blue-500={fileDragging}
 		>
 			{#if node.children && node.children.length > 0}
@@ -211,6 +212,7 @@
 					}}
 				/>
 			</span>
+			<EllipsisButton />
 		</button>
 	</Draggable>
 
@@ -271,35 +273,40 @@
 				<TabWrapTab class="bg-green-500" tab={1}>Details</TabWrapTab>
 			</TabWrap>
 		{:else}
-			<TabWrap names={['Actions', 'Preview', 'Details']}>
-				<TabWrapTab class="flex flex-col space-y-2" tab={0}>
-					{#if compareAccess('WRITE', $sessionAccess)}
+			<TabWrap names={$isMobile ? ['Actions', 'Preview', 'Details'] : ['Preview', 'Details']}>
+				{#if $isMobile}
+					<TabWrapTab class="flex flex-col space-y-2" tab={0}>
+						{#if compareAccess('WRITE', $sessionAccess)}
+							<button
+								class="flex flex-row items-center justify-start py-2 px-4"
+								on:click={() => {
+									let position = editor.lonLatToPosition(
+										get(editor.longitude),
+										get(editor.latitude)
+									);
+
+									broker.placeCad(node.id, position);
+									editor.activateDialog('');
+								}}><Fa class="pr-4" icon={faPlus} /> Place on map</button
+							>
+						{/if}
 						<button
 							class="flex flex-row items-center justify-start py-2 px-4"
-							on:click={() => {
-								let position = editor.lonLatToPosition(get(editor.longitude), get(editor.latitude));
-
-								broker.placeCad(node.id, position);
-								editor.activateDialog('');
-							}}><Fa class="pr-4" icon={faPlus} /> Place on map</button
+							on:click={(e) => {
+								setTimeout(() => {
+									editingName = true;
+								});
+							}}><Fa class="pr-4" icon={faPenToSquare} /> Rename</button
 						>
-					{/if}
-					<button
-						class="flex flex-row items-center justify-start py-2 px-4"
-						on:click={(e) => {
-							setTimeout(() => {
-								editingName = true;
-							});
-						}}><Fa class="pr-4" icon={faPenToSquare} /> Rename</button
-					>
-					<button class="flex flex-row items-center justify-start py-2 px-4"
-						><Fa class="pr-4" icon={faTrash} /> Delete</button
-					></TabWrapTab
-				>
-				<TabWrapTab class="bg-white" tab={1}>
+						<button class="flex flex-row items-center justify-start py-2 px-4"
+							><Fa class="pr-4" icon={faTrash} /> Delete</button
+						>
+					</TabWrapTab>
+				{/if}
+				<TabWrapTab class="bg-white" tab={$isMobile ? 1 : 0}>
 					<ModelViewer fileId={node.id} />
 				</TabWrapTab>
-				<TabWrapTab class="" tab={2}>
+				<TabWrapTab class="" tab={$isMobile ? 2 : 1}>
 					{#if node.file}
 						<p class="px-4 pb-2">
 							<b>Date Uploaded</b>:

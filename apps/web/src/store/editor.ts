@@ -102,8 +102,11 @@ export class ProjectBroker {
 	loading: Writable<boolean> = writable(true);
 	pushing: Writable<boolean> = writable(false);
 	connected: Writable<boolean> = writable(false);
+	syncing: Writable<boolean> = writable(false);
 	broken: Writable<boolean> = writable(false);
 	establishingConnection: boolean = false;
+
+	lastCommunication: number = 0;
 
 	sessions: Writable<ProjectSession[]> = writable([]);
 	mySessionUid: Writable<string> = writable('');
@@ -672,7 +675,6 @@ export class ProjectBroker {
 			return;
 		}
 
-		console.log('Establishing connection', this.establishingConnection, this, this.socket);
 		this.establishingConnection = true;
 
 		if (this.socket) {
@@ -688,6 +690,7 @@ export class ProjectBroker {
 			this.connected.set(true);
 			this.establishingConnection = false;
 			(async () => {
+				this.syncing.set(true); // We expect to receive a Sync message soon
 				if (this.accessToken) {
 					this.sendMessage(SocketMessage.login('!' + this.accessToken));
 				} else {
@@ -754,6 +757,7 @@ export class ProjectBroker {
 		this.synced.set(true);
 		this.broken.set(message.broken);
 		this.objectTreeWatcher.update((n) => n + 1);
+		this.syncing.set(false);
 	}
 
 	markAllDirty() {

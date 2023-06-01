@@ -72,7 +72,7 @@
 	setSvelteContext(broker, editorContext);
 
 	const { name } = broker.metadata;
-	const { loading, error, broken, connected, rootComments } = broker;
+	const { syncing, loading, error, broken, connected, rootComments } = broker;
 
 	const { geo, heading } = broker.watchCornerstone();
 
@@ -772,6 +772,14 @@
 		<div class="text-2xl text-gray-400 mt-4">Loading</div>
 	</div>
 {/if}
+{#if $syncing && !$loading}
+	<div
+		transition:fly={{ duration: 200, y: 14 }}
+		class="loading-bar fixed h-2 left-0 right-0 bottom-0 bg-gray-100 z-50"
+	>
+		<div class="bg-blue-500 h-full" />
+	</div>
+{/if}
 
 {#if $error !== null}
 	<div
@@ -916,6 +924,39 @@
 
 				text-overflow: ellipsis;
 			}
+		}
+	}
+
+	.loading-bar > div {
+		animation: loading-bar 10s forwards;
+	}
+
+	@keyframes loading-bar {
+		0% {
+			width: 0%;
+		}
+		3% {
+			width: 1%;
+		}
+		10% {
+			width: 10%;
+		}
+		13% {
+			width: 20%;
+		}
+		20% {
+			width: 30%;
+		}
+		40% {
+			width: 50%;
+		}
+
+		60% {
+			width: 70%;
+		}
+
+		100% {
+			width: 90%;
 		}
 	}
 </style>
