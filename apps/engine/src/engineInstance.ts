@@ -481,7 +481,11 @@ export class EngineInstance {
       if (session.checkAccess("WRITE")) {
         const clampedNumbers = ["cadOpacity", "boundaryOpacity"];
         if (data.key == "mapStyle") {
-          if (["google-satellite", "google-simple"].includes(data.value)) {
+          if (
+            ["google-satellite", "google-simple", "google-dark"].includes(
+              data.value
+            )
+          ) {
             this.project.globalProperties.mapStyle = data.value;
             this.enqueueBroadcast(data);
             this.dirty = true;

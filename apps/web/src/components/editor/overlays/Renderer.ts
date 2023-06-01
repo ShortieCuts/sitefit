@@ -59,7 +59,7 @@ class RenderPath implements RenderObject2D {
 
 	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Path) {
 		let geo = new THREE.BufferGeometry();
-		geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(100 * 3), 3));
+		geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(20 * 3), 3));
 
 		geo.setDrawRange(0, 0);
 
@@ -94,6 +94,7 @@ class RenderPath implements RenderObject2D {
 			this.textEl.style.width = '0px';
 			this.textEl.style.background = 'red';
 			this.textEl.style.display = 'flex';
+			this.textEl.style.willChange = 'transform, font-size';
 			this.textEl.style.alignItems = 'center';
 			this.textEl.style.justifyContent = 'center';
 			this.textEl.style.whiteSpace = 'nowrap';
@@ -313,12 +314,12 @@ class RenderPath implements RenderObject2D {
 
 		this.textEl.style.fontSize = `${Math.min(fontSize, 18)}px`;
 		// this.textEl.style.width = `${screenSize * text.length * 0.5498070069642946}px`;
-		this.textEl.style.top = pos.y + 'px';
-		this.textEl.style.left = pos.x + 'px';
+		// this.textEl.style.top = pos.y + 'px';
+		// this.textEl.style.left = pos.x + 'px';
 
-		this.textEl.style.transform = `rotate(${angle}rad)`;
+		this.textEl.style.transform = `translate(${pos.x}px, ${pos.y}px) rotate(${angle}rad)`;
 
-		this.textEl.style.display = 'flex';
+		// this.textEl.style.display = 'flex';
 	}
 
 	setMaterial(mat: THREE.Material): void {
@@ -489,6 +490,7 @@ class RenderText implements RenderObject2D {
 		this.el.style.lineHeight = '1em';
 		this.el.style.overflow = 'hidden';
 		this.el.style.resize = 'none';
+		this.el.style.willChange = 'transform';
 		this.el.readOnly = true;
 
 		overlay.appendElement(this.el);
@@ -639,18 +641,18 @@ class RenderText implements RenderObject2D {
 			}
 			this.el.style.fontSize = `${screenSize}px`;
 			this.el.style.width = `${screenSize * obj.text.length * 0.5498070069642946}px`;
-			this.el.style.top = pos.y + 'px';
-			this.el.style.left = pos.x + 'px';
-			let trans = `rotate(${
+			// this.el.style.top = pos.y + 'px';
+			// this.el.style.left = pos.x + 'px';
+			let trans = `translate(${pos.x}px, ${pos.y}px) rotate(${
 				obj.transform.rotation * (180 / Math.PI) + heading * -1 + anchorHeading
 			}deg)`;
 
 			if (this.el.style.transform != trans) {
 				this.el.style.transform = trans;
 			}
-			this.el.style.display = 'block';
+			if (this.el.style.display != 'block') this.el.style.display = 'block';
 		} else {
-			this.el.style.display = 'none';
+			if (this.el.style.display != 'none') this.el.style.display = 'none';
 		}
 	}
 }
@@ -671,6 +673,8 @@ class RenderSVG implements RenderObject2D {
 		this.el.style.fontFamily = 'monospace';
 		this.el.style.lineHeight = '1em';
 		this.el.style.overflow = 'hidden';
+
+		this.el.style.willChange = 'transform';
 
 		this.refresh(overlay, obj);
 
@@ -769,19 +773,21 @@ class RenderSVG implements RenderObject2D {
 				this.el.firstChild.style.width = `${screenSize}px`;
 				this.el.firstChild.style.height = `${(obj.sourceHeight / obj.sourceWidth) * screenSize}px`;
 
-				this.el.style.top = pos.y + 'px';
-				this.el.style.left = pos.x + 'px';
-				let trans = `rotate(${obj.transform.rotation * (180 / Math.PI)}deg) scaleX(${
-					obj.transform.size[0]
-				}) scaleY(${obj.transform.size[1]}) rotate(${heading * -1 + anchorHeading}deg)`;
+				// this.el.style.top = pos.y + 'px';
+				// this.el.style.left = pos.x + 'px';
+				let trans = `translate(${pos.x}px, ${pos.y}px) rotate(${
+					obj.transform.rotation * (180 / Math.PI)
+				}deg) scaleX(${obj.transform.size[0]}) scaleY(${obj.transform.size[1]}) rotate(${
+					heading * -1 + anchorHeading
+				}deg)`;
 
 				if (this.el.style.transform != trans) {
 					this.el.style.transform = trans;
 				}
-				this.el.style.display = 'block';
+				if (this.el.style.display != 'block') this.el.style.display = 'block';
 			}
 		} else {
-			this.el.style.display = 'none';
+			if (this.el.style.display != 'none') this.el.style.display = 'none';
 		}
 	}
 }

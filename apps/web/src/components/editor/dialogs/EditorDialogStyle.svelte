@@ -74,7 +74,7 @@
 	<ResponsiveGroup groups={['Map', 'Transparency', 'Colors']}>
 		<div
 			slot="group-0"
-			class="flex flex-row items-center justify-center space-x-16 py-8 select-none"
+			class="flex flex-row items-center justify-center space-x-4 py-8 select-none"
 		>
 			<button
 				class="flex flex-col items-center"
@@ -103,6 +103,20 @@
 					class:active={$mapStyle == 'google-simple'}
 				/>
 				<b class="mt-2">Simple</b>
+			</button>
+			<button
+				class="flex flex-col items-center"
+				on:click={() => {
+					$mapStyle = 'google-dark';
+				}}
+			>
+				<img
+					src="/img/google-dark.png"
+					alt="dark"
+					class="rounded-xl hover:shadow-md hover:brightness-105 border-4 border-white [&.active]:border-blue-500"
+					class:active={$mapStyle == 'google-dark'}
+				/>
+				<b class="mt-2">Dark</b>
 			</button>
 		</div>
 		<div slot="group-1">

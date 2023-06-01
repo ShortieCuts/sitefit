@@ -1,6 +1,3 @@
-import { Injectable } from '@angular/core';
-
-@Injectable()
 export class ZoomRangeModifierService {
 	private originalSetFunc: Function;
 	private zoomRangeModifier: any;

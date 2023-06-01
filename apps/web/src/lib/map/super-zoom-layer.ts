@@ -20,7 +20,8 @@ export class SuperZoomLayer {
 					zoomDiff = 0;
 				}
 				return (
-					'https://khms1.googleapis.com/kh?v=713&hl=en-US&&x=' +
+					// 'https://khms1.googleapis.com/kh?v=713&hl=en-US&&x=' +
+					'https://khms1.googleapis.com/kh?v=949&hl=en-US&&x=' +
 					normTile.x +
 					'&y=' +
 					normTile.y +

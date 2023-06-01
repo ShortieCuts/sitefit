@@ -5,7 +5,10 @@ import type { Serializable } from "./serializable";
 import { Quadtree, Rectangle } from "../../lib/quadtree/index.esm";
 import Flatten from "@flatten-js/core";
 
-export type ProjectMapStyle = "google-simple" | "google-satellite";
+export type ProjectMapStyle =
+  | "google-simple"
+  | "google-satellite"
+  | "google-dark";
 
 export type GlobalProjectProperties = {
   mapStyle?: ProjectMapStyle;

@@ -19,6 +19,11 @@
 	import { faTextHeight } from '@fortawesome/free-solid-svg-icons';
 	import { translateDXF } from '$lib/util/dxf';
 	import type { Object2D } from 'core';
+	import { SuperZoomLayer } from '$lib/map/super-zoom-layer';
+	import { ZoomRangeModifierService } from '$lib/map/zoom-range-modifier-service';
+	import { SuperZoomMapType } from '$lib/map/super-zoom-map-type';
+	const MIN_ZOOM = 1;
+	const MAX_ZOOM = 45;
 
 	const { editor, broker } = getSvelteContext();
 	const { geo, heading } = broker.watchCornerstone();
@@ -64,12 +69,16 @@
 	$: {
 		canDrag;
 		$activeTool;
-		if (map)
+		if (map) {
 			map.setOptions({
 				gestureHandling: canDrag ? 'greedy' : 'none',
 				keyboardShortcuts: canDrag,
-				draggableCursor: $activeTool == 'pan' ? 'grab' : 'default'
+				draggableCursor: $activeTool == 'pan' ? 'grab' : 'default',
+				maxZoom: MAX_ZOOM,
+				minZoom: MIN_ZOOM
 			});
+			map.setMapTypeId(getMapTypeId());
+		}
 	}
 
 	let filesDraggable = getDraggable('files');
@@ -100,11 +109,14 @@
 	function getMapId() {
 		if ($mapStyle == 'google-satellite') return 'c0f380f46a9601c5';
 		if ($mapStyle == 'google-simple') return '44130cd24e816b48';
+		if ($mapStyle == 'google-dark') return '3a922666b5448450';
 		return 'c0f380f46a9601c5';
 	}
 	function getMapTypeId() {
+		// return 'test';
 		if ($mapStyle == 'google-satellite') return google.maps.MapTypeId.HYBRID;
 		if ($mapStyle == 'google-simple') return google.maps.MapTypeId.ROADMAP;
+		if ($mapStyle == 'google-dark') return google.maps.MapTypeId.ROADMAP;
 		return google.maps.MapTypeId.HYBRID;
 	}
 
@@ -115,8 +127,13 @@
 			map.setOptions({
 				mapTypeId: getMapTypeId(),
 				mapId: getMapId(),
-				tilt: 0
+
+				tilt: 0,
+				maxZoom: MAX_ZOOM,
+				minZoom: MIN_ZOOM
 			});
+
+			map.setMapTypeId(getMapTypeId());
 		}
 	}
 
@@ -177,16 +194,47 @@
 
 					mapId: getMapId(),
 					mapTypeId: getMapTypeId(),
+
 					streetViewControl: false,
 					draggableCursor: 'default',
 					gestureHandling: canDrag ? 'greedy' : 'none',
 					keyboardShortcuts: canDrag,
 					scrollwheel: true,
-					isFractionalZoomEnabled: true,
-					maxZoom: 40
+					isFractionalZoomEnabled: false,
+					maxZoom: MAX_ZOOM,
+					minZoom: MIN_ZOOM
 				});
 
-				(window as any).editorMap = map;
+				map.mapTypes.set(
+					'test',
+					new SuperZoomMapType({
+						tileSize: new google.maps.Size(256, 256),
+						maxZoom: 40,
+						name: 'Satellite',
+						getTileUrl: (tileCoord: google.maps.Point, zoom: number): string => {
+							if (zoom > 40) {
+								return '';
+							}
+							let zoomDiff: number = zoom - 40;
+							let normTile: any = { x: tileCoord.x, y: tileCoord.y };
+							if (zoomDiff > 0) {
+								let dScale: number = Math.pow(2, zoomDiff);
+								normTile.x = Math.floor(normTile.x / dScale);
+								normTile.y = Math.floor(normTile.y / dScale);
+							} else {
+								zoomDiff = 0;
+							}
+							return (
+								'https://khms1.googleapis.com/kh?v=949&hl=en-US&&x=' +
+								normTile.x +
+								'&y=' +
+								normTile.y +
+								'&z=' +
+								(zoom - zoomDiff)
+							);
+						}
+					})
+				);
 
 				let scene = new THREE.Scene();
 				let deg = -$heading;

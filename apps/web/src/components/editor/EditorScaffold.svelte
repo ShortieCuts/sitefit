@@ -97,6 +97,7 @@
 		needsCornerstone = !broker.project.objectsMap.has('_cornerstone');
 	}
 
+	const mapStyle = broker.writableGlobalProperty('mapStyle', 'google-satellite');
 	checkCornerstone();
 
 	broker.objectTreeWatcher.subscribe(() => {
@@ -445,7 +446,7 @@
 					fileDragging = false;
 				}}
 			>
-				{#key `${$geo[0]},${$geo[1]},${$heading}`}
+				{#key `${$geo[0]},${$geo[1]},${$heading}.${$mapStyle}`}
 					<EditorMap>
 						{#if $stagingComment}
 							{#key $stagingComment.longitude + ' ' + $stagingComment.latitude}
