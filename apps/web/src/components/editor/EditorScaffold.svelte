@@ -72,7 +72,7 @@
 	setSvelteContext(broker, editorContext);
 
 	const { name } = broker.metadata;
-	const { syncing, loading, error, broken, connected, rootComments } = broker;
+	const { syncing, loading, error, broken, connected, rootComments, stagingObject } = broker;
 
 	const { geo, heading } = broker.watchCornerstone();
 
@@ -113,6 +113,8 @@
 			broker.retry();
 		}
 	}
+
+	$: canContextMenu = !['area', 'measurement'].includes($activeTool);
 
 	let fileDragging = false;
 	let fileEl: HTMLInputElement | null = null;
@@ -188,6 +190,9 @@
 	}
 
 	function onCopy(e: ClipboardEvent) {
+		if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+			return;
+		}
 		if (e.clipboardData) {
 			let data: { objects: any[] } = { objects: [] };
 			for (let key of $effectiveSelection) {
@@ -203,6 +208,9 @@
 	}
 
 	function onCut(e: ClipboardEvent) {
+		if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+			return;
+		}
 		if (e.clipboardData) {
 			let data: { objects: any[] } = { objects: [] };
 			for (let key of $effectiveSelection) {
@@ -255,6 +263,9 @@
 	}
 
 	function onPaste(e: ClipboardEvent) {
+		if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+			return;
+		}
 		if (e.clipboardData) {
 			let data = e.clipboardData.getData('cad-mapper/objects');
 			if (data) {
@@ -291,7 +302,7 @@
 	<title>{$name}</title>
 </svelte:head>
 
-<div class="editor-scaffold h-full flex flex-col select-none">
+<div class="editor-scaffold h-full flex flex-col select-none overflow-hidden">
 	{#if !$isMobile}
 		<div
 			class="editor-bar z-20 h-16 min-h-[4rem] bg-white flex flex-row border-b-[1px] border-gray-200"
@@ -385,7 +396,7 @@
 			{/if}
 		{/if}
 		<div class="editor-viewport h-full w-full relative">
-			{#if $activeTool == 'pan' && $selection.length > 0}
+			{#if !$isMobile && $activeTool == 'pan' && $selection.length > 0}
 				<div
 					transition:fly={{ y: -100 }}
 					class="absolute top-4 left-[50%] z-10 rounded-lg bg-white shadow-lg p-2"
@@ -399,6 +410,29 @@
 					>
 				</div>
 			{/if}
+
+			{#if ($activeTool == 'area' || $activeTool == 'measurement') && $stagingObject}
+				<div
+					transition:fly={{ y: 100 }}
+					class="absolute bottom-4 left-[50%] z-10 rounded-lg bg-white shadow-lg p-2 flex flex-row items-center"
+					style="transform: translate(-50%, 0)"
+				>
+					Press
+					<span
+						class="font-bold rounded border border-gray-300 bg-gray-200 text-gray-600 px-2 shadow-sm mx-2"
+					>
+						ESC
+					</span>
+					to Cancel or
+					<span
+						class="font-bold rounded border border-gray-300 bg-gray-200 text-gray-600 px-2 shadow-sm mx-2"
+					>
+						RIGHT CLICK
+					</span>
+					to Save
+				</div>
+			{/if}
+
 			{#if !$isMobile}
 				<EditorToolbar />
 			{:else}
@@ -526,7 +560,7 @@
 					</EditorMap>
 				{/key}
 				{#if !$isMobile}
-					<ContextMenu el={midEl}>
+					<ContextMenu el={midEl} disabled={!canContextMenu}>
 						{#if $effectiveSelection.length > 0}
 							<button on:click={doCopy}><Fa icon={faCopy} /> Copy </button>
 							<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>

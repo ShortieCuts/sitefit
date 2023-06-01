@@ -5,11 +5,19 @@
 
 	export let el: HTMLElement;
 
+	export let disabled = false;
+
 	let open = false;
 
 	let position = { x: 0, y: 0 };
 
+	$: {
+		disabled;
+		open = false;
+	}
+
 	const handleClick = (e: MouseEvent) => {
+		if (disabled) return;
 		if (e.button === 2 || e.target.closest('[data-context]')) {
 			open = true;
 			position = { x: e.clientX, y: e.clientY };
@@ -21,6 +29,7 @@
 	let touchTimer: NodeJS.Timeout;
 
 	function handleTouchStart(e: TouchEvent) {
+		if (disabled) return;
 		if (e.touches.length === 1) {
 			touchTimer = setTimeout(() => {
 				if (!$isMobile) {
@@ -32,6 +41,7 @@
 	}
 
 	function handleTouchEnd(e: TouchEvent) {
+		if (disabled) return;
 		if (e.touches.length === 0) {
 			clearTimeout(touchTimer);
 		}
@@ -62,6 +72,9 @@
 
 <svelte:window
 	on:mousedown={(e) => {
+		if (disabled) {
+			return;
+		}
 		if (e.button != 0) {
 			open = false;
 		}
@@ -71,12 +84,18 @@
 		}
 	}}
 	on:click={(e) => {
+		if (disabled) {
+			return;
+		}
 		if ($isMobile) {
 		} else {
 			setTimeout(() => (open = false), 10);
 		}
 	}}
 	on:contextmenu|capture={(e) => {
+		if (disabled) {
+			return;
+		}
 		if ($isMobile) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -85,6 +104,9 @@
 		}
 	}}
 	on:touchstart={(e) => {
+		if (disabled) {
+			return;
+		}
 		if (e.target.closest('.context-menu')) {
 			setTimeout(() => (open = false), 10);
 			return;

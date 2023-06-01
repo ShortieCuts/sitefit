@@ -27,6 +27,7 @@
 		access: ProjectAccessLevel;
 		hidden?: boolean;
 		commit?: (editor: EditorContext, broker: ProjectBroker) => void;
+		cancel?: (editor: EditorContext, broker: ProjectBroker) => void;
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
@@ -54,7 +55,8 @@
 				onDown: tool.onDown,
 				onUp: tool.onUp,
 				onMove: tool.onMove,
-				commit: tool.commit ?? ((editor, broker) => {})
+				commit: tool.commit ?? ((editor, broker) => {}),
+				cancel: tool.cancel ?? ((editor, broker) => {})
 			};
 		} else {
 			editor.currentToolHandlers = null;
@@ -92,6 +94,11 @@
 		if (event.key === 'Enter') {
 			if (editor.currentToolHandlers) {
 				editor.currentToolHandlers.commit(editor, broker);
+			}
+			editor.activeTool.set('select');
+		} else if (event.key === 'Escape') {
+			if (editor.currentToolHandlers) {
+				editor.currentToolHandlers.cancel(editor, broker);
 			}
 			editor.activeTool.set('select');
 		}

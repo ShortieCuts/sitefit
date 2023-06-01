@@ -1020,6 +1020,7 @@ export class EditorContext {
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		commit: (editor: EditorContext, broker: ProjectBroker) => void;
+		cancel: (editor: EditorContext, broker: ProjectBroker) => void;
 	} | null = null;
 
 	currentMousePosition: Writable<[number, number]> = writable([0, 0]);

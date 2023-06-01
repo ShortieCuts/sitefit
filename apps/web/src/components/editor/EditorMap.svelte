@@ -200,7 +200,7 @@
 					gestureHandling: canDrag ? 'greedy' : 'none',
 					keyboardShortcuts: canDrag,
 					scrollwheel: true,
-					isFractionalZoomEnabled: false,
+					isFractionalZoomEnabled: true,
 					maxZoom: MAX_ZOOM,
 					minZoom: MIN_ZOOM
 				});
@@ -418,6 +418,15 @@
 					if (e.button === 0) {
 						if (editor.currentToolHandlers) {
 							editor.currentToolHandlers.onDown(e, editor, broker);
+						}
+					} else if (e.button == 2) {
+						if (
+							editor.currentToolHandlers &&
+							($activeTool == 'area' || $activeTool == 'measurement')
+						) {
+							// editor.currentToolHandlers.onDown(e, editor, broker);
+							editor.currentToolHandlers.commit(editor, broker);
+							e.preventDefault();
 						}
 					}
 				}

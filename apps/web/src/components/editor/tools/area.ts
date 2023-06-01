@@ -44,7 +44,14 @@ export const AreaTool = {
 			});
 		}
 	},
-
+	cancel(editor: EditorContext, broker: ProjectBroker) {
+		if (active) {
+			clickMoving = false;
+			active = false;
+			isDown = false;
+			broker.stagingObject.set(null);
+		}
+	},
 	commit(editor: EditorContext, broker: ProjectBroker) {
 		let isEmpty = false;
 		if (clickMoving) {
