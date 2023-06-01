@@ -12,8 +12,9 @@ import { nanoid } from 'nanoid';
 
 export const POST = (async ({ request, params }) => {
 	return validateRequestWithAuth(request, UpdateProjectFolderSchema, async (payload, user) => {
-		if (payload.parentId) { {
-			if (payload.parentId.toString() === params.id.toString()) throw new Error('Cannot move a folder into itself');
+		if (payload.parentId) {
+			if (payload.parentId.toString() === params.id.toString())
+				throw new Error('Cannot move a folder into itself');
 		}
 		let newP = await db()
 			.updateTable('ProjectFolder')
