@@ -18,6 +18,9 @@
 	const inverseBoundaryOpacity = writable(1 - get(boundaryOpacity));
 	let skipCadOpacityUpdate = false;
 	cadOpacity.subscribe((v) => {
+		if (typeof v != 'number') {
+			v = 1;
+		}
 		inverseCadOpacity.set(1 - v);
 		skipCadOpacityUpdate = true;
 	});

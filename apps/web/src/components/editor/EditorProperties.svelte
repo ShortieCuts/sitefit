@@ -403,6 +403,17 @@
 								bind:value={propertiesDisplay.props[prop.name]}
 								on:change={doPropChange(prop)}
 							/>
+						{:else if prop.type == 'geo'}
+							<input
+								class="w-1/2 px-1"
+								type="number"
+								value={propertiesDisplay.props[prop.name][0]}
+							/>
+							<input
+								class="w-1/2 px-1"
+								type="number"
+								value={propertiesDisplay.props[prop.name][1]}
+							/>
 						{/if}
 					</div>
 				{/each}

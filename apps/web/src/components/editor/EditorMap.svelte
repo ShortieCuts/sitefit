@@ -120,6 +120,11 @@
 		return google.maps.MapTypeId.HYBRID;
 	}
 
+	let floatingAnchor = {
+		lat: 0,
+		lng: 0
+	};
+
 	$: {
 		$mapStyle;
 
@@ -188,7 +193,7 @@
 						lat: $geo[1],
 						lng: $geo[0]
 					},
-					zoom: $geo[1] != 0 || $geo[0] != 0 ? 18 : 1,
+					zoom: $geo[1] != 0 || $geo[0] != 0 ? 18 : 3,
 					heading: $heading,
 					disableDefaultUI: true,
 
@@ -495,6 +500,16 @@
 					editor.longitude.set(center.lng());
 					editor.latitude.set(center.lat());
 
+					let floatingDlon = center.lng() - $geo[0];
+					let floatingDlat = center.lat() - $geo[1];
+					let floatingDist = Math.sqrt(floatingDlon * floatingDlon + floatingDlat * floatingDlat);
+					if (floatingDist > 0.05 && broker.project.objects.length <= 1) {
+						(async () => {
+							await broker.getOrCreateCornerstone();
+							$geo = [center.lng(), center.lat()];
+						})();
+					}
+
 					let topLeft = map.getBounds()?.getNorthEast();
 					let bottomRight = map.getBounds()?.getSouthWest();
 					let bounds = {
@@ -534,6 +549,46 @@
 
 				rebuildOverlays(map);
 			});
+		}
+	});
+
+	editor.longitude.subscribe((val) => {
+		if (map) {
+			let center = map.getCenter();
+			if (!center) return;
+			if (center.lng() != val) {
+				map.setCenter({ lat: center.lat(), lng: val });
+				map.setZoom(18);
+			}
+		}
+	});
+
+	editor.latitude.subscribe((val) => {
+		if (map) {
+			let center = map.getCenter();
+			if (!center) return;
+			if (center.lat() != val) {
+				map.setCenter({ lat: val, lng: center.lng() });
+				map.setZoom(18);
+			}
+		}
+	});
+
+	geo.subscribe(() => {
+		if (map) {
+			if (referenceOverlay) {
+				referenceOverlay.setAnchor({
+					lat: $geo[1],
+					lng: $geo[0]
+				});
+			}
+
+			let center = map.getCenter();
+			if (!center) return;
+			if (center.lng() == 0 && center.lat() == 0) {
+				map.setCenter({ lat: $geo[1], lng: $geo[0] });
+				map.setZoom(18);
+			}
 		}
 	});
 

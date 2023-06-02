@@ -562,6 +562,32 @@ export class ProjectBroker {
 		};
 	}
 
+	getOrCreateCornerstoneBlock: null | Promise<void> = null;
+
+	async getOrCreateCornerstone(): Promise<void> {
+		if (this.getOrCreateCornerstoneBlock) {
+			await this.getOrCreateCornerstoneBlock;
+			return;
+		}
+
+		this.getOrCreateCornerstoneBlock = (async () => {
+			let cornerstone = this.project.objectsMap.get('_cornerstone');
+			if (!cornerstone) {
+				let transaction = this.project.createTransaction();
+				let obj = new Cornerstone();
+				obj.id = '_cornerstone';
+				obj.name = 'Cornerstone';
+				obj.geo = [0, 0];
+				obj.heading = 0;
+				transaction.create(obj);
+				this.commitTransaction(transaction);
+			}
+		})();
+
+		await this.getOrCreateCornerstoneBlock;
+		this.getOrCreateCornerstoneBlock = null;
+	}
+
 	async refreshCommentReplies(commentId: number) {
 		if (this.replyStores.has(commentId.toString())) {
 			let replies = await getCommentReplies(this.projectId, commentId.toString(), {});

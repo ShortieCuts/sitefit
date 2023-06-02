@@ -59,10 +59,13 @@
 	import { string } from 'zod';
 	import Icon from '../icon/Icon.svelte';
 	import UserChip from '../auth/UserChip.svelte';
+	import RichSearch from './common/RichSearch.svelte';
 
 	// export let auth: AuthState;
 	export let projectId: string;
 	export let accessToken: string | undefined;
+
+	const ENABLE_CORNERSTONE_PICKER = false;
 
 	let midEl: HTMLElement;
 
@@ -346,15 +349,7 @@
 			<div
 				class="editor-bar-center flex-1 justify-center flex-row items-center px-2 hidden md:flex"
 			>
-				<div
-					class="search-bar relative h-10 w-60 lg:w-96 shadow-style rounded-lg border-[1px] border-gray-300 flex flex-row items-center"
-				>
-					<input
-						class="absolute top-0 left-0 right-0 bottom-0 pl-10 rounded-lg outline-none"
-						placeholder="Search (by Address, CAD name, Project name)"
-					/>
-					<Icon class="pointer-events-none text-lg absolute z-10 ml-2" icon="search" />
-				</div>
+				<RichSearch />
 				<button class="btn btn-icon-only w-10 h-10 flex items-center pr-0 text-xl ml-3 shadow-style"
 					><Icon icon="arrow" /></button
 				>
@@ -480,7 +475,7 @@
 					fileDragging = false;
 				}}
 			>
-				{#key `${$geo[0]},${$geo[1]},${$heading}.${$mapStyle}`}
+				{#key `${$heading}.${$mapStyle}`}
 					<EditorMap>
 						{#if $stagingComment}
 							{#key $stagingComment.longitude + ' ' + $stagingComment.latitude}
@@ -860,7 +855,7 @@
 	</div>
 {/if}
 
-{#if needsCornerstone}
+{#if needsCornerstone && ENABLE_CORNERSTONE_PICKER}
 	<div
 		transition:fade={{ duration: 100 }}
 		class="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center
