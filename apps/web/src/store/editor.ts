@@ -954,6 +954,9 @@ function mirrorArc(startAngle: number, endAngle: number, mirrorX: boolean, mirro
 
 export class EditorContext {
 	activeTool: Writable<string> = writable('pan');
+	activeToolSmartObject: Writable<string> = writable('');
+	activeToolSmartObjectProperties: Writable<any> = writable({});
+
 	activeDialog: Writable<string> = writable('');
 
 	longitude: Writable<number> = writable(0);

@@ -1,10 +1,19 @@
 <script lang="ts">
 	import { getSvelteContext } from 'src/store/editor';
-	import { Material, ObjectProperties, ProjectTransaction, type ObjectProperty } from 'core';
+	import {
+		Material,
+		ObjectProperties,
+		ProjectTransaction,
+		type ObjectProperty,
+		Object2D,
+		ObjectType,
+		Path
+	} from 'core';
 	import Fa from 'svelte-fa';
 	import { faAngleDown, faCompassDrafting } from '@fortawesome/free-solid-svg-icons';
 
 	import ColorInput from './common/ColorInput.svelte';
+	import { getSmartObject, smartObjectProps } from './overlays/SmartObjects';
 
 	const { broker, editor } = getSvelteContext();
 
@@ -88,6 +97,33 @@
 					trackProperty(p.name, (object as any)[p.name]);
 				}
 
+				if (object.type == ObjectType.Path) {
+					let pathObject = object as Path;
+					if (pathObject.smartObject) {
+						let smartObject = getSmartObject(pathObject.smartObject);
+						if (smartObject) {
+							let props = smartObjectProps(
+								pathObject,
+								pathObject.smartObject,
+								pathObject.smartProperties ?? {}
+							);
+							for (let prop of Object.keys(smartObject.properties)) {
+								let rprop = smartObject.properties[prop];
+								let rval = props[prop];
+								propertiesMap.set(`smartProperties.${prop}`, {
+									...rprop.type,
+									name: `smartProperties.${prop}`
+								});
+								propertiesMapCounter.set(
+									`smartProperties.${prop}`,
+									(propertiesMapCounter.get(`smartProperties.${prop}`) || 0) + 1
+								);
+								trackProperty(`smartProperties.${prop}`, rval);
+							}
+						}
+					}
+				}
+
 				let bounds = object.getBounds();
 
 				trackProperty('x', bounds.minX);
@@ -168,7 +204,17 @@
 				for (const id of $effectiveSelection) {
 					const object = broker.project.objectsMap.get(id);
 					if (object) {
-						transaction.update(object.id, prop.name, setTo);
+						if (prop.name.includes('.')) {
+							let parts = prop.name.split('.');
+							let newVals: any = {
+								...(object as any)[parts[0]]
+							};
+							newVals[parts[1]] = setTo;
+
+							transaction.update(object.id, parts[0], newVals);
+						} else {
+							transaction.update(object.id, prop.name, setTo);
+						}
 					}
 				}
 
@@ -387,7 +433,7 @@
 						<span
 							class="flex-shrink-0 h-full w-20 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-center"
 						>
-							{prop.name}
+							{prop.name.startsWith('smartProperties') ? prop.name.slice(16) : prop.name}
 						</span>
 						{#if prop.type == 'string'}
 							<input

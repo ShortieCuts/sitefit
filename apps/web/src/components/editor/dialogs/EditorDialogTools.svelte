@@ -231,10 +231,19 @@
 	onMount(() => {
 		import('src/lib/client/path-data-polyfill.js');
 	});
+
+	function smartParking(degrees: number) {
+		editor.activeTool.set('smart');
+		editor.activateDialog('');
+		editor.activeToolSmartObject.set('parking');
+		editor.activeToolSmartObjectProperties.set({
+			angle: degrees
+		});
+	}
 </script>
 
 <DialogSlideUp>
-	<ResponsiveGroup groups={['Insert Shape', 'Insert Pre-Made Object', 'Measure', 'More']}>
+	<ResponsiveGroup groups={['Insert Shape', 'Insert Pre-Made Object', 'Measure', 'Smart Objects']}>
 		<div
 			slot="group-0"
 			class="flex flex-row items-center justify-center select-none flex-wrap py-4"
@@ -287,7 +296,35 @@
 				<div class="ml-2">Area</div>
 			</button>
 		</div>
-		<div slot="group-3" />
+		<div slot="group-3" class="flex flex-col space-y-2 p-4">
+			<div class="text-lg">Parking</div>
+			<div class="flex flex-row space-x-4">
+				<button
+					class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					on:click={() => {
+						smartParking(90);
+					}}
+				>
+					<div class="">90°</div>
+				</button>
+				<button
+					class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					on:click={() => {
+						smartParking(45);
+					}}
+				>
+					<div class="">45°</div>
+				</button>
+				<button
+					class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					on:click={() => {
+						smartParking(30);
+					}}
+				>
+					<div class="">30°</div>
+				</button>
+			</div>
+		</div>
 	</ResponsiveGroup>
 </DialogSlideUp>
 

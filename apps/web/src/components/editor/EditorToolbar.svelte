@@ -19,6 +19,7 @@
 	import { compareAccess } from '$lib/util/access';
 	import { MeasurementTool } from './tools/measure';
 	import { AreaTool } from './tools/area';
+	import { SmartTool } from './tools/smart';
 
 	const toolbarItems: {
 		icon: any;
@@ -31,7 +32,7 @@
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
-	}[] = [SelectTool, PanTool, CommentTool, PenTool, TextTool, MeasurementTool, AreaTool];
+	}[] = [SelectTool, PanTool, CommentTool, PenTool, TextTool, MeasurementTool, AreaTool, SmartTool];
 
 	const { editor, broker } = getSvelteContext();
 

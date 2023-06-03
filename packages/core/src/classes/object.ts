@@ -222,6 +222,9 @@ export class Path extends Object2D implements Serializable {
 
   measurement?: boolean = false;
 
+  smartObject?: string;
+  smartProperties?: any;
+
   computeShape() {
     try {
       const m = this.getMatrix();
@@ -296,6 +299,8 @@ export class Path extends Object2D implements Serializable {
       width: this.width,
       closed: this.closed,
       measurement: this.measurement,
+      smartObject: this.smartObject,
+      smartProperties: this.smartProperties,
     };
   }
 
@@ -307,6 +312,8 @@ export class Path extends Object2D implements Serializable {
     if ("width" in data) this.width = data.width;
     if ("closed" in data) this.closed = data.closed;
     if ("measurement" in data) this.measurement = data.measurement;
+    if ("smartObject" in data) this.smartObject = data.smartObject;
+    if ("smartProperties" in data) this.smartProperties = data.smartProperties;
   }
 }
 
