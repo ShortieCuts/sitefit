@@ -60,6 +60,7 @@
 	import Icon from '../icon/Icon.svelte';
 	import UserChip from '../auth/UserChip.svelte';
 	import RichSearch from './common/RichSearch.svelte';
+	import ObjectEditor from './common/ObjectEditor.svelte';
 
 	// export let auth: AuthState;
 	export let projectId: string;
@@ -86,6 +87,7 @@
 		selection,
 		toasts,
 		stagingComment,
+		editingObject,
 		focusComment,
 		activeTool
 	} = editorContext;
@@ -515,6 +517,9 @@
 									</div>
 								</div>
 							{/key}
+						{/if}
+						{#if $editingObject}
+							<ObjectEditor />
 						{/if}
 						{#each $rootComments as comment}
 							{#key comment.long + ' ' + comment.lat}

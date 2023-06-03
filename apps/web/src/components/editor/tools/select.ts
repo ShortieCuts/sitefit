@@ -494,18 +494,27 @@ export function selectUp(ev: MouseEvent, editor: EditorContext, broker: ProjectB
 		if (isTranslating) {
 			let transaction = broker.project.createTransaction();
 			let sels = get(editor.effectiveSelection);
+			let didRealChange = false;
 			for (let id of sels) {
 				let obj = broker.project.objectsMap.get(id);
 				let objOrig = transformStartObjects.get(id);
 				if (obj && objOrig) {
 					transaction.update(id, 'transform', structuredClone(obj.transform));
+					if (
+						obj.transform.position[0] != objOrig.transform.position[0] ||
+						obj.transform.position[1] != objOrig.transform.position[1]
+					) {
+						didRealChange = true;
+					}
 					obj.transform = objOrig.transform;
 				}
 			}
 			if (get(editor.selectToolCursor) == Cursors.grabbing) {
 				editor.selectToolCursor.set(Cursors.grab);
 			}
-			broker.commitTransaction(transaction);
+			if (didRealChange) {
+				broker.commitTransaction(transaction);
+			}
 		} else if (isScaling) {
 			let sels = get(editor.effectiveSelection);
 			let transaction = broker.project.createTransaction();
@@ -563,8 +572,9 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 	let isTranslating = get(editor.translating);
 	let isRotating = get(editor.rotating);
 	let isScaling = get(editor.scaling);
+	let canTransform = !get(editor.editingObject);
 
-	if (access === 'WRITE' && (isTranslating || isScaling || isRotating)) {
+	if (access === 'WRITE' && (isTranslating || isScaling || isRotating) && canTransform) {
 		// Transforming
 		let currentMousePosition = get(editor.currentMousePositionRelative);
 
@@ -950,7 +960,7 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 			if (obj) objs.push(obj);
 		}
 		let box = computeBounds(objs);
-		if (access == 'WRITE' && (box.width > 0 || box.height > 0)) {
+		if (access == 'WRITE' && (box.width > 0 || box.height > 0) && canTransform) {
 			needsRootReset = false;
 			let cursorPoint = point(cursor[0], cursor[1]);
 

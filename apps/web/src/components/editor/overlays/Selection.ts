@@ -351,7 +351,7 @@ export class SelectionOverlay extends Overlay {
 			this.selectionBox?.setVisible(false, globalShouldHandlesBeVisible);
 		}
 
-		if (get(this.editor.translating)) {
+		if (get(this.editor.translating) || get(this.editor.editingObject)) {
 			this.selectionBox?.setVisible(false, globalShouldHandlesBeVisible);
 		}
 

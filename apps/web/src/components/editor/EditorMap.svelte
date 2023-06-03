@@ -680,7 +680,7 @@
 				if (currentCursor == Cursors.default) {
 					currentCursor = $leftMouseDown ? Cursors.grabbing : Cursors.grab;
 				}
-			} else if ($activeTool == 'pen') {
+			} else if ($activeTool == 'pen' || $activeTool == 'smart') {
 				currentCursor = Cursors.pen;
 			} else if ($activeTool == 'comment') {
 				currentCursor = Cursors.comment;
@@ -693,8 +693,12 @@
 	}
 
 	let topLeftCursors = [Cursors.default, Cursors.pen, Cursors.comment];
-
+	let oldObservers = new Map<HTMLElement, MutationObserver>();
 	function updateSvelteOverlays() {
+		for (let old of oldObservers.values()) {
+			old.disconnect();
+		}
+
 		if (!svelteOverlaysEl || !overlayView) return;
 		let proj = overlayView.getProjection();
 
@@ -728,6 +732,33 @@
 					childEl.style.top = `${pos.y}px`;
 					childEl.style.position = `absolute`;
 				}
+			}
+
+			if ('relativeX' in childEl.dataset) {
+				let refreshEl = () => {
+					let relativeX = parseFloat(childEl.dataset.relativeX ?? '0');
+					let relativeY = parseFloat(childEl.dataset.relativeY ?? '0');
+					let p = editor.positionToLonLat(relativeX, relativeY);
+
+					let pos = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
+					if (pos) {
+						childEl.style.left = `${pos.x}px`;
+						childEl.style.top = `${pos.y}px`;
+						childEl.style.position = `absolute`;
+					}
+				};
+				refreshEl();
+
+				let observer = new MutationObserver((list, ob) => {
+					refreshEl();
+				});
+
+				observer.observe(childEl, {
+					attributes: true,
+					attributeFilter: ['data-relative-x', 'data-relative-y']
+				});
+
+				oldObservers.set(childEl, observer);
 			}
 		}
 	}

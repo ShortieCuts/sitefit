@@ -19,6 +19,7 @@ import Flatten from '@flatten-js/core';
 import { metersAreaToFootArea, metersToFeetPrettyPrint } from '$lib/util/distance';
 import createDOMPurify from 'dompurify';
 import { colorArrayToCss } from '$lib/util/color';
+import { getSmartObject, smartObjectRender } from './SmartObjects';
 
 const ACTIVE_COLOR = '#0c8ae5';
 
@@ -56,6 +57,8 @@ class RenderPath implements RenderObject2D {
 	filled: THREE.Mesh;
 
 	textEl?: HTMLDivElement;
+
+	smartObjects: [Object2D, RenderObject2D][] = [];
 
 	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Path) {
 		let geo = new THREE.BufferGeometry();
@@ -131,6 +134,25 @@ class RenderPath implements RenderObject2D {
 	}
 
 	refresh(overlay: RendererOverlay | HeadlessRenderer, obj: Path): void {
+		// Kill all children
+		for (let [smartObj, renderObj] of this.smartObjects) {
+			renderObj.destroy(overlay);
+		}
+		this.smartObjects = [];
+
+		if (obj.smartObject) {
+			let smartObject = getSmartObject(obj.smartObject);
+			if (smartObject) {
+				let children = smartObjectRender(obj, obj.smartObject, obj.smartProperties ?? {});
+
+				for (let child of children) {
+					let ro = createRenderObject(overlay, child);
+					ro.refresh(overlay, child);
+					this.smartObjects.push([child, ro]);
+				}
+			}
+		}
+
 		let mat = this.line.material as THREE.MeshBasicMaterial;
 		let mat2 = this.filled.material as THREE.MeshBasicMaterial;
 
@@ -267,6 +289,10 @@ class RenderPath implements RenderObject2D {
 	}
 
 	mapUpdate(overlay: RendererOverlay | HeadlessRenderer, obj: Path): void {
+		for (let [object, renderObject] of this.smartObjects) {
+			if (renderObject.mapUpdate) renderObject.mapUpdate(overlay, object);
+		}
+
 		if (!this.textEl) return;
 
 		let text = this.textEl.innerText;
@@ -285,6 +311,7 @@ class RenderPath implements RenderObject2D {
 			let p2 = overlay.editor.positionToLonLat(objBounds.maxX, objBounds.maxY);
 
 			let proj = overlay.overlayView.getProjection();
+
 			if (!proj) return;
 			let pos1 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
 			let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
@@ -337,6 +364,11 @@ class RenderPath implements RenderObject2D {
 	}
 
 	destroy(overlay: RendererOverlay | HeadlessRenderer): void {
+		for (let [smartObj, renderObj] of this.smartObjects) {
+			renderObj.destroy(overlay);
+		}
+		this.smartObjects = [];
+
 		overlay.scene.remove(this.line);
 		this.line.geometry.dispose();
 
@@ -872,7 +904,6 @@ export class RendererOverlay extends Overlay {
 				if (realObj.type == ObjectType.Text) {
 					let textObj = renderObj as RenderText;
 					textObj.setEditing(true);
-					console.log('editing text', textObj.el.innerText, textObj.el);
 				}
 			} else {
 				for (let [key, obj] of this.renderedObjects) {
