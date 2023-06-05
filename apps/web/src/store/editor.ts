@@ -1198,6 +1198,24 @@ export class EditorContext {
 		}
 	}
 
+	flyToObject(id: ObjectID, zoom = true) {
+		let bounds = this.broker.project.computeBoundsMulti([id]);
+		let center = this.getBoundsCenter(bounds);
+
+		let [lon, lat] = this.positionToLonLat(center[0], center[1]);
+		let map = get(this.map);
+		if (!map) {
+			return;
+		}
+
+		if (zoom) {
+			map.setZoom(20);
+			map.panTo({ lat: lat, lng: lon });
+		} else {
+			map.setCenter({ lat: lat, lng: lon });
+		}
+	}
+
 	flyTo(lon: number, lat: number, zoom = false) {
 		let map = get(this.map);
 		if (!map) {

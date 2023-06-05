@@ -918,7 +918,8 @@ export class RendererOverlay extends Overlay {
 
 		this.addDraw(() => {
 			for (let [id, ro] of this.renderedObjects.entries()) {
-				if (ro.mapUpdate) ro.mapUpdate(this, this.broker.project.objectsMap.get(id)!);
+				if (this.broker.project.objectsMap.has(id))
+					if (ro.mapUpdate) ro.mapUpdate(this, this.broker.project.objectsMap.get(id)!);
 			}
 
 			let previewObjects = get(this.editor.previewObjects);

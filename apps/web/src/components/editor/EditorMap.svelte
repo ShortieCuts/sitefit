@@ -210,36 +210,36 @@
 					minZoom: MIN_ZOOM
 				});
 
-				map.mapTypes.set(
-					'test',
-					new SuperZoomMapType({
-						tileSize: new google.maps.Size(256, 256),
-						maxZoom: 40,
-						name: 'Satellite',
-						getTileUrl: (tileCoord: google.maps.Point, zoom: number): string => {
-							if (zoom > 40) {
-								return '';
-							}
-							let zoomDiff: number = zoom - 40;
-							let normTile: any = { x: tileCoord.x, y: tileCoord.y };
-							if (zoomDiff > 0) {
-								let dScale: number = Math.pow(2, zoomDiff);
-								normTile.x = Math.floor(normTile.x / dScale);
-								normTile.y = Math.floor(normTile.y / dScale);
-							} else {
-								zoomDiff = 0;
-							}
-							return (
-								'https://khms1.googleapis.com/kh?v=949&hl=en-US&&x=' +
-								normTile.x +
-								'&y=' +
-								normTile.y +
-								'&z=' +
-								(zoom - zoomDiff)
-							);
-						}
-					})
-				);
+				// map.mapTypes.set(
+				// 	'test',
+				// 	new SuperZoomMapType({
+				// 		tileSize: new google.maps.Size(256, 256),
+				// 		maxZoom: 40,
+				// 		name: 'Satellite',
+				// 		getTileUrl: (tileCoord: google.maps.Point, zoom: number): string => {
+				// 			if (zoom > 40) {
+				// 				return '';
+				// 			}
+				// 			let zoomDiff: number = zoom - 40;
+				// 			let normTile: any = { x: tileCoord.x, y: tileCoord.y };
+				// 			if (zoomDiff > 0) {
+				// 				let dScale: number = Math.pow(2, zoomDiff);
+				// 				normTile.x = Math.floor(normTile.x / dScale);
+				// 				normTile.y = Math.floor(normTile.y / dScale);
+				// 			} else {
+				// 				zoomDiff = 0;
+				// 			}
+				// 			return (
+				// 				'https://khms1.googleapis.com/kh?v=949&hl=en-US&&x=' +
+				// 				normTile.x +
+				// 				'&y=' +
+				// 				normTile.y +
+				// 				'&z=' +
+				// 				(zoom - zoomDiff)
+				// 			);
+				// 		}
+				// 	})
+				// );
 
 				let scene = new THREE.Scene();
 				let deg = -$heading;
@@ -482,14 +482,16 @@
 
 					let ne = bounds.getNorthEast();
 					let sw = bounds.getSouthWest();
+					console.log('bounds', ne.lat(), sw.lat());
 
 					let scale = Math.abs(ne.lat() - sw.lat()) * 800;
+					if (isNaN(scale)) return;
 					editor.screenScale.set(scale);
 				}
 
 				map.addListener('zoom_changed', () => {
 					if (!map) return;
-					computeScaling();
+					// computeScaling();
 					editor.zoom.set(map.getZoom() ?? 0);
 				});
 
@@ -500,18 +502,23 @@
 					editor.longitude.set(center.lng());
 					editor.latitude.set(center.lat());
 
+					computeScaling();
+
 					let floatingDlon = center.lng() - $geo[0];
 					let floatingDlat = center.lat() - $geo[1];
+					let closeLng = center.lng();
+					let closeLat = center.lat();
 					let floatingDist = Math.sqrt(floatingDlon * floatingDlon + floatingDlat * floatingDlat);
 					if (floatingDist > 0.05 && broker.project.objects.length <= 1) {
 						(async () => {
 							await broker.getOrCreateCornerstone();
-							$geo = [center.lng(), center.lat()];
+							$geo = [closeLng, closeLat];
 						})();
 					}
 
 					let topLeft = map.getBounds()?.getNorthEast();
 					let bottomRight = map.getBounds()?.getSouthWest();
+					console.log('bounds 2', topLeft?.lat(), bottomRight?.lat());
 					let bounds = {
 						minX: Infinity,
 						minY: Infinity,
@@ -537,7 +544,7 @@
 						bounds.maxX = Math.max(relativeTopLeft.x, relativeBottomRight.x);
 						bounds.maxY = Math.max(relativeTopLeft.z, relativeBottomRight.z);
 					}
-
+					console.log('View vounds', bounds);
 					editor.viewBounds.set(bounds);
 				});
 
@@ -588,6 +595,23 @@
 			if (center.lng() == 0 && center.lat() == 0) {
 				map.setCenter({ lat: $geo[1], lng: $geo[0] });
 				map.setZoom(18);
+			}
+		}
+	});
+
+	broker.synced.subscribe((newVal) => {
+		if (map) {
+			if (newVal) {
+				// Zoom to latest cad
+				let obj = broker.project.objects.find((c) => {
+					if (!c.parent) {
+						return true;
+					}
+				});
+
+				if (obj) {
+					editor.flyToObject(obj.id);
+				}
 			}
 		}
 	});
