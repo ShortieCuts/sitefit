@@ -303,7 +303,14 @@
 						let normalized = broker.normalizeVector([vectorPos.x, vectorPos.z]);
 						let deltaX = 0;
 						let deltaY = 0;
-						if (get(editor.activeTool) == 'pen' || get(editor.activeTool) == 'measurement') {
+
+						if (
+							get(editor.activeTool) == 'pen' ||
+							get(editor.activeTool) == 'measurement' ||
+							get(editor.activeTool) == 'area' ||
+							get(editor.activeTool) == 'smart' ||
+							get(editor.editingObject)
+						) {
 							if (!(ev.domEvent as MouseEvent).ctrlKey) {
 								let guides = calculateGuides(
 									editor,
@@ -518,7 +525,6 @@
 
 					let topLeft = map.getBounds()?.getNorthEast();
 					let bottomRight = map.getBounds()?.getSouthWest();
-					console.log('bounds 2', topLeft?.lat(), bottomRight?.lat());
 					let bounds = {
 						minX: Infinity,
 						minY: Infinity,
@@ -544,7 +550,9 @@
 						bounds.maxX = Math.max(relativeTopLeft.x, relativeBottomRight.x);
 						bounds.maxY = Math.max(relativeTopLeft.z, relativeBottomRight.z);
 					}
-					console.log('View vounds', bounds);
+
+					if (isNaN(bounds.minX) || isNaN(bounds.minY) || isNaN(bounds.maxX) || isNaN(bounds.maxY))
+						return;
 					editor.viewBounds.set(bounds);
 				});
 

@@ -20,6 +20,7 @@
 	import { MeasurementTool } from './tools/measure';
 	import { AreaTool } from './tools/area';
 	import { SmartTool } from './tools/smart';
+	import { ShapeTool } from './tools/shape';
 
 	const toolbarItems: {
 		icon: any;
@@ -32,7 +33,17 @@
 		onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
-	}[] = [SelectTool, PanTool, CommentTool, PenTool, TextTool, MeasurementTool, AreaTool, SmartTool];
+	}[] = [
+		SelectTool,
+		PanTool,
+		CommentTool,
+		PenTool,
+		TextTool,
+		MeasurementTool,
+		AreaTool,
+		SmartTool,
+		ShapeTool
+	];
 
 	const { editor, broker } = getSvelteContext();
 

@@ -122,7 +122,22 @@ class Session {
 
   send(msg: SocketMessage) {
     if (this.socket.readyState == WebSocket.READY_STATE_OPEN) {
-      this.socket.send(LZString.compressToUint8Array(JSON.stringify(msg)));
+      let now = Date.now();
+      console.log("Stringifying");
+      let str = JSON.stringify(msg);
+      console.log("Done Stringifying");
+      console.log("Compressing");
+      let arr = LZString.compressToUint8Array(str);
+      console.log(
+        "Compressed ~",
+        str.length,
+        "bytes to",
+        arr.length,
+        "bytes in",
+        Date.now() - now,
+        "ms"
+      );
+      this.socket.send(arr);
     } else {
       console.log("Socket not ready", this.socket.readyState);
     }
@@ -388,11 +403,14 @@ export class EngineInstance {
   }
 
   async syncAll(session: Session) {
+    let now = Date.now();
+    let serialized = this.project?.serialize() ?? {};
+    console.log("serialized in", Date.now() - now, "ms");
     session.send(
       SocketMessage.sync({
         broken: this.broken,
         selfUid: session.uid,
-        project: this.project?.serialize() ?? {},
+        project: serialized,
         sessions: this.sessions
           .filter((s) => !s.quit && s.userId)
           .map((s) => ({

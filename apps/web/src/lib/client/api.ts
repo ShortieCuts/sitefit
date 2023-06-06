@@ -293,16 +293,53 @@ export const updateCadFile = createIdApiEndpointHelper<
 	}
 >('POST', '/api/cad/<id>');
 
-async function convertDwgToDxf(dwg: any): Promise<any> {
-	let endpoint = 'https://dwg2dxf.server-a.workers.dev';
-	const formData = new FormData();
-	formData.append('file', dwg);
-	let res = fetch(endpoint, {
-		method: 'POST',
-		body: formData
-	});
+const USE_LOCAL_WASM_CONVERTER = true;
 
-	return await res.then((res) => res.text());
+async function convertDwgToDxf(dwg: any): Promise<any> {
+	if (USE_LOCAL_WASM_CONVERTER) {
+		const createMyModule = (await import('src/lib/client/dwg2dxf/dwg2dxf_module.js')).default;
+		let arrBufIn = new Uint8Array(await dwg.arrayBuffer());
+		return new Promise((resolve, reject) => {
+			console.log('Using local WASM converter', arrBufIn);
+			var ModuleInit = {
+				arguments: ['/t.dwg'],
+				print: function (text) {
+					console.log(text);
+				},
+				printErr: function (text) {
+					console.error(text);
+				},
+				preRun: function () {
+					let FS = ModuleInit.FS;
+					var data = arrBufIn;
+					var stream = FS.open('/t.dwg', 'w+');
+					FS.write(stream, data, 0, data.length, 0);
+					FS.close(stream);
+				},
+				postRun: function () {
+					let FS = ModuleInit.FS;
+					let stat = FS.stat('/t.dxf');
+					let stream2 = FS.open('/t.dxf', 'r');
+					var buf = new Uint8Array(stat.size);
+					FS.read(stream2, buf, 0, stat.size, 0);
+					FS.close(stream2);
+
+					resolve(new TextDecoder('ascii').decode(buf));
+				}
+			};
+			createMyModule(ModuleInit);
+		});
+	} else {
+		let endpoint = 'https://dwg2dxf.server-a.workers.dev';
+		const formData = new FormData();
+		formData.append('file', dwg);
+		let res = fetch(endpoint, {
+			method: 'POST',
+			body: formData
+		});
+
+		return await res.then((res) => res.text());
+	}
 }
 
 export async function processCadUploads(
@@ -348,6 +385,7 @@ export async function processCadUploads(
 								editor.uploadCounter.update((x) => x + 1);
 								resolve(cad.data.cadId);
 							} catch (e) {
+								console.error(e);
 								convertToast();
 								editor.alert("Failed to convert '" + f.name + "'");
 								editor.uploadStatus.set('idle');

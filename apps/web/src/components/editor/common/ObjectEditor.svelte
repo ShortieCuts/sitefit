@@ -131,3 +131,11 @@
 		/>
 	{/each}
 {/if}
+
+<style lang="scss">
+	.path-editor-point {
+		&:hover {
+			background-color: dodgerblue;
+		}
+	}
+</style>

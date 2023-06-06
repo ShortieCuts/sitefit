@@ -3,6 +3,8 @@ import type { EditorContext, ProjectBroker } from 'src/store/editor';
 import { get } from 'svelte/store';
 import { Material, Path } from 'core';
 
+const CAN_MULTI_CLICK = false;
+
 let isDown = false;
 let clickMoving = false;
 let downPos: [number, number] = [0, 0];
@@ -14,7 +16,7 @@ export const SmartTool = {
 	access: 'WRITE',
 	shortcut: '',
 	hidden: true,
-	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+	onDown(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
 		committed = false;
 		active = true;
 		if (!clickMoving) {
@@ -42,6 +44,10 @@ export const SmartTool = {
 				}
 				return obj;
 			});
+
+			if (!CAN_MULTI_CLICK) {
+				this.commit(editor, broker);
+			}
 		}
 	},
 	cancel(editor: EditorContext, broker: ProjectBroker) {

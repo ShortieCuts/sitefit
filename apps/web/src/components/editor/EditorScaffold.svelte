@@ -786,16 +786,12 @@
 		</div>
 	</div>
 {/if}
-{#if !$connected}
+
+{#if $loading || !$connected || $syncing}
 	<div
 		transition:fade={{ duration: 200 }}
-		class="fixed top-0 left-0 right-0 bottom-0 bg-gray-100 bg-opacity-25 flex items-center justify-center flex-col z-50 backdrop-blur-md"
-	>
-		<div class="rounded-lg bg-white bg-opacity-50 p-10 flex items-center justify-center flex-col">
-			<img src="/logo.svg" alt="logo" class="opacity-20" style="filter: grayscale(1)" />
-			<div class="text-2xl text-stone-700 mt-4">Connecting</div>
-		</div>
-	</div>
+		class="fixed top-0 left-0 right-0 bottom-0 bg-gray-100 flex items-center justify-center flex-col z-50"
+	/>
 {/if}
 
 {#if $loading}
@@ -807,12 +803,30 @@
 		<div class="text-2xl text-gray-400 mt-4">Loading</div>
 	</div>
 {/if}
+
 {#if $syncing && !$loading}
+	<div
+		transition:fade={{ duration: 200 }}
+		class="fixed top-0 left-0 right-0 bottom-0 bg-gray-100 flex items-center justify-center flex-col z-50"
+	>
+		<img src="/logo.svg" alt="logo" class="opacity-20" style="filter: grayscale(1)" />
+		<div class="text-2xl text-gray-400 mt-4">Downloading</div>
+	</div>
 	<div
 		transition:fly={{ duration: 200, y: 14 }}
 		class="loading-bar fixed h-2 left-0 right-0 bottom-0 bg-gray-100 z-50"
 	>
 		<div class="bg-blue-500 h-full" />
+	</div>
+{/if}
+
+{#if !$connected && !$loading && !$syncing}
+	<div
+		transition:fade={{ duration: 200 }}
+		class="fixed top-0 left-0 right-0 bottom-0 bg-gray-100 flex items-center justify-center flex-col z-50"
+	>
+		<img src="/logo.svg" alt="logo" class="opacity-20" style="filter: grayscale(1)" />
+		<div class="text-2xl text-gray-400 mt-4">Connecting</div>
 	</div>
 {/if}
 

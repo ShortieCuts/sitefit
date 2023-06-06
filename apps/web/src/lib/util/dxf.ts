@@ -28,7 +28,17 @@ import {
 	type Object2D,
 	type RelativeCoordinate
 } from 'core';
-import colorsMapper from 'autocad-colors-index';
+import colorsMapperReal from 'autocad-colors-index';
+let colorsMapper = {
+	getByACI(aci: number) {
+		let out = colorsMapperReal.getByACI(aci);
+		if (out) return out;
+		return {
+			hex: '#000000'
+		};
+	}
+};
+
 function parseHexColor(hex: string): [number, number, number, number] {
 	let r = parseInt(hex.slice(1, 3), 16);
 	let g = parseInt(hex.slice(3, 5), 16);
@@ -86,6 +96,8 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 		if (!dxf.blocks) {
 			dxf.blocks = {};
 		}
+
+		console.log('DXF', dxf);
 
 		let objects: Object2D[] = [];
 
@@ -327,7 +339,8 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 			return mat;
 		}
 
-		function translateEntity(ent: IEntity): Object2D {
+		function translateEntity(ent: IEntity, willBeId: string): Object2D {
+			if (!dxf) throw new Error('DXF not loaded');
 			let mat = makeMaterialFromEntity(ent);
 			let obj: Object2D | null = null;
 
@@ -438,6 +451,27 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 
 				text.text = textEnt.text.replaceAll('\\P', '\n');
 
+				if (text.text.startsWith('{\\')) {
+					let style = text.text.match(/{\\([^;]+);/);
+					if (style) {
+						let styleName = style[1];
+						let styleDef = text.text.match(/{\\[^;]+;(.*)}/);
+						if (styleDef) {
+							let styleDefStr = styleDef[1];
+							let styleDefParts = styleDefStr.split(';');
+							let styleDefObj: any = {};
+							for (let part of styleDefParts) {
+								let [key, val] = part.split('=');
+								styleDefObj[key] = val;
+							}
+							let styleObj: any = {};
+						}
+					}
+
+					text.text = text.text.replace(/{\\[^;]+;/, '');
+					text.text = text.text.replace(/}/, '');
+				}
+
 				let dirVec = textEnt.directionVector;
 
 				let angle = Math.atan2(dirVec.x, dirVec.y); // We swap x and y because the viewDirection is strange
@@ -445,6 +479,53 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 				text.transform.rotation = angle;
 
 				obj = text;
+			} else if (ent.type == 'INSERT') {
+				let insertEnt = ent as IInsertEntity;
+				let block = dxf.blocks[insertEnt.name];
+				if (!block) {
+					console.log('No block found for insert', insertEnt);
+				} else {
+					let childEntities = block.entities;
+					console.log('Insert', insertEnt, childEntities);
+					let trans = transformCoords(ent, insertEnt.position);
+					let group = new Group();
+					group.transform = new Transform();
+					group.transform.position = [trans.x, trans.z];
+					group.name = insertEnt.name;
+					group.transform.rotation = insertEnt.rotation ?? 0;
+					group.transform.size = [insertEnt.xScale ?? 1, insertEnt.yScale ?? 1];
+
+					if (childEntities) {
+						let childObjects = childEntities.map((ent, i) => {
+							let childId = `${willBeId}-child${i}`;
+							let childObj = translateEntity(ent, childId);
+							childObj.id = childId;
+							childObj.order = i;
+							return childObj;
+						});
+						for (let obj of childObjects) {
+							obj.parent = willBeId;
+							obj.transform.rotation = obj.transform.rotation + group.transform.rotation;
+							let rotationMatrix = [
+								[Math.cos(obj.transform.rotation), -Math.sin(obj.transform.rotation)],
+								[Math.sin(obj.transform.rotation), Math.cos(obj.transform.rotation)]
+							];
+							function applyRotation(p: [number, number]) {
+								return [
+									p[0] * rotationMatrix[0][0] + p[1] * rotationMatrix[0][1],
+									p[0] * rotationMatrix[1][0] + p[1] * rotationMatrix[1][1]
+								];
+							}
+							let applied = applyRotation(obj.transform.position);
+							obj.transform.position = [
+								group.transform.position[0] + applied[0],
+								group.transform.position[1] + applied[1]
+							];
+							objects.push(obj);
+						}
+					}
+					obj = group;
+				}
 			} else {
 				console.log('Unhandled entity', ent);
 			}
@@ -453,14 +534,16 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 
 			obj.style = mat;
 			obj.visible = ent.visible;
-			obj.name = ent.handle.toString() ?? '';
+			if (!obj.name) {
+				obj.name = ent.handle.toString() ?? '';
+			}
 			obj.parent = ent.layer;
 
 			return obj;
 		}
 
 		for (let [i, ent] of dxf.entities.entries()) {
-			let obj = translateEntity(ent);
+			let obj = translateEntity(ent, 'ent' + i.toString());
 			obj.id = 'ent' + i.toString();
 			obj.order = i;
 			if (obj) {

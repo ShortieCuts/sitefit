@@ -182,6 +182,7 @@ export class ProjectBroker {
 				this.loading.set(true);
 				await this.pullMetadata();
 				await this.refreshComments();
+				this.syncing.set(true);
 				this.loading.set(false);
 
 				this.establishConnection();
@@ -713,10 +714,10 @@ export class ProjectBroker {
 		this.socket = ws;
 
 		ws.addEventListener('open', (event) => {
+			this.syncing.set(true); // We expect to receive a Sync message soon
 			this.connected.set(true);
 			this.establishingConnection = false;
 			(async () => {
-				this.syncing.set(true); // We expect to receive a Sync message soon
 				if (this.accessToken) {
 					this.sendMessage(SocketMessage.login('!' + this.accessToken));
 				} else {
@@ -956,6 +957,8 @@ export class EditorContext {
 	activeTool: Writable<string> = writable('pan');
 	activeToolSmartObject: Writable<string> = writable('');
 	activeToolSmartObjectProperties: Writable<any> = writable({});
+
+	activeSVG: Writable<string> = writable('');
 
 	activeDialog: Writable<string> = writable('');
 

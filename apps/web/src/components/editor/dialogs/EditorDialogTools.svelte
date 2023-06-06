@@ -58,6 +58,12 @@
 		}
 	];
 
+	function activateShape(shape: Shape) {
+		editor.activeTool.set('shape');
+		editor.activateDialog('');
+		editor.activeSVG.set(shape.svg);
+	}
+
 	function insertShape(shape: Shape) {
 		let transaction = broker.project.createTransaction();
 
@@ -251,7 +257,7 @@
 			{#each shapes as shape}
 				<button
 					class="flex flex-col items-center justify-center p-2 hover:bg-gray-100 rounded-md cursor-pointer"
-					on:click={() => insertShape(shape)}
+					on:click={() => activateShape(shape)}
 				>
 					<div class="w-12 h-12 max-svg">
 						{@html shape.svg}

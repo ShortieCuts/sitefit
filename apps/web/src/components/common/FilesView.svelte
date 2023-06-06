@@ -5,7 +5,13 @@
 	import { getCadsStore, refreshData } from 'src/store/cads';
 	import ContextMenu from '../editor/common/ContextMenu.svelte';
 	import Fa from 'svelte-fa';
-	import { faArrowLeft, faFolderPlus, faPlus, faRefresh } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faArrowLeft,
+		faFolderPlus,
+		faPlus,
+		faRefresh,
+		faUpload
+	} from '@fortawesome/free-solid-svg-icons';
 	import {
 		createCadFolder,
 		processCadUploads,
@@ -125,6 +131,14 @@
 	</div>
 
 	<ContextMenu el={containerEl}>
+		<button
+			on:click={async (e) => {
+				let fileInput = document.querySelector('#import-file');
+				if (fileInput && fileInput instanceof HTMLInputElement) {
+					fileInput.click();
+				}
+			}}><Fa icon={faUpload} /> Upload DWG</button
+		>
 		<button
 			on:click={async (e) => {
 				let res = await createCadFolder({
