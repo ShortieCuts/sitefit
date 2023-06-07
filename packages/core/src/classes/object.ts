@@ -225,28 +225,79 @@ export class Path extends Object2D implements Serializable {
   smartObject?: string;
   smartProperties?: any;
 
+  disconnected?: boolean = false;
+
   computeShape() {
     try {
       const m = this.getMatrix();
       let segs = [];
       let points: Flatten.Point[] = [];
 
-      for (let i = 0; i < this.segments.length; i++) {
-        if (i == 0) continue;
+      if (!this.disconnected) {
+        for (let i = 0; i < this.segments.length; i++) {
+          if (i == 0) continue;
 
-        let p1 = point(
-          this.segments[i - 1][0],
-          this.segments[i - 1][1]
-        ).transform(m);
+          let p1 = point(
+            this.segments[i - 1][0],
+            this.segments[i - 1][1]
+          ).transform(m);
 
-        let p2 = point(this.segments[i][0], this.segments[i][1]).transform(m);
+          let p2 = point(this.segments[i][0], this.segments[i][1]).transform(m);
 
-        if (i == 1) {
-          points.push(p1);
+          if (i == 1) {
+            points.push(p1);
+          }
+
+          points.push(p2);
+          segs.push(new Flatten.Segment(p1, p2));
         }
+      } else {
+        if (this.style?.filled) {
+          let poly = new Flatten.Polygon();
+          for (let i = 0; i < Math.min(this.segments.length, 9); i += 3) {
+            let p1 = point(this.segments[i][0], this.segments[i][1]).transform(
+              m
+            );
+            if (i == 0) {
+              points.push(p1);
+            }
 
-        points.push(p2);
-        segs.push(new Flatten.Segment(p1, p2));
+            let p2 = point(
+              this.segments[i + 1][0],
+              this.segments[i + 1][1]
+            ).transform(m);
+
+            let p3 = point(
+              this.segments[i + 2][0],
+              this.segments[i + 2][1]
+            ).transform(m);
+
+            points.push(p1);
+            points.push(p2);
+            points.push(p3);
+            poly.addFace([
+              new Flatten.Segment(p1, p2),
+              new Flatten.Segment(p2, p3),
+              new Flatten.Segment(p3, p1),
+            ]);
+          }
+          segs.push(poly);
+        } else {
+          for (let i = 0; i < this.segments.length; i += 2) {
+            let p1 = point(this.segments[i][0], this.segments[i][1]).transform(
+              m
+            );
+
+            let p2 = point(
+              this.segments[i + 1][0],
+              this.segments[i + 1][1]
+            ).transform(m);
+
+            points.push(p1);
+            points.push(p2);
+            segs.push(new Flatten.Segment(p1, p2));
+          }
+        }
       }
 
       if (this.closed) {
@@ -301,6 +352,7 @@ export class Path extends Object2D implements Serializable {
       measurement: this.measurement,
       smartObject: this.smartObject,
       smartProperties: this.smartProperties,
+      disconnected: this.disconnected,
     };
   }
 
@@ -314,6 +366,7 @@ export class Path extends Object2D implements Serializable {
     if ("measurement" in data) this.measurement = data.measurement;
     if ("smartObject" in data) this.smartObject = data.smartObject;
     if ("smartProperties" in data) this.smartProperties = data.smartProperties;
+    if ("disconnected" in data) this.disconnected = data.disconnected;
   }
 }
 
@@ -652,6 +705,7 @@ export type ObjectProperty = {
   name: string;
   type?:
     | "number"
+    | "angle"
     | "string"
     | "boolean"
     | "color"
@@ -697,11 +751,11 @@ export const ObjectProperties: {
     },
     {
       name: "startAngle",
-      type: "number",
+      type: "angle",
     },
     {
       name: "endAngle",
-      type: "number",
+      type: "angle",
     },
   ],
   [ObjectType.Circle]: [

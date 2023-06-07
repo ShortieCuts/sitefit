@@ -1,0 +1,4941 @@
+{
+	"type": "FeatureCollection",
+	"features": [
+		{
+			"type": "Feature",
+			"id": "3712C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3712C"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[250.766445, 781.096531],
+					[251.906791, 782.236877]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3712D",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3712D"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[256.326208, 786.656294],
+					[260.745626, 791.075711]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3712E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3712E"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[265.165043, 795.495129],
+					[269.58446, 799.914546]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3712F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3712F"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[241.92761, 781.096531],
+					[243.067956, 782.236877]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37130",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37130"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[247.487373, 786.656294],
+					[251.906791, 791.075711]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37131",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37131"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[256.326208, 795.495129],
+					[260.745626, 799.914546]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37132",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37132"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[233.088776, 781.096531],
+					[234.229121, 782.236877]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37133",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37133"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[238.648539, 786.656294],
+					[243.067956, 791.075711]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37134",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37134"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[247.487373, 795.495129],
+					[251.906791, 799.914546]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37135",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37135"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[229.809704, 786.656294],
+					[234.229121, 791.075711]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37136",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37136"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[238.648539, 795.495129],
+					[243.067956, 799.914546]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37137",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37137"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[229.809704, 795.495129],
+					[234.229121, 799.914546]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37138",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37138"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[259.60528, 781.096531],
+					[260.745626, 782.236877]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37139",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37139"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[265.165043, 786.656294],
+					[269.58446, 791.075711]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3713A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3713A"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[274.003878, 795.495129],
+					[278.423295, 799.914546]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3713B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3713B"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[268.444115, 781.096531],
+					[269.58446, 782.236877]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3713C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3713C"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[274.003878, 786.656294],
+					[278.423295, 791.075711]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3713D",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3713D"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[282.842712, 795.495129],
+					[287.26213, 799.914546]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3713E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3713E"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[277.282949, 781.096531],
+					[278.423295, 782.236877]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3713F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3713F"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[282.842712, 786.656294],
+					[287.26213, 791.075711]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37140",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37140"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[291.681547, 795.495129],
+					[292.701526, 796.515108]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37141",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37141"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[286.121784, 781.096531],
+					[287.26213, 782.236877]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37142",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37142"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[291.681547, 786.656294],
+					[292.701526, 787.676273]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37427",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b0|i0|c0|p34;vegetable area}",
+				"EntityHandle": "37427"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [823.915615, 5021.929161]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37551",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;1}",
+				"EntityHandle": "37551"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4525.764058, 4414.851733]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37552",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;4}",
+				"EntityHandle": "37552"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1870.877083, 5214.892511]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37553",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;5}",
+				"EntityHandle": "37553"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [3115.161404, 4111.668637]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37554",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;6}",
+				"EntityHandle": "37554"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [2385.181449, 4116.203314]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37555",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;7}",
+				"EntityHandle": "37555"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1619.705087, 4124.714753]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37556",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;3}",
+				"EntityHandle": "37556"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [2136.730972, 4586.029951]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37557",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;8}",
+				"EntityHandle": "37557"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1032.174146, 4274.03742]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37558",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;9}",
+				"EntityHandle": "37558"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [309.450887, 4169.730672]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37559",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;2}",
+				"EntityHandle": "37559"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4885.706129, 5404.695121]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37563",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b0|i0|c0|p34;cold room\\Pvegetable}",
+				"EntityHandle": "37563"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [3715.304223, 5077.615663]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37565",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 256,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;10}",
+				"EntityHandle": "37565"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [2229.632528, 3464.518856]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3769C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "dwgmodels.com",
+				"Color": 5,
+				"EntityHandle": "3769C"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-42.518024, 4823.716517],
+					[107.481976, 4823.716517],
+					[107.481976, 5784.162775],
+					[5707.481976, 5783.517296],
+					[5707.481976, 3183.716517],
+					[107.481976, 3183.716517],
+					[107.481976, 3931.075812],
+					[-42.518024, 3931.075812]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37703",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37703"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1198.6786, 2598.844042],
+					[1198.6786, 703.172259]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3770F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "3770F"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 703.172259],
+					[5420.168039, 703.172259]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37710",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;2550X2150X2150}",
+				"EntityHandle": "37710"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 2540.067566]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37712",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37712"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 2598.844042],
+					[5420.168039, 2598.844042]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37713",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37713"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 2396.24834],
+					[5420.168039, 2396.24834]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37714",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37714"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 2017.569799],
+					[5420.168039, 2017.569799]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37715",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37715"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 2200.063844],
+					[5420.168039, 2200.063844]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37716",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37716"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 1822.038286],
+					[5420.168039, 1822.038286]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37717",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37717"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 1630.853131],
+					[5420.168039, 1630.853131]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37718",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37718"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 1450.533871],
+					[5420.168039, 1450.533871]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37719",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37719"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 1272.382973],
+					[5420.168039, 1272.382973]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3771A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "3771A"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 1089.888928],
+					[5420.168039, 1089.888928]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3771B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "3771B"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 894.357414],
+					[5420.168039, 894.357414]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3771C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "3771C"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[4253.350115, 2598.844042],
+					[4253.350115, 703.172259]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3771D",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;1}",
+				"EntityHandle": "3771D"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [981.053367, 2540.067566]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3771F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;COLD ROOM}",
+				"EntityHandle": "3771F"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 2540.067566]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37721",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;1025x440x1500}",
+				"EntityHandle": "37721"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 2371.110215]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37723",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;SHELVING}",
+				"EntityHandle": "37723"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 2371.110215]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37725",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;340X340X250}",
+				"EntityHandle": "37725"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 2157.09725]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37726",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;3}",
+				"EntityHandle": "37726"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [981.053367, 2157.09725]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37728",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;FLOOR DRAIN WITH GULLY}",
+				"EntityHandle": "37728"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 2157.09725]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3772A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;1500x500x1800}",
+				"EntityHandle": "3772A"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 1988.1399]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3772C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;SHELVING}",
+				"EntityHandle": "3772C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 1988.1399]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3772E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;2}",
+				"EntityHandle": "3772E"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [981.053367, 2382.373717]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3772F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;4}",
+				"EntityHandle": "3772F"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [969.769121, 1988.1399]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37730",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;700X700X1000}",
+				"EntityHandle": "37730"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 1796.655547]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37732",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;VEGETABLE WASHER AND DRYER}",
+				"EntityHandle": "37732"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 1796.655547]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37734",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;5}",
+				"EntityHandle": "37734"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [969.769121, 1796.655547]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37735",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;1000X700X1000}",
+				"EntityHandle": "37735"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 1616.434696]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37737",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;TABLE}",
+				"EntityHandle": "37737"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 1616.434696]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37739",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;6}",
+				"EntityHandle": "37739"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [969.769121, 1616.434696]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3773A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;1200X700X1000}",
+				"EntityHandle": "3773A"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 1413.685231]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3773C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;VEGETABLE PROCESSING AND WASHING}",
+				"EntityHandle": "3773C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 1413.685231]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3773E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;7}",
+				"EntityHandle": "3773E"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [969.769121, 1413.685231]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37740",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;WASTE BIN}",
+				"EntityHandle": "37740"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 1233.46438]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37742",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;8}",
+				"EntityHandle": "37742"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [969.769121, 1233.46438]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37743",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;320X420X800}",
+				"EntityHandle": "37743"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 1053.243529]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37745",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;POTATO PEELER}",
+				"EntityHandle": "37745"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 1053.243529]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37747",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;9}",
+				"EntityHandle": "37747"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [969.769121, 1053.243529]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37748",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;1400X380X20}",
+				"EntityHandle": "37748"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [4324.62757, 861.759176]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3774A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;WALL SHELVE}",
+				"EntityHandle": "3774A"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1256.439043, 861.759176]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3774C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;10}",
+				"EntityHandle": "3774C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [969.769121, 861.759176]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37755",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbMText",
+				"Layer": "0",
+				"Color": 0,
+				"Text": "{\\fArial Narrow|b1|i0|c0|p34;VEGETABLE}",
+				"EntityHandle": "37755"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [2217.591806, 2539.96123]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37758",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37758"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[843.635287, 703.172259],
+					[843.635287, 2598.844042]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37759",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 8,
+				"EntityHandle": "37759"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[5420.168039, 2598.844042],
+					[5420.168039, 703.172259]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377CD",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377CD"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-490.0, 0.0],
+					[-465.0, 0.0],
+					[-465.0, -25.0],
+					[-490.0, -25.0],
+					[-490.0, 0.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377CE",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377CE"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-465.0, -17.5],
+					[-25.0, -17.5]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377CF",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377CF"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-465.0, -1042.5],
+					[-25.0, -1042.5]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377D0",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377D0"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-465.0, -7.5],
+					[-25.0, -7.5]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377D1",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377D1"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[0.0, 0.0],
+					[-25.0, 0.0],
+					[-25.0, -25.0],
+					[0.0, -25.0],
+					[0.0, 0.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377D2",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377D2"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-490.0, -1035.0],
+					[-465.0, -1035.0],
+					[-465.0, -1060.0],
+					[-490.0, -1060.0],
+					[-490.0, -1035.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377D3",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377D3"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-465.0, -1052.5],
+					[-25.0, -1052.5]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377D4",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377D4"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[0.0, -1035.0],
+					[-25.0, -1035.0],
+					[-25.0, -1060.0],
+					[0.0, -1060.0],
+					[0.0, -1035.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377D5",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377D5"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-465.0, -17.5],
+					[-465.0, -1042.5]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377D6",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377D6"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-25.0, -1042.5],
+					[-25.0, -17.5]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377D7",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377D7"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-369.899722, -55.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377DA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "377DA"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[44.999859, 0.112813],
+					[-44.999859, -0.112813]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E0",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E0"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [0.0, 0.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E1",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E1"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -50.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E2",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E2"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E3",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E3"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, 0.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E4",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E4"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -50.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E5",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E5"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E6",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E6"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, 0.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E7",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E7"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -50.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E8",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E8"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377E9",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377E9"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377EA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377EA"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377EB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377EB"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377EC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377EC"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377ED",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377ED"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377EE",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377EE"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377EF",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377EF"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F0",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F0"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F1",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F1"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -450.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F2",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F2"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F3",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F3"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F4",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F4"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F5",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F5"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F6",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F6"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F7",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F7"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -450.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F8",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F8"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377F9",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377F9"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377FA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377FA"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377FB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377FB"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377FC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377FC"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377FD",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377FD"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -450.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377FE",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377FE"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -500.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "377FF",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "377FF"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -550.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37800",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37800"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -600.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37801",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37801"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -650.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37802",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37802"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -700.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37803",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37803"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -750.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37804",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37804"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -800.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37805",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37805"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -850.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37806",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37806"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -900.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37807",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37807"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -950.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37808",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37808"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -500.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37809",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37809"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -550.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3780A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3780A"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -600.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3780B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3780B"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -650.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3780C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3780C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -700.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3780D",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3780D"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -750.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3780E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3780E"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -800.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3780F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3780F"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -850.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37810",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37810"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -900.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37811",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37811"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -950.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37812",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37812"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -500.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37813",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37813"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -550.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37814",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37814"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -600.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37815",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37815"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -650.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37816",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37816"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -700.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37817",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37817"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -750.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37818",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37818"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -800.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37819",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37819"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -850.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3781A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3781A"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -900.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3781B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3781B"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -950.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3782C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "*U",
+				"EntityHandle": "3782C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [5587.481976, 5668.616907]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37834",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37834"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-1814.170895, 272.338623],
+					[-1995.370895, 272.338623]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37835",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37835"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-1819.770895, 664.338623],
+					[-1989.770895, 664.338623]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37838",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37838"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-1904.770895, 749.338623],
+					[-1904.770895, 579.338623]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3783A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3783A"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[-1814.170895, 152.338623],
+						[-1814.170895, 759.338623],
+						[-1995.370895, 759.338623],
+						[-1995.370895, 152.338623],
+						[-1814.170895, 152.338623]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3783B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3783B"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-1814.170895, 736.838623],
+					[-1484.170895, 736.838623],
+					[-1484.170895, 174.838623],
+					[-1814.170895, 174.838623]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3783C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3783C"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[-2150.0, 974.131658],
+						[-2150.0, 1574.311941],
+						[-2212.664473, 1574.311941],
+						[-2212.664473, 974.131658],
+						[-2150.0, 974.131658]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3783D",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3783D"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[-2212.664473, 1141.841669],
+					[-2228.217011, 1141.841669],
+					[-2228.217011, 1007.624271],
+					[-2212.664473, 1007.624271]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3783E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3783E"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[-2150.0, -0.0],
+						[0.0, 0.0],
+						[-0.0, 2550.0],
+						[-2150.0, 2550.0],
+						[-2150.0, -0.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3783F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "3783F"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[-2090.0, 60.0],
+						[-60.0, 60.0],
+						[-60.0, 2490.0],
+						[-2090.0, 2490.0],
+						[-2090.0, 60.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37840",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "Cold room 2550x2150",
+				"EntityHandle": "37840"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [5677.481976, 3208.616907]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3784B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "*U",
+				"EntityHandle": "3784B"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [5587.481976, 4633.616907]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3784C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "*U",
+				"EntityHandle": "3784C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [3617.481976, 5668.616907]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378C8",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378C8"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[0.0, -490.0],
+					[0.0, -465.0],
+					[25.0, -465.0],
+					[25.0, -490.0],
+					[0.0, -490.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378C9",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378C9"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[17.5, -465.0],
+					[17.5, -25.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378CA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378CA"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1517.5, -465.0],
+					[1517.5, -25.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378CB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378CB"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[7.5, -465.0],
+					[7.5, -25.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378CC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378CC"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[0.0, 0.0],
+					[0.0, -25.0],
+					[25.0, -25.0],
+					[25.0, 0.0],
+					[0.0, 0.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378CD",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378CD"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1510.0, -490.0],
+					[1510.0, -465.0],
+					[1535.0, -465.0],
+					[1535.0, -490.0],
+					[1510.0, -490.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378CE",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378CE"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1527.5, -465.0],
+					[1527.5, -25.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378CF",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378CF"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1510.0, 0.0],
+					[1510.0, -25.0],
+					[1535.0, -25.0],
+					[1535.0, 0.0],
+					[1510.0, 0.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378D0",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378D0"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[17.5, -465.0],
+					[1517.5, -465.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378D1",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378D1"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1517.5, -25.0],
+					[17.5, -25.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378D2",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378D2"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [55.0, -369.899722]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378D5",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "378D5"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[44.999859, 0.112813],
+					[-44.999859, -0.112813]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378DB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378DB"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [0.0, 0.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378DC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378DC"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -50.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378DD",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378DD"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378DE",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378DE"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, 0.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378DF",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378DF"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -50.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E0",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E0"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E1",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E1"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, 0.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E2",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E2"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -50.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E3",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E3"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E4",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E4"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E5",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E5"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E6",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E6"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E7",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E7"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E8",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E8"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378E9",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378E9"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378EA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378EA"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378EB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378EB"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378EC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378EC"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -450.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378ED",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378ED"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378EE",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378EE"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378EF",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378EF"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F0",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F0"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F1",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F1"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F2",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F2"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -450.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F3",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F3"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F4",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F4"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F5",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F5"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F6",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F6"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F7",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F7"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F8",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F8"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -450.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378F9",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378F9"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -500.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378FA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378FA"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -550.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378FB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378FB"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -600.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378FC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378FC"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -650.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378FD",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378FD"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -700.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378FE",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378FE"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -750.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "378FF",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "378FF"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -800.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37900",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37900"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -850.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37901",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37901"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -900.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37902",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37902"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -950.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37903",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37903"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -500.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37904",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37904"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -550.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37905",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37905"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -600.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37906",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37906"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -650.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37907",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37907"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -700.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37908",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37908"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -750.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37909",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37909"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -800.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3790A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3790A"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -850.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3790B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3790B"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -900.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3790C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3790C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -950.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3790D",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3790D"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -500.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3790E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3790E"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -550.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3790F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3790F"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -600.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37910",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37910"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -650.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37911",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37911"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -700.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37912",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37912"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -750.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37913",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37913"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -800.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37914",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37914"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -850.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37915",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37915"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -900.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37916",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37916"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -950.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37917",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37917"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1000.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37918",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37918"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1050.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37919",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37919"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3791A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3791A"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3791B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3791B"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3791C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3791C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3791D",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3791D"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3791E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3791E"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3791F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3791F"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [-0.0, -1400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37920",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37920"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1000.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37921",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37921"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1050.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37922",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37922"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37923",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37923"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37924",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37924"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37925",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37925"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37926",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37926"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37927",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37927"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37928",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37928"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [125.0, -1400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37929",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37929"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1000.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3792A",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3792A"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1050.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3792B",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3792B"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1100.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3792C",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3792C"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1150.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3792D",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3792D"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1200.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3792E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3792E"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1250.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3792F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "3792F"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1300.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37930",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37930"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1350.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37931",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*U",
+				"EntityHandle": "37931"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [250.0, -1400.0]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37942",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "*U",
+				"EntityHandle": "37942"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [137.481976, 5754.162775]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37943",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "*U",
+				"EntityHandle": "37943"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1647.481976, 5754.162775]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37947",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37947"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[-75.0, -75.0],
+						[75.0, -75.0],
+						[75.0, 75.0],
+						[-75.0, 75.0],
+						[-75.0, -75.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37948",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37948"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[50.0, 50.0],
+						[-50.0, 50.0],
+						[-50.0, -50.0],
+						[50.0, -50.0],
+						[50.0, 50.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37951",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "FLOOR DRAIN",
+				"EntityHandle": "37951"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1948.446153, 4502.081938]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37960",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "WASTE BIN",
+				"EntityHandle": "37960"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [1080.922733, 3827.200967]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37964",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "37964"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[100.0, 240.0],
+						[100.0, 410.0],
+						[-100.0, 410.0],
+						[-100.0, 240.0],
+						[100.0, 240.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "37968",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "POTATO PEELER",
+				"EntityHandle": "37968"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [416.079842, 3487.547631]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3797F",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "wall shelve 1400x380_2x",
+				"EntityHandle": "3797F"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [715.922733, 3183.716517]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "3799E",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "dwgmodels.com",
+				"Color": 256,
+				"name": "kitchen block 021",
+				"EntityHandle": "3799E"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [715.922733, 3202.200967]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379A3",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379A3"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[307.342802, 486.212351],
+						[307.342802, 596.212351],
+						[282.342802, 621.212351],
+						[72.342802, 621.212351],
+						[47.342802, 596.212351],
+						[47.342802, 486.212351],
+						[72.342802, 461.212351],
+						[282.342802, 461.212351],
+						[307.342802, 486.212351]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379A4",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379A4"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[252.342802, 571.212351],
+						[257.342802, 566.212351],
+						[257.342802, 516.212351],
+						[252.342802, 511.212351],
+						[102.342802, 511.212351],
+						[97.342802, 516.212351],
+						[97.342802, 566.212351],
+						[102.342802, 571.212351],
+						[252.342802, 571.212351]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379A5",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379A5"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[95.0, 60.0],
+						[1105.0, 60.0],
+						[1135.0, 90.0],
+						[1135.0, 350.0],
+						[1105.0, 380.0],
+						[95.0, 380.0],
+						[65.0, 350.0],
+						[65.0, 90.0],
+						[95.0, 60.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379A6",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379A6"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[1200.0, 700.0],
+						[0.0, 700.0],
+						[0.0, 0.0],
+						[1200.0, -0.0],
+						[1200.0, 700.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379A7",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379A7"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1200.0, 30.0],
+					[0.0, 30.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379A9",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379A9"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[91.7362, 576.818953],
+					[61.7362, 606.818953]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379AA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379AA"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[91.7362, 505.605749],
+					[61.7362, 475.605749]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379AB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379AB"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[2777.886958, 700.0],
+						[2203.172302, 700.0],
+						[2203.172302, -0.0],
+						[2777.886958, -0.0],
+						[2777.886958, 700.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379AC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379AC"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[1200.0, -0.0],
+						[2203.172302, -0.0],
+						[2203.172302, 700.0],
+						[1200.0, 700.0],
+						[1200.0, -0.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379AD",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379AD"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[1079.105667, 447.153291],
+						[1079.105667, 647.153291],
+						[409.105667, 647.153291],
+						[409.105667, 447.153291],
+						[1079.105667, 447.153291]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379AE",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbBlockReference",
+				"Layer": "0",
+				"Color": 0,
+				"name": "*X",
+				"EntityHandle": "379AE"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [3336.120926, 8458.118602]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379AF",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379AF"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[292.949404, 606.818953],
+					[262.949404, 576.818953]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B0",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B0"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[292.949404, 475.605749],
+					[262.949404, 505.605749]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B1",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B1"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[524.258949, 47.385643],
+					[545.167293, 83.599958]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B2",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B2"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[524.258949, 47.385643],
+					[545.167293, 11.171328]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B3",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B3"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[550.130461, 77.468105],
+						[537.375369, 84.83226],
+						[485.271017, 54.749798],
+						[485.271017, 40.021487],
+						[537.375369, 9.939025],
+						[550.130461, 17.303181],
+						[550.130461, 77.468105]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B4",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B4"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[524.258949, 47.385643],
+					[482.44226, 47.385643]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B5",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B5"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[679.258949, 47.385643],
+					[658.350604, 83.599958]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B6",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B6"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[679.258949, 47.385643],
+					[721.075638, 47.385643]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B7",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLine",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B7"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[679.258949, 47.385643],
+					[658.350604, 11.171328]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B8",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B8"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[653.387437, 17.303181],
+						[666.142528, 9.939025],
+						[718.246881, 40.021487],
+						[718.246881, 54.749798],
+						[666.142528, 84.83226],
+						[653.387437, 77.468105],
+						[653.387437, 17.303181]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379B9",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379B9"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[586.785737, 47.23372],
+						[616.785737, 47.23372],
+						[616.785737, 280.854821],
+						[586.785737, 280.854821],
+						[586.785737, 47.23372]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379BA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379BA"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[1135.0, 430.0],
+						[1135.0, 660.0],
+						[365.0, 660.0],
+						[365.0, 430.0],
+						[1135.0, 430.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379BB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379BB"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[2297.886567, 96.560295],
+						[2689.25618, 96.560295],
+						[2689.25618, 615.719984],
+						[2297.886567, 615.719984],
+						[2297.886567, 96.560295]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379BC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"EntityHandle": "379BC"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[2324.880485, 635.947902],
+						[2432.840333, 635.947902],
+						[2432.840333, 662.916576],
+						[2324.880485, 662.916576],
+						[2324.880485, 635.947902]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379F9",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"Linetype": "ACAD_ISO12W100",
+				"EntityHandle": "379F9"
+			},
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [
+					[
+						[0.0, 0.0],
+						[2779.241744, -0.0],
+						[2779.241744, 380.0],
+						[0.0, 380.0],
+						[0.0, 0.0]
+					]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379FA",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"Linetype": "ACAD_ISO12W100",
+				"EntityHandle": "379FA"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1389.620872, 20.0],
+					[1389.620872, 380.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379FB",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"Linetype": "ACAD_ISO12W100",
+				"EntityHandle": "379FB"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[0.0, 20.0],
+					[1389.620872, 20.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"id": "379FC",
+			"properties": {
+				"SubClasses": "AcDbEntity : AcDbLwPolyline",
+				"Layer": "0",
+				"Color": 0,
+				"Linetype": "ACAD_ISO12W100",
+				"EntityHandle": "379FC"
+			},
+			"geometry": {
+				"type": "LineString",
+				"coordinates": [
+					[1389.620872, 20.0],
+					[2779.241744, 20.0]
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": null,
+			"geometry": null
+		}
+	],
+	"geocoding": {
+		"creation_date": "2023-06-06",
+		"generator": {
+			"author": {
+				"name": "dwgread"
+			},
+			"package": "LibreDWG",
+			"version": "c3ccd222"
+		}
+	}
+}

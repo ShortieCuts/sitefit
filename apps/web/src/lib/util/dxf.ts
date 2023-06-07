@@ -26,9 +26,12 @@ import {
 	Text,
 	Transform,
 	type Object2D,
-	type RelativeCoordinate
+	type RelativeCoordinate,
+	ObjectType
 } from 'core';
 import colorsMapperReal from 'autocad-colors-index';
+import { hexColorToArray } from './color';
+import type { TypeOf } from 'zod';
 let colorsMapper = {
 	getByACI(aci: number) {
 		let out = colorsMapperReal.getByACI(aci);
@@ -46,7 +49,389 @@ function parseHexColor(hex: string): [number, number, number, number] {
 	return [r / 255, g / 255, b / 255, 255 / 255];
 }
 
+function translateJSON(json: any): Object2D[] {
+	let objects: Object2D[] = [];
+
+	let unitMap = {
+		unitless: 0,
+		inches: 1,
+		feet: 2,
+		miles: 3,
+		millimeters: 4,
+		centimeters: 5,
+		meters: 6,
+		kilometers: 7,
+		microinches: 8,
+		mils: 9,
+		yards: 1,
+		angstroms: 1,
+		nanometers: 1,
+		microns: 1,
+		decimeters: 1,
+		decameters: 1,
+		hectometers: 1,
+		gigameters: 1,
+		'astronomical units': 1,
+		'light years': 1,
+		parsecs: 2
+	};
+	let units: keyof typeof unitMap = json.metadata?.page_dimensions?.model_units ?? 'feet';
+
+	let unitScale: {
+		[key: number]: number;
+	} = {
+		0: 1,
+		1: 0.0254,
+		2: 0.3048,
+		3: 1609.344,
+		4: 0.001,
+		5: 0.01,
+		6: 1,
+		7: 1000,
+		8: 2.54e-8,
+		9: 2.54e-5,
+		10: 0.9144,
+		11: 1e-10,
+		12: 1e-9,
+		13: 1e-6,
+		14: 0.1,
+		15: 10,
+		16: 100,
+		17: 1e9,
+		18: 149597870700,
+		19: 9460730472580800,
+		20: 30856775814671900
+	};
+
+	let unitScaleMeters = unitScale[unitMap[units]];
+	function roundToMillimeters(n: number) {
+		return Math.round(n * 1000) / 1000;
+	}
+	function transformCoord(coord: number[]): RelativeCoordinate {
+		return [
+			roundToMillimeters(coord[0] * unitScaleMeters),
+			roundToMillimeters(coord[1] * unitScaleMeters * -1)
+		];
+	}
+
+	let rootObj = new Group();
+	rootObj.iconKind = 'cad';
+	rootObj.id = 'root';
+
+	objects.push(rootObj);
+	let i = 0;
+	let groups: Map<number, Group> = new Map();
+	function getdbidGroup(dbid: number): Group {
+		if (groups.has(dbid)) return groups.get(dbid)!;
+
+		let group = new Group();
+		let groupInfo = json.props.find((p) => p.dbId == dbid);
+
+		group.id = 'group' + dbid;
+		group.name = groupInfo?.name || 'Group';
+		group.parent = rootObj.id;
+		groups.set(dbid, group);
+		objects.push(group);
+		return group;
+	}
+
+	if (JSON.stringify(json.objects).length > 1024 * 1024 * 1.3) {
+		console.log('merging', json.objects.length, 'objects');
+		// Merge like objects
+		let mergedObjects: Map<string, any> = new Map();
+		let i = 0;
+		for (let frag of json.objects) {
+			let type = frag[0];
+			let dbid = frag[2];
+			let color = frag[2];
+			if (type == 'l') {
+				let key = `${type}-${color}`;
+				if (mergedObjects.has(key)) {
+					let merged = mergedObjects.get(key);
+					merged[3].push(...frag[3]);
+				} else {
+					mergedObjects.set(key, frag);
+				}
+			} else {
+				mergedObjects.set(`${type}-${dbid}-${color}-${i}`, frag);
+			}
+			i++;
+		}
+		json.objects = [];
+		for (let frag of mergedObjects.values()) {
+			json.objects.push(frag);
+		}
+
+		console.log('merged', json.objects.length, 'objects');
+	}
+
+	let lineSize = 1 / 1000; // 1mm
+	let purgeCount = 0;
+
+	while (purgeCount < 100 && JSON.stringify(json.objects).length > 1024 * 1024 * 1.3) {
+		lineSize *= 2;
+		purgeCount++;
+		// Still too big, remove small lines
+		console.log('removing small lines');
+		for (let fragI = json.objects.length - 1; fragI >= 0; fragI--) {
+			let frag = json.objects[fragI];
+			let type = frag[0];
+			let dbid = frag[2];
+			let color = frag[2];
+			if (type == 't') {
+				for (let i = frag[3].length - 1; i >= 0; i--) {
+					let t = frag[3][i];
+
+					let c1 = transformCoord([t[0], t[1]]);
+					let c2 = transformCoord([t[2], t[3]]);
+					let c3 = transformCoord([t[4], t[5]]);
+					let x1 = c1[0];
+					let y1 = c1[1];
+					let x2 = c2[0];
+					let y2 = c2[1];
+					let x3 = c3[0];
+					let y3 = c3[1];
+					let triangleArea = 0.5 * Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
+					if (triangleArea < lineSize) {
+						frag[3].splice(i, 1);
+					}
+				}
+
+				if (frag[3].length == 0) {
+					json.objects.splice(fragI, 1);
+				}
+			} else if (type == 'l') {
+				for (let i = frag[3].length - 1; i >= 0; i--) {
+					let l = frag[3][i];
+					let dist = Math.sqrt((l[0] - l[2]) ** 2 + (l[1] - l[3]) ** 2);
+					if (dist < lineSize) {
+						frag[3].splice(i, 1);
+					}
+				}
+				if (frag[3].length == 0) {
+					json.objects.splice(fragI, 1);
+				}
+			} else if (type == 'a') {
+				if (frag[7] < lineSize) {
+					json.objects.splice(fragI, 1);
+				}
+			}
+		}
+	}
+
+	console.log('final size', JSON.stringify(json.objects).length / 1024 / 1024, 'MB');
+
+	let childCounts = new Map<number, Object2D[]>();
+	for (let frag of json.objects) {
+		let type = frag[0];
+		let dbid = frag[1];
+		let color = frag[2];
+		if (type == 'a') {
+			let arcObj = new Arc();
+			arcObj.transform.position = transformCoord([frag[3], frag[4]]);
+			let startAngle = frag[5];
+			let endAngle = frag[6];
+			let clockwise = true;
+
+			const twoPi = Math.PI * 2;
+			let deltaAngle = endAngle - startAngle;
+			const samePoints = Math.abs(deltaAngle) < Number.EPSILON;
+
+			while (deltaAngle < 0) deltaAngle += twoPi;
+			while (deltaAngle > twoPi) deltaAngle -= twoPi;
+
+			if (deltaAngle < Number.EPSILON) {
+				if (samePoints) {
+					deltaAngle = 0;
+				} else {
+					deltaAngle = twoPi;
+				}
+			}
+
+			if (clockwise === true && !samePoints) {
+				if (deltaAngle === twoPi) {
+					deltaAngle = -twoPi;
+				} else {
+					deltaAngle = deltaAngle - twoPi;
+				}
+			}
+			if (startAngle != 0 || endAngle != twoPi) {
+				console.log('Insert angle', startAngle, endAngle, deltaAngle);
+			}
+			function wrapAngle(a: number) {
+				return Math.atan2(Math.sin(a), Math.cos(a));
+			}
+			arcObj.startAngle = startAngle + Math.PI / 2;
+			arcObj.endAngle = endAngle + Math.PI / 2;
+
+			// This is no longer needed, but I'm keeping the code here in case I need it again
+			// Act like we're swapping the x/y coordinates (i.e. y = x, x = y)
+			// But do it with angles
+
+			// arcObj.startAngle = wrapAngle(Math.PI / 2 - startAngle);
+			// arcObj.endAngle = wrapAngle(Math.PI / 2 - endAngle);
+			// let sa = arcObj.startAngle;
+			// let ea = arcObj.endAngle;
+			// arcObj.startAngle = ea;
+			// arcObj.endAngle = sa;
+
+			arcObj.radius = frag[7] * unitScaleMeters;
+			if (arcObj.radius < 0.001) {
+				continue;
+			}
+			arcObj.style = new Material();
+			arcObj.style.color = hexColorToArray(`#${color}`);
+			arcObj.id = 'arc' + i;
+
+			arcObj.name = 'A';
+
+			arcObj.parent = getdbidGroup(dbid).id;
+			let arr = childCounts.get(dbid);
+			if (!arr) {
+				arr = [];
+			}
+			arr.push(arcObj);
+
+			childCounts.set(dbid, arr);
+			objects.push(arcObj);
+		} else if (type == 'l') {
+			let path = new Path();
+			path.segments = [];
+			for (let l of frag[3]) {
+				let dx = l[2] - l[0];
+				let dy = l[3] - l[1];
+				let dist = Math.sqrt(dx * dx + dy * dy);
+				if (dist < 0.1) {
+					// Probably hatch texture
+					console.log('hatch');
+					if (Math.random() < 0.4) {
+						let angle = Math.random() * Math.PI * 2;
+						dx = Math.cos(angle) * dist;
+						dy = Math.sin(angle) * dist;
+						path.segments.push(transformCoord([l[0], l[1]] as RelativeCoordinate));
+						path.segments.push(
+							transformCoord([l[0] + dx * 140, l[1] + dy * 140] as RelativeCoordinate)
+						);
+					}
+				} else {
+					path.segments.push(transformCoord([l[0], l[1]] as RelativeCoordinate));
+					path.segments.push(transformCoord([l[2], l[3]] as RelativeCoordinate));
+				}
+			}
+			path.style = new Material();
+			path.style.color = hexColorToArray(`#${color.replace('-', '')}`);
+			path.id = 'path' + i;
+			path.disconnected = true;
+
+			path.parent = getdbidGroup(dbid).id;
+			let arr = childCounts.get(dbid);
+			if (!arr) {
+				arr = [];
+			}
+			arr.push(path);
+
+			childCounts.set(dbid, arr);
+			path.name = 'P';
+			objects.push(path);
+		} else if (type == 't') {
+			let path = new Path();
+			path.segments = [];
+			for (let l of frag[3]) {
+				path.segments.push(transformCoord([l[0], l[1]] as RelativeCoordinate));
+				path.segments.push(transformCoord([l[2], l[3]] as RelativeCoordinate));
+				path.segments.push(transformCoord([l[4], l[5]] as RelativeCoordinate));
+			}
+			path.style = new Material();
+			path.style.color = hexColorToArray(`#${color.replace('-', '')}`);
+			path.id = 'tri' + i;
+			path.disconnected = true;
+			path.style.filled = true;
+
+			path.parent = getdbidGroup(dbid).id;
+			let arr = childCounts.get(dbid);
+			if (!arr) {
+				arr = [];
+			}
+			arr.push(path);
+
+			childCounts.set(dbid, arr);
+			path.name = 'T';
+			objects.push(path);
+		}
+
+		// for (let [dbid, count] of childCounts.entries()) {
+		// 	if (count == 1) {
+		// 		// Remove group and keep child
+		// 		let group = getdbidGroup(dbid);
+		// 		let child = objects.find((o) => o.parent == group.id);
+		// 		if (child) {
+		// 			child.parent = group.parent;
+		// 		}
+		// 		objects = objects.filter((o) => o.id != group.id);
+		// 	}
+		// }
+
+		for (let i = objects.length - 1; i >= 0; i--) {
+			let obj = objects[i];
+			if (obj.type == ObjectType.Group) {
+				if (obj.id.startsWith('group')) {
+					let dbid = parseInt(obj.id.substr(5));
+					if (childCounts.has(dbid) && childCounts.get(dbid)!.length <= 1) {
+						objects.splice(i, 1);
+
+						let children = childCounts.get(dbid)!;
+						for (let child of children) {
+							child.parent = obj.parent;
+							child.name = obj.name;
+						}
+					}
+				}
+			}
+		}
+
+		i++;
+		// let path = new Path();
+		// path.segments = [];
+		// for (let l of frag.lines) {
+		// 	path.segments.push([l[0], l[1]] as RelativeCoordinate);
+		// 	path.segments.push([l[2], l[3]] as RelativeCoordinate);
+		// }
+		// path.style = new Material();
+		// path.style.color = [1, 1, 1, 1];
+		// path.id = 'path' + i;
+		// path.disconnected = true;
+		// i++;
+		// path.parent = rootObj.id;
+		// objects.push(path);
+
+		// for (let arc of frag.arcs) {
+		// 	let arcObj = new Arc();
+		// 	arcObj.transform.position = [arc[0], arc[1]];
+		// 	arcObj.startAngle = arc[2];
+		// 	arcObj.endAngle = arc[3];
+		// 	arcObj.radius = arc[4];
+		// 	arcObj.style = new Material();
+		// 	arcObj.style.color = [1, 1, 1, 1];
+		// 	arcObj.id = 'arc' + i;
+
+		// 	i++;
+		// 	arcObj.parent = rootObj.id;
+		// 	objects.push(arcObj);
+	}
+
+	return objects;
+}
+
 export function translateDXF(rawDXF: string): Object2D[] | null {
+	if (rawDXF.startsWith('{')) {
+		try {
+			let json = JSON.parse(rawDXF);
+			return translateJSON(json);
+		} catch (e) {
+			console.error(e);
+			return null;
+		}
+	}
 	const parser = new DxfParser();
 
 	try {
@@ -287,9 +672,9 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 			let z2 = z;
 
 			if (viewDirection.x === 0 && viewDirection.y === 0 && viewDirection.z === 1) {
-				x = y2;
+				x = x2;
 				y = 0;
-				z = x2;
+				z = y2;
 			} else if (viewDirection.x === 0 && viewDirection.y === 0 && viewDirection.z === -1) {
 				x = x2;
 				y = y2;
@@ -506,9 +891,16 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 						for (let obj of childObjects) {
 							obj.parent = willBeId;
 							obj.transform.rotation = obj.transform.rotation + group.transform.rotation;
+							let deg2rad = Math.PI / 180;
 							let rotationMatrix = [
-								[Math.cos(obj.transform.rotation), -Math.sin(obj.transform.rotation)],
-								[Math.sin(obj.transform.rotation), Math.cos(obj.transform.rotation)]
+								[
+									Math.cos(obj.transform.rotation * deg2rad),
+									-Math.sin(obj.transform.rotation * deg2rad)
+								],
+								[
+									Math.sin(obj.transform.rotation * deg2rad),
+									Math.cos(obj.transform.rotation * deg2rad)
+								]
 							];
 							function applyRotation(p: [number, number]) {
 								return [

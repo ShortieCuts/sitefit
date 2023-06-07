@@ -195,6 +195,14 @@
 				}
 
 				setTo = num;
+			} else if (prop.type == 'angle') {
+				let num = parseFloat((e.target as HTMLInputElement).value);
+				if (isNaN(num)) {
+					recalculateProperties();
+					return;
+				}
+
+				setTo = deg2rad(num);
 			} else if (prop.type == 'string') {
 				setTo = (e.target as HTMLInputElement).value;
 			}
@@ -447,6 +455,14 @@
 								class="w-full px-1"
 								type="number"
 								bind:value={propertiesDisplay.props[prop.name]}
+								on:change={doPropChange(prop)}
+							/>
+						{:else if prop.type == 'angle'}
+							<input
+								class="w-full px-1"
+								step="1"
+								type="number"
+								value={rad2deg(propertiesDisplay.props[prop.name])}
 								on:change={doPropChange(prop)}
 							/>
 						{:else if prop.type == 'geo'}

@@ -55,6 +55,10 @@
 				return;
 			}
 
+			for (let obj of objects) {
+				if (obj.style) obj.style.color = [1, 1, 1, 1];
+			}
+
 			let bounds = computeBoundsMulti(objects);
 			let width = bounds.maxX - bounds.minX;
 			let height = bounds.maxY - bounds.minY;
@@ -65,8 +69,8 @@
 
 			camera.lookAt(0, 0, 0);
 
-			camera.position.z = height / 2;
-			camera.position.x = width / 2;
+			camera.position.z = (bounds.minY + bounds.maxY) / 2;
+			camera.position.x = (bounds.minX + bounds.maxX) / 2;
 
 			let rect = wrapperEl.getBoundingClientRect();
 			let aspectRatio = rect.width / rect.height;

@@ -62,7 +62,20 @@ class RenderPath implements RenderObject2D {
 
 	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Path) {
 		let geo = new THREE.BufferGeometry();
-		geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(20 * 3), 3));
+		let elements = 20;
+
+		if (obj.segments.length > 20) {
+			elements = obj.segments.length;
+		}
+
+		geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(elements * 3), 3));
+
+		let indices = [];
+		for (let i = 0; i < elements; i++) {
+			indices.push(i);
+		}
+
+		geo.setIndex(indices);
 
 		geo.setDrawRange(0, 0);
 
@@ -114,10 +127,17 @@ class RenderPath implements RenderObject2D {
 
 			overlay.appendElement(this.textEl);
 		} else {
-			this.line = new THREE.Line(
-				geo,
-				new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
-			);
+			if (obj.disconnected) {
+				this.line = new THREE.LineSegments(
+					geo,
+					new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+				);
+			} else {
+				this.line = new THREE.Line(
+					geo,
+					new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+				);
+			}
 		}
 
 		this.filled = new THREE.Mesh(
@@ -201,12 +221,21 @@ class RenderPath implements RenderObject2D {
 
 		this.line.geometry.setDrawRange(0, obj.segments.length + (obj.closed ? 1 : 0));
 
+		// let indices = [];
+		// for (let i = 0; i < obj.segments.length; i++) {
+		// 	indices.push(i);
+		// }
+
+		// this.line.geometry.setIndex(indices);
+
 		this.line.geometry.attributes.position.needsUpdate = true;
 
 		this.line.geometry.computeBoundingSphere();
 		this.line.geometry.computeBoundingBox();
 
-		this.line.computeLineDistances();
+		if (obj.measurement) {
+			this.line.computeLineDistances();
+		}
 
 		this.line.position.setX(obj.transform.position[0]);
 		this.line.position.setZ(obj.transform.position[1]);
@@ -216,37 +245,56 @@ class RenderPath implements RenderObject2D {
 		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 
 		if (obj.style && obj.style.filled) {
-			this.line.visible = false;
-			let shape = new THREE.Shape();
+			if (obj.disconnected) {
+				this.line.visible = false;
 
-			shape.moveTo(obj.segments[0][0], obj.segments[0][1]);
+				this.filled.geometry = this.line.geometry;
 
-			for (let i = 1; i < obj.segments.length; i++) {
-				shape.lineTo(obj.segments[i][0], obj.segments[i][1]);
+				this.filled.position.setX(obj.transform.position[0]);
+				if (obj.measurement) {
+					this.filled.position.setY(0.01);
+					this.line.visible = true;
+					mat2.opacity = 0.1;
+					mat2.transparent = true;
+				}
+				this.filled.position.setZ(obj.transform.position[1]);
+				this.filled.scale.setX(obj.transform.size[0]);
+				this.filled.scale.setZ(obj.transform.size[1]);
+
+				this.filled.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
+			} else {
+				this.line.visible = false;
+				let shape = new THREE.Shape();
+
+				shape.moveTo(obj.segments[0][0], obj.segments[0][1]);
+
+				for (let i = 1; i < obj.segments.length; i++) {
+					shape.lineTo(obj.segments[i][0], obj.segments[i][1]);
+				}
+
+				if (obj.closed) {
+					shape.lineTo(obj.segments[0][0], obj.segments[0][1]);
+				}
+
+				this.filled.geometry.dispose();
+
+				let geo = new THREE.ShapeGeometry(shape);
+				geo.rotateX(Math.PI * 0.5);
+				this.filled.geometry = geo;
+
+				this.filled.position.setX(obj.transform.position[0]);
+				if (obj.measurement) {
+					this.filled.position.setY(0.01);
+					this.line.visible = true;
+					mat2.opacity = 0.1;
+					mat2.transparent = true;
+				}
+				this.filled.position.setZ(obj.transform.position[1]);
+				this.filled.scale.setX(obj.transform.size[0]);
+				this.filled.scale.setZ(obj.transform.size[1]);
+
+				this.filled.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 			}
-
-			if (obj.closed) {
-				shape.lineTo(obj.segments[0][0], obj.segments[0][1]);
-			}
-
-			this.filled.geometry.dispose();
-
-			let geo = new THREE.ShapeGeometry(shape);
-			geo.rotateX(Math.PI * 0.5);
-			this.filled.geometry = geo;
-
-			this.filled.position.setX(obj.transform.position[0]);
-			if (obj.measurement) {
-				this.filled.position.setY(0.01);
-				this.line.visible = true;
-				mat2.opacity = 0.1;
-				mat2.transparent = true;
-			}
-			this.filled.position.setZ(obj.transform.position[1]);
-			this.filled.scale.setX(obj.transform.size[0]);
-			this.filled.scale.setZ(obj.transform.size[1]);
-
-			this.filled.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 		}
 
 		if (this.textEl) {
