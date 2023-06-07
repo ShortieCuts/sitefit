@@ -1126,6 +1126,9 @@ export class EditorContext {
 	}
 
 	activateDialog(key: string) {
+		if (get(isMobile)) {
+			history.pushState('popover', '', location.pathname);
+		}
 		this.stagingComment.set(null);
 		if (get(isMobile) && key != '') {
 			this.deselectAll();
@@ -1198,6 +1201,18 @@ export class EditorContext {
 			map.panTo({ lat: lat, lng: lon });
 		} else {
 			map.setCenter({ lat: lat, lng: lon });
+		}
+	}
+
+	flyHome() {
+		let obj = this.broker.project.objects.find((c) => {
+			if (!c.parent && c.type != ObjectType.Cornerstone) {
+				return true;
+			}
+		});
+
+		if (obj) {
+			this.flyToObject(obj.id);
 		}
 	}
 

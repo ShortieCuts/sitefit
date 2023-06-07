@@ -18,7 +18,7 @@
 	import { getDraggable } from 'src/store/draggable';
 	import { faTextHeight } from '@fortawesome/free-solid-svg-icons';
 	import { translateDXF } from '$lib/util/dxf';
-	import type { Object2D } from 'core';
+	import { ObjectType, type Object2D } from 'core';
 	import { SuperZoomLayer } from '$lib/map/super-zoom-layer';
 	import { ZoomRangeModifierService } from '$lib/map/zoom-range-modifier-service';
 	import { SuperZoomMapType } from '$lib/map/super-zoom-map-type';
@@ -209,6 +209,8 @@
 					maxZoom: MAX_ZOOM,
 					minZoom: MIN_ZOOM
 				});
+
+				flyToLatestCad();
 
 				// map.mapTypes.set(
 				// 	'test',
@@ -607,19 +609,15 @@
 		}
 	});
 
+	function flyToLatestCad() {
+		editor.flyHome();
+	}
+
 	broker.synced.subscribe((newVal) => {
 		if (map) {
 			if (newVal) {
 				// Zoom to latest cad
-				let obj = broker.project.objects.find((c) => {
-					if (!c.parent) {
-						return true;
-					}
-				});
-
-				if (obj) {
-					editor.flyToObject(obj.id);
-				}
+				flyToLatestCad();
 			}
 		}
 	});

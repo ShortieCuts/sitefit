@@ -6,6 +6,7 @@ import EditorDialogProjects from './EditorDialogProjects.svelte';
 import EditorDialogShare from './EditorDialogShare.svelte';
 import EditorDialogStyle from './EditorDialogStyle.svelte';
 import EditorDialogTools from './EditorDialogTools.svelte';
+import EditorDialogSearch from './EditorDialogSearch.svelte';
 
 export const dialogs: {
 	[key: string]: {
@@ -43,5 +44,9 @@ export const dialogs: {
 	style: {
 		dock: 'left',
 		component: EditorDialogStyle
+	},
+	search: {
+		dock: 'left',
+		component: EditorDialogSearch
 	}
 };

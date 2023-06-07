@@ -424,7 +424,7 @@
 					<span
 						class="font-bold rounded border border-gray-300 bg-gray-200 text-gray-600 px-2 shadow-sm mx-2"
 					>
-						RIGHT CLICK
+						ENTER
 					</span>
 					to Save
 				</div>

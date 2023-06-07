@@ -36,7 +36,25 @@
 			}
 		});
 	}
+
+	$: isHome = !editor;
+
+	function handleBack(e: PopStateEvent) {
+		if ($activeDialog !== '') {
+			editor.activateDialog('');
+		} else if (mode == 'insert') {
+			mode = '';
+		} else if (mode == 'insertUpload') {
+			mode = '';
+		} else {
+			return;
+		}
+		e.preventDefault();
+		e.stopPropagation();
+	}
 </script>
+
+<svelte:window on:popstate={handleBack} />
 
 {#if $isMobile && $mobileToolMode == ''}
 	<div
@@ -50,21 +68,28 @@
 				on:click={() => {
 					window.location.href = '/';
 				}}
+				class:text-blue-500={isHome}
 			>
 				<Fa icon={faHome} />
 			</button>
-			<button
-				class:text-blue-500={$activeDialog == ''}
-				class="flex flex-1 justify-center items-center w-16 text-xl"
-				on:click={() => {
-					editor.activateDialog('');
-				}}
-			>
-				<Fa icon={faEarth} />
-			</button>
-			<button class="flex flex-1 justify-center items-center w-16 text-xl" on:click={() => {}}>
-				<Fa icon={faCog} />
-			</button>
+			{#if !isHome}
+				<button
+					class:text-blue-500={$activeDialog == ''}
+					class="flex flex-1 justify-center items-center w-16 text-xl"
+					on:click={() => {
+						if (get(editor.activeDialog) == '') {
+							editor.flyHome();
+						} else {
+							editor.activateDialog('');
+						}
+					}}
+				>
+					<Fa icon={faEarth} />
+				</button>
+				<button class="flex flex-1 justify-center items-center w-16 text-xl" on:click={() => {}}>
+					<Fa icon={faCog} />
+				</button>
+			{/if}
 			<button
 				class="flex flex-1 justify-center items-center w-16 text-xl"
 				class:text-blue-500={$activeDialog == 'cads'}

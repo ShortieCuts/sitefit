@@ -123,6 +123,8 @@
 		realLatitude = $latitude;
 		realLongitude = $longitude;
 
+		$activeTool = 'select';
+
 		if ($mobileToolMode === 'transform') {
 			doTransform();
 		}
