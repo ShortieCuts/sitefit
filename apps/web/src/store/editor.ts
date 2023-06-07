@@ -50,7 +50,7 @@ import type { MetadataProject } from '$lib/types/project';
 import { isMobile } from './responsive';
 import type { ProjectComment, ProjectCommentReply } from '$lib/types/comment';
 
-const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
+export const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
 export type ProjectAccessLevel = 'READ' | 'WRITE' | 'COMMENT';
 

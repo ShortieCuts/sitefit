@@ -3,6 +3,7 @@
 		faCaretDown,
 		faCaretRight,
 		faCheck,
+		faCopy,
 		faDrawPolygon,
 		faExternalLink,
 		faFolder,
@@ -27,6 +28,7 @@
 	import ContextMenu from '../editor/common/ContextMenu.svelte';
 	import EditableLabel from '../editor/common/EditableLabel.svelte';
 	import {
+		copyProject,
 		createProject,
 		createProjectFolder,
 		getProjects,
@@ -70,6 +72,20 @@
 	function toggle() {
 		$toggleState.set(node.id, !($toggleState.get(node.id) ?? false));
 		$toggleState = $toggleState;
+	}
+
+	async function duplicateProject(id: string) {
+		let res = await copyProject(id, {
+			name: node.name + ' (Copy)'
+		});
+		if (res.data) {
+			await refreshData();
+			setTimeout(() => {
+				newEditId.set(res.data.id.toString());
+			}, 10);
+		} else {
+			editor?.alert('Error duplicating project');
+		}
 	}
 
 	let nodeElement: HTMLElement;
@@ -273,6 +289,12 @@
 						location.href = `/project/${node.id}`;
 					}}><Fa icon={faExternalLink} /> Open project</button
 				>
+				<button
+					class="flex flex-row items-center justify-start py-2 px-4"
+					on:click={() => {
+						duplicateProject(node.id);
+					}}><Fa class="" icon={faCopy} />Duplicate</button
+				>
 			{/if}
 			<button
 				on:click={(e) => {
@@ -316,6 +338,12 @@
 							on:click={() => {
 								location.href = `/project/${node.id}`;
 							}}><Fa class="pr-4" icon={faExternalLink} /> Open project</button
+						>
+						<button
+							class="flex flex-row items-center justify-start py-2 px-4"
+							on:click={() => {
+								duplicateProject(node.id);
+							}}><Fa class="pr-4" icon={faCopy} /> Duplicate</button
 						>
 						<button
 							class="flex flex-row items-center justify-start py-2 px-4"

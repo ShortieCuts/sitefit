@@ -31,28 +31,47 @@ export default Default;
 
 async function handleRequest(request: Request, env: Env) {
   let url = new URL(request.url);
-  console.log("URL 2", url);
 
   let paths = url.pathname.split("/");
-  console.log("paths", paths);
+  if (paths[1] == "copy") {
+    // This secret should be set in the environment
+    if (request.headers.get("x-auth") != "Fshegstds2$@!@%!Q-fshsges") {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    let id = env.ENGINE_INSTANCE.idFromName(paths[2]);
+    let id2 = env.ENGINE_INSTANCE.idFromName(paths[3]);
+    let source = await env.PROJECTS.get(id.toString());
+    if (!source) {
+      return new Response("Source project not found", { status: 404 });
+    }
+    let rawText = await source.text();
+    let dest = await env.PROJECTS.get(id2.toString());
+    if (dest) {
+      return new Response("Destination project already exists", {
+        status: 409,
+      });
+    }
+
+    await env.PROJECTS.put(id2.toString(), rawText);
+
+    return new Response("OK");
+  }
+
   let id = env.ENGINE_INSTANCE.idFromName(paths[1]);
-  console.log("id", id);
 
   let obj = env.ENGINE_INSTANCE.get(id);
-  console.log("obj 3", obj);
 
   try {
-    console.log("Doing the await");
-
     let awaited = await obj.fetch(request);
-    console.log("objResp awaited", awaited);
+
     return awaited;
   } catch (e) {
     console.error("Error from engine request handler:", e);
     console.error(e.stack);
   }
 
-  return new Response("Hello world from engine!");
+  return new Response("Unhandled request");
 }
 
 // Durable Object

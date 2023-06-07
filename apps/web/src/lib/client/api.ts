@@ -231,6 +231,15 @@ export const getComments = createIdApiEndpointHelper<
 	}
 >('POST', '/api/project/<id>/comments');
 
+export const copyProject = createIdApiEndpointHelper<
+	{
+		name: string;
+	},
+	{
+		id: string;
+	}
+>('POST', '/api/project/<id>/copy');
+
 export const getProjectMetadata = createIdApiEndpointHelper<{}, MetadataProject>(
 	'POST',
 	'/api/project/<id>/metadata'
