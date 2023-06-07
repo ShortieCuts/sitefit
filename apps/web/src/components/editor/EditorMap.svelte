@@ -16,12 +16,13 @@
 	import { GuidesOverlay } from './overlays/Guides';
 	import { calculateGuides } from './tools/select';
 	import { getDraggable } from 'src/store/draggable';
-	import { faTextHeight } from '@fortawesome/free-solid-svg-icons';
+	import { faCompactDisc, faCompass, faTextHeight } from '@fortawesome/free-solid-svg-icons';
 	import { translateDXF } from '$lib/util/dxf';
 	import { ObjectType, type Object2D } from 'core';
 	import { SuperZoomLayer } from '$lib/map/super-zoom-layer';
 	import { ZoomRangeModifierService } from '$lib/map/zoom-range-modifier-service';
 	import { SuperZoomMapType } from '$lib/map/super-zoom-map-type';
+	import Fa from 'svelte-fa';
 	const MIN_ZOOM = 1;
 	const MAX_ZOOM = 45;
 
@@ -141,6 +142,9 @@
 			map.setMapTypeId(getMapTypeId());
 		}
 	}
+
+	let mapRotationNonZero = writable(false);
+	let mapRotation = writable(0);
 
 	// $: {
 	// 	$heading;
@@ -487,14 +491,22 @@
 
 					let bounds = map.getBounds();
 
-					if (!bounds) return;
+					if (!bounds) {
+						console.log('no bounds');
+						return;
+					}
 
 					let ne = bounds.getNorthEast();
 					let sw = bounds.getSouthWest();
 					console.log('bounds', ne.lat(), sw.lat());
 
 					let scale = Math.abs(ne.lat() - sw.lat()) * 800;
-					if (isNaN(scale)) return;
+
+					if (isNaN(scale)) {
+						console.log('scale is NaN');
+						return;
+					}
+					console.log('scale', scale);
 					editor.screenScale.set(scale);
 				}
 
@@ -556,6 +568,18 @@
 					if (isNaN(bounds.minX) || isNaN(bounds.minY) || isNaN(bounds.maxX) || isNaN(bounds.maxY))
 						return;
 					editor.viewBounds.set(bounds);
+
+					if (map.getTilt() != 0) {
+						mapRotationNonZero.set(true);
+					} else {
+						if (map.getHeading() != 0) {
+							mapRotationNonZero.set(true);
+						} else {
+							mapRotationNonZero.set(false);
+						}
+					}
+
+					mapRotation.set(map.getHeading() ?? 0);
 				});
 
 				setTimeout(() => {
@@ -806,10 +830,15 @@
 	});
 
 	onDestroy(() => {
+		console.log('Map destroy');
+		for (let overlay of overlays) {
+			overlay.destroy();
+		}
 		if (observer) {
 			observer.disconnect();
 			observer = null;
 		}
+		map?.unbindAll();
 	});
 
 	let insideMap = false;
@@ -882,6 +911,18 @@
 	on:mouseleave={handleMouseLeave}
 />
 
+{#if $mapRotationNonZero && !$isMobile}
+	<button
+		class="absolute top-4 right-4 text-2xl text-white rounded-full shadow-lg shadow-black"
+		style="transform: rotate(-{$mapRotation + 45}deg)"
+		on:click={() => {
+			map?.setTilt(0);
+			map?.setHeading(0);
+		}}
+	>
+		<Fa icon={faCompass} />
+	</button>
+{/if}
 <div
 	bind:this={svelteOverlaysEl}
 	class="map-container-svelte-overlays absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden"

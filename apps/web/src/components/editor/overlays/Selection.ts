@@ -266,6 +266,12 @@ export class SelectionOverlay extends Overlay {
 				}
 			})
 		);
+		this.addUnsub(
+			this.editor.screenScale.subscribe((newVal) => {
+				this.selectionBox?.updateSize();
+			})
+		);
+
 		let remove = this.map.addListener('zoom_changed', () => {
 			this.selectionBox?.updateSize();
 		}).remove;

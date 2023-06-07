@@ -352,9 +352,11 @@
 				class="editor-bar-center flex-1 justify-center flex-row items-center px-2 hidden md:flex"
 			>
 				<RichSearch />
-				<button class="btn btn-icon-only w-10 h-10 flex items-center pr-0 text-xl ml-3 shadow-style"
-					><Icon icon="arrow" /></button
-				>
+				<!-- <button class="btn btn-icon-only w-10 h-10 flex items-center pr-0 text-xl ml-3 shadow-style"
+					>
+					<Icon icon="arrow" />
+					</button
+				> -->
 			</div>
 			<div
 				class="editor-bar-center flex-1 justify-end flex flex-row items-center my-auto space-x-4 h-8 pr-4"
