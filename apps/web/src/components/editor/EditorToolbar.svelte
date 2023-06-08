@@ -103,7 +103,7 @@
 			}
 		}
 
-		if (event.key === 'Enter') {
+		if (event.key === 'Enter' || event.key === ' ') {
 			if (editor.currentToolHandlers) {
 				editor.currentToolHandlers.commit(editor, broker);
 			}
