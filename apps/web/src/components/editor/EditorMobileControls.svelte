@@ -18,6 +18,7 @@
 	import { type ObjectID, type Object2D, makeObject } from 'core';
 	import Flatten from '@flatten-js/core';
 	import MobileCrosshair from './common/MobileCrosshair.svelte';
+	import { onMount } from 'svelte';
 
 	const { editor, broker } = getSvelteContext();
 	const { effectiveSelection, latitude, longitude } = editor;
@@ -123,12 +124,14 @@
 		realLatitude = $latitude;
 		realLongitude = $longitude;
 
-		$activeTool = 'select';
-
 		if ($mobileToolMode === 'transform') {
 			doTransform();
 		}
 	}
+
+	onMount(() => {
+		$activeTool = 'select';
+	});
 </script>
 
 {#if canWrite}
