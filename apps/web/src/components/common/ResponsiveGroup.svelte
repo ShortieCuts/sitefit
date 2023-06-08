@@ -51,63 +51,63 @@
 {:else}
 	{#if slotCount >= 1}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[0]}</div>
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 		</div>
 		<slot name="group-0" />
 	{/if}
 
 	{#if slotCount >= 2}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[1]}</div>
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 		</div>
 		<slot name="group-1" />
 	{/if}
 
 	{#if slotCount >= 3}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[2]}</div>
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 		</div>
 		<slot name="group-2" />
 	{/if}
 
 	{#if slotCount >= 4}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[3]}</div>
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 		</div>
 		<slot name="group-3" />
 	{/if}
 
 	{#if slotCount >= 5}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[4]}</div>
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 		</div>
 		<slot name="group-4" />
 	{/if}
 
 	{#if slotCount >= 6}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[5]}</div>
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 		</div>
 		<slot name="group-5" />
 	{/if}
 
 	{#if slotCount >= 7}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[6]}</div>
-			<div class="bg-gray-200 h-1 flex-1" />
+			<div class="bg-gray-200 h-[2px] flex-1" />
 		</div>
 		<slot name="group-6" />
 	{/if}

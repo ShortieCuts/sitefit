@@ -83,6 +83,13 @@ const Parking = makeSmartObject({
 				name: 'distance',
 				type: 'number'
 			}
+		},
+		direction: {
+			default: 1,
+			type: {
+				name: 'direction',
+				type: 'number'
+			}
 		}
 	},
 	render(path: Path, props) {
@@ -91,6 +98,7 @@ const Parking = makeSmartObject({
 		let spacing = props.spacing;
 		let angle = props.angle;
 		let distance = props.distance;
+		let direction = props.direction ?? 1;
 
 		let x = 0;
 		let y = 0;
@@ -105,8 +113,8 @@ const Parking = makeSmartObject({
 			obj.id = `${path.id}-parking-${i}`;
 			obj.name = `Parking Line ${i}`;
 			let normalAngle = Math.atan2(tangent[1], tangent[0]);
-			let dx = Math.cos(normalAngle + angle * DEG2RAD) * distance;
-			let dy = Math.sin(normalAngle + angle * DEG2RAD) * distance;
+			let dx = Math.cos(normalAngle + angle * DEG2RAD) * distance * direction;
+			let dy = Math.sin(normalAngle + angle * DEG2RAD) * distance * direction;
 			obj.segments = [matrix.transform([x, y]), matrix.transform([x + dx, y + dy])];
 
 			obj.style = new Material();

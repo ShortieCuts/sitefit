@@ -608,8 +608,10 @@ class RenderText implements RenderObject2D {
 
 			this.el.addEventListener('keydown', (e) => {
 				if (e.key == 'Enter' && !e.shiftKey) {
+					e.preventDefault();
 					overlay.editor.editingObject.set(null);
 					saveText();
+					this.setEditing(false);
 				}
 			});
 		}
@@ -658,6 +660,7 @@ class RenderText implements RenderObject2D {
 			this.el.style.zIndex = '1000';
 			this.el.select();
 		} else {
+			this.el.blur();
 			this.el.removeAttribute('contenteditable');
 			this.el.style.pointerEvents = 'none';
 			this.el.style.cursor = 'default';

@@ -44,7 +44,7 @@
 		<slot />
 	</div>
 {:else}
-	<div class="pt-2">
+	<div class="pt-2 overflow-auto h-full">
 		<slot />
 	</div>
 {/if}

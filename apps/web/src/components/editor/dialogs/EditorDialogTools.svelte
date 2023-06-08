@@ -17,6 +17,8 @@
 	import { onMount } from 'svelte';
 	import Page from 'src/routes/+page.svelte';
 	import { hexColorToArray } from '$lib/util/color';
+	import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+	import Fa from 'svelte-fa';
 
 	const { broker, editor } = getSvelteContext();
 
@@ -242,14 +244,29 @@
 		editor.activeTool.set('smart');
 		editor.activateDialog('');
 		editor.activeToolSmartObject.set('parking');
+
 		editor.activeToolSmartObjectProperties.set({
-			angle: degrees
+			angle: degrees > 0 ? 180 - degrees : Math.abs(degrees),
+			direction: Math.sign(degrees),
+			spacing: Math.abs(degrees) == 30 ? 4 : 2.59
 		});
 	}
 </script>
 
 <DialogSlideUp>
-	<ResponsiveGroup groups={['Shape', 'Pre-Made Object', 'Smart Objects']}>
+	<div class="px-4 py-2">
+		<button
+			class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+			on:click={() => {
+				editor.activeTool.set('text');
+				editor.activateDialog('');
+			}}
+		>
+			<img src="/img/text.png" class="max-w-[32px]" alt="Distance ft" />
+			<div class="ml-4">Insert text box</div>
+		</button>
+	</div>
+	<ResponsiveGroup groups={['Shapes', 'Pre-Made Objects', 'Smart Objects']}>
 		<div
 			slot="group-0"
 			class="flex flex-row items-center justify-center select-none flex-wrap py-4"
@@ -265,8 +282,8 @@
 				</button>
 			{/each}
 		</div>
-		<div slot="group-1" class="grid grid-cols-2 p-2 py-4">
-			{#each stamps as stamp}
+		<div slot="group-1" class="flex items-center flex-col space-y-2 p-4">
+			<!-- {#each stamps as stamp}
 				<button
 					class="flex flex-col items-center justify-center p-2 hover:bg-gray-100 rounded-md cursor-pointer"
 					on:click={() => insertStamp(stamp)}
@@ -278,38 +295,69 @@
 						{stamp.name}
 					</div>
 				</button>
-			{/each}
-		</div>
-
-		<div slot="group-2" class="flex flex-col space-y-2 p-4">
+			{/each} -->
 			<div class="text-lg">Parking</div>
-			<div class="flex flex-row space-x-4">
+			<div class="flex flex-row flex-wrap justify-center">
 				<button
-					class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
 					on:click={() => {
 						smartParking(90);
 					}}
 				>
-					<div class="">90°</div>
+					<div class="mb-2 flex flex-row items-center"><Fa icon={faArrowLeft} /> 90°</div>
+					<img class="rounded -scale-100" src="/img/smart-parking-90.svg" alt="90deg" />
 				</button>
 				<button
-					class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					on:click={() => {
+						smartParking(-90);
+					}}
+				>
+					<div class="mb-2 flex flex-row items-center">90° <Fa icon={faArrowRight} /></div>
+					<img class="rounded" src="/img/smart-parking-90.svg" alt="90deg" />
+				</button>
+
+				<button
+					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
 					on:click={() => {
 						smartParking(45);
 					}}
 				>
-					<div class="">45°</div>
+					<div class="mb-2 flex flex-row items-center"><Fa icon={faArrowLeft} /> 45</div>
+					<img class="rounded -scale-x-100" src="/img/smart-parking-45.svg" alt="45deg" />
 				</button>
 				<button
-					class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					on:click={() => {
+						smartParking(-45);
+					}}
+				>
+					<div class="mb-2 flex flex-row items-center">45° <Fa icon={faArrowRight} /></div>
+					<img class="rounded" src="/img/smart-parking-45.svg" alt="45deg" />
+				</button>
+
+				<button
+					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
 					on:click={() => {
 						smartParking(30);
 					}}
 				>
-					<div class="">30°</div>
+					<div class="mb-2 flex flex-row items-center"><Fa icon={faArrowLeft} /> 30</div>
+					<img class="rounded -scale-x-100" src="/img/smart-parking-30.svg" alt="30deg" />
+				</button>
+				<button
+					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					on:click={() => {
+						smartParking(-30);
+					}}
+				>
+					<div class="mb-2 flex flex-row items-center">30° <Fa icon={faArrowRight} /></div>
+					<img class="rounded" src="/img/smart-parking-30.svg" alt="30deg" />
 				</button>
 			</div>
 		</div>
+
+		<div slot="group-2" class="flex flex-col space-y-2 p-4" />
 	</ResponsiveGroup>
 </DialogSlideUp>
 
