@@ -41,6 +41,16 @@ export const POST = (async ({ request, params }) => {
 				throw error(404, 'Project not found');
 			}
 
+			if (user && user.id == project.ownerId) {
+				await db()
+					.updateTable('Project')
+					.set({
+						updatedAt: new Date()
+					})
+					.where('id', '=', project.id)
+					.execute();
+			}
+
 			let grantedAccess = await db()
 				.selectFrom('Access')
 				.where('projectId', '=', project.id)

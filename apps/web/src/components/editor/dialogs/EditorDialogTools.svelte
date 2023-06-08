@@ -15,7 +15,7 @@
 	import createDOMPurify from 'dompurify';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
-	import Page from 'src/routes/+page.svelte';
+
 	import { hexColorToArray } from '$lib/util/color';
 	import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 	import Fa from 'svelte-fa';

@@ -17,13 +17,13 @@ export const POST = (async ({ request }) => {
 			.selectFrom('ProjectFolder')
 			.selectAll()
 			.where('ownerId', '=', user.id)
-			.orderBy('createdAt', 'desc')
+			.orderBy('updatedAt', 'desc')
 			.execute();
 		let cads = await db()
 			.selectFrom('Project')
 			.selectAll()
 			.where('ownerId', '=', user.id)
-			.orderBy('createdAt', 'desc')
+			.orderBy('updatedAt', 'desc')
 			.execute();
 
 		function resolveFolder(parentId?: string): ProjectTreeNode {
