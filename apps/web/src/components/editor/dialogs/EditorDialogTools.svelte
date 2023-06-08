@@ -93,7 +93,7 @@
 		];
 		let viewWidth = viewBounds.maxX - viewBounds.minX;
 		let viewHeight = viewBounds.maxY - viewBounds.minY;
-		let scaleFactor = Math.min(viewWidth / svg.sourceWidth, viewHeight / svg.sourceHeight) / 6;
+		let scaleFactor = Math.min(viewWidth / svg.sourceWidth, viewHeight / svg.sourceHeight) / 64;
 		svg.transform.size[0] = scaleFactor;
 		svg.transform.size[1] = scaleFactor;
 		svg.transform.position[0] = location[0] - (svg.sourceWidth / 2) * scaleFactor;
