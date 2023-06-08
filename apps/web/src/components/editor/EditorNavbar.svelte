@@ -51,9 +51,16 @@
 			user: true
 		},
 		{
-			icon: 'tools',
+			icon: 'insert',
 			key: 'tools',
-			name: 'Tools',
+			name: 'Insert',
+			access: 'WRITE',
+			user: false
+		},
+		{
+			icon: 'tools',
+			key: 'measure',
+			name: 'Measure',
 			access: 'WRITE',
 			user: false
 		},
@@ -91,8 +98,8 @@
 
 		{
 			icon: 'tools',
-			key: 'tools',
-			name: 'Tools',
+			key: 'measure',
+			name: 'Measure',
 			access: 'WRITE',
 			user: false
 		},

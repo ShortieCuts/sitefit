@@ -22,6 +22,7 @@
 	import iconTap_edit from './assets/tap_edit.png?url';
 	import iconTools from './assets/tools.png?url';
 	import iconPalette from './assets/palette.png?url';
+	import iconInsert from './assets/insert.png?url';
 	import type { IconName } from './icon';
 
 	let icons: {
@@ -49,7 +50,8 @@
 		share: iconShare,
 		tap_edit: iconTap_edit,
 		tools: iconTools,
-		palette: iconPalette
+		palette: iconPalette,
+		insert: iconInsert
 	};
 
 	export let icon: IconName = 'world';

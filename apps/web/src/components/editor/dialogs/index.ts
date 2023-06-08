@@ -7,6 +7,7 @@ import EditorDialogShare from './EditorDialogShare.svelte';
 import EditorDialogStyle from './EditorDialogStyle.svelte';
 import EditorDialogTools from './EditorDialogTools.svelte';
 import EditorDialogSearch from './EditorDialogSearch.svelte';
+import EditorDialogMeasure from './EditorDialogMeasure.svelte';
 
 export const dialogs: {
 	[key: string]: {
@@ -48,5 +49,9 @@ export const dialogs: {
 	search: {
 		dock: 'left',
 		component: EditorDialogSearch
+	},
+	measure: {
+		dock: 'left',
+		component: EditorDialogMeasure
 	}
 };

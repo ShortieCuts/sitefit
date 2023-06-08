@@ -249,7 +249,7 @@
 </script>
 
 <DialogSlideUp>
-	<ResponsiveGroup groups={['Insert Shape', 'Insert Pre-Made Object', 'Measure', 'Smart Objects']}>
+	<ResponsiveGroup groups={['Shape', 'Pre-Made Object', 'Smart Objects']}>
 		<div
 			slot="group-0"
 			class="flex flex-row items-center justify-center select-none flex-wrap py-4"
@@ -280,29 +280,8 @@
 				</button>
 			{/each}
 		</div>
-		<div slot="group-2" class="flex flex-row p-4 space-x-4">
-			<button
-				class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
-				on:click={() => {
-					editor.activeTool.set('measurement');
-					editor.activateDialog('');
-				}}
-			>
-				<img src="/img/distance.png" alt="Distance ft" />
-				<div class="ml-2">Distance/Perimeter</div>
-			</button>
-			<button
-				class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
-				on:click={() => {
-					editor.activeTool.set('area');
-					editor.activateDialog('');
-				}}
-			>
-				<img src="/img/area.png" alt="Distance ft" />
-				<div class="ml-2">Area</div>
-			</button>
-		</div>
-		<div slot="group-3" class="flex flex-col space-y-2 p-4">
+
+		<div slot="group-2" class="flex flex-col space-y-2 p-4">
 			<div class="text-lg">Parking</div>
 			<div class="flex flex-row space-x-4">
 				<button

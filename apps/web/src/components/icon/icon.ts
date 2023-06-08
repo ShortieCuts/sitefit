@@ -21,4 +21,5 @@ export type IconName =
 	| 'share'
 	| 'tap_edit'
 	| 'tools'
-	| 'palette';
+	| 'palette'
+	| 'insert';
