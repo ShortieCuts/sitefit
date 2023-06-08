@@ -532,40 +532,42 @@
 							<ObjectEditor />
 						{/if}
 						{#each $rootComments as comment}
-							{#key comment.long + ' ' + comment.lat}
-								<button
-									on:scroll|preventDefault|stopPropagation
-									on:mousewheel|preventDefault|stopPropagation
-									data-longitude={comment.long}
-									data-latitude={comment.lat}
-									class="comment-wrap"
-									class:active={$focusComment == comment.id}
-									on:click={() => {
-										if ($activeDialog !== 'comments') editorContext.activateDialog('comments');
-										setTimeout(() => {
-											let el = document.querySelector(`[data-comment-id="${comment.id}"]`);
-											if (el) {
-												el.scrollIntoView();
-												el.focus();
-											}
-										}, 100);
-									}}
-								>
-									<div class="comment-hover-side" />
-									<div
-										class="comment-bulb absolute rotate-45 w-8 h-8 flex items-center justify-center hover:bg-blue-500 transition-colors pointer-events-auto origin-top-left"
-										class:bg-blue-500={!comment.read}
-										class:bg-white={comment.read}
+							{#if comment.long !== 0 || comment.lat !== 0}
+								{#key comment.long + ' ' + comment.lat}
+									<button
+										on:scroll|preventDefault|stopPropagation
+										on:mousewheel|preventDefault|stopPropagation
+										data-longitude={comment.long}
+										data-latitude={comment.lat}
+										class="comment-wrap"
+										class:active={$focusComment == comment.id}
+										on:click={() => {
+											if ($activeDialog !== 'comments') editorContext.activateDialog('comments');
+											setTimeout(() => {
+												let el = document.querySelector(`[data-comment-id="${comment.id}"]`);
+												if (el) {
+													el.scrollIntoView();
+													el.focus();
+												}
+											}, 100);
+										}}
 									>
-										<div class="comment-chip origin-center -rotate-45 scale-[0.65]">
-											<UserChip userId={comment.authorId} />
+										<div class="comment-hover-side" />
+										<div
+											class="comment-bulb absolute rotate-45 w-8 h-8 flex items-center justify-center hover:bg-blue-500 transition-colors pointer-events-auto origin-top-left"
+											class:bg-blue-500={!comment.read}
+											class:bg-white={comment.read}
+										>
+											<div class="comment-chip origin-center -rotate-45 scale-[0.65]">
+												<UserChip userId={comment.authorId} />
+											</div>
+											<div class="absolute comment-text">
+												{comment.text}
+											</div>
 										</div>
-										<div class="absolute comment-text">
-											{comment.text}
-										</div>
-									</div>
-								</button>
-							{/key}
+									</button>
+								{/key}
+							{/if}
 						{/each}
 					</EditorMap>
 				{/key}

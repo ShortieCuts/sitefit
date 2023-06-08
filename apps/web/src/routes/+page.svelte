@@ -18,7 +18,7 @@
 </script>
 
 <AppLanding auth={data.user}>
-	<div class="flex flex-col pb-20 alternate min-h-[100vh]">
+	<div class="flex flex-col pb-20 alternate min-h-[100vh] relative">
 		{#if browser}
 			<ProjectsView />
 		{/if}

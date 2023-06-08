@@ -2,7 +2,15 @@
 	import type { ProjectComment } from '$lib/types/comment';
 	import UserChip from 'src/components/auth/UserChip.svelte';
 	import ContextMenu from './ContextMenu.svelte';
-	import { faArrowRight, faEllipsis } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faArrowRight,
+		faComment,
+		faEllipsis,
+		faLocation,
+		faLocationPin,
+		faMapLocation,
+		faMapLocationDot
+	} from '@fortawesome/free-solid-svg-icons';
 	import Fa from 'svelte-fa';
 	import { getSvelteContext } from 'src/store/editor';
 	import { WrapLoader } from 'ui';
@@ -25,6 +33,8 @@
 	let reply = '';
 
 	let textareaEl: HTMLTextAreaElement | null = null;
+
+	$: isPinned = comment.long !== 0 && comment.lat !== 0;
 
 	async function handleSave() {
 		if (!textareaEl) {
@@ -61,7 +71,10 @@
 	on:keydown={(e) => {}}
 	on:focus={() => {
 		if (!comment.read) broker.markCommentRead(comment.id);
-		editor.flyTo(comment.long, comment.lat);
+		if (isPinned) {
+			// Is it pinned?
+			editor.flyTo(comment.long, comment.lat);
+		}
 		editor.focusComment.set(comment.id);
 	}}
 	on:blur={() => {
@@ -75,7 +88,8 @@
 		bind:this={commentEl}
 	>
 		<div class="flex flex-row items-center justify-between">
-			<span>
+			<span class="flex flex-row items-center">
+				<Fa class="text-gray-400 text-xs mr-1" icon={isPinned ? faLocationPin : faComment} />
 				<UserChip showName small showPicture={false} userId={comment.authorId} />
 			</span>
 			<button class="text-gray-400 text-sm hidden group-hover:block" data-context>
@@ -119,12 +133,12 @@
 	<div class="p-4">
 		<div class="relative">
 			<input
-				class="input-text"
+				class="input-text shadow-none focus:shadow-none"
 				style="background-color: white; padding-left: 0.5rem"
 				placeholder="Reply"
 				bind:value={reply}
 				on:keydown={(e) => {
-					if (e.key === 'Enter') {
+					if (e.code === 'Enter') {
 						handleReply();
 					}
 				}}

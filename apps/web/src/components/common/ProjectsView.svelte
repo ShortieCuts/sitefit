@@ -52,7 +52,6 @@
 <div
 	class="overflow-y-auto max-h-full h-full flex flex-col flex-shrink-0"
 	class:bg-white={$isMobile}
-	class:p-4={$isMobile}
 	class:pointer-events-auto={$isMobile}
 >
 	<div class="flex flex-row px-6 py-2 space-x-4">
