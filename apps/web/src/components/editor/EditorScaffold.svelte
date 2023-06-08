@@ -64,6 +64,7 @@
 	import ObjectEditor from './common/ObjectEditor.svelte';
 	import ObjectContextButtons from './common/ObjectContextButtons.svelte';
 	import KeyBind from './common/KeyBind.svelte';
+	import { cookieName } from 'src/store/name';
 
 	// export let auth: AuthState;
 	export let projectId: string;
@@ -79,7 +80,8 @@
 	setSvelteContext(broker, editorContext);
 
 	const { name } = broker.metadata;
-	const { syncing, loading, error, broken, connected, rootComments, stagingObject } = broker;
+	const { syncing, loading, error, broken, connected, rootComments, stagingObject, sessionAccess } =
+		broker;
 
 	const { geo, heading } = broker.watchCornerstone();
 
@@ -981,6 +983,42 @@
 					<div class="h-[1000px] border-r-black border-r absolute" />
 				</div>
 				<LocationMap bind:map={locationMap} bind:location />
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if !$cookieName && !$auth.user && ($sessionAccess == 'COMMENT' || $sessionAccess == 'WRITE')}
+	<div
+		transition:fade={{ duration: 100 }}
+		class="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center
+		"
+	>
+		<div
+			on:click|stopPropagation={() => {}}
+			on:keydown={() => {}}
+			transition:fly={{
+				y: 20
+			}}
+			class="dialog-slide bg-white fixed z-30 rounded-lg flex flex-col lg:flex-row w-full h-full sm:w-auto sm:h-auto"
+		>
+			<div class="flex-1 flex flex-col p-4">
+				<h2 class="flex text-lg">Please enter your name</h2>
+				<p class="text-gray-400 mb-4">This is what you'll go by when commenting.</p>
+
+				<form
+					on:submit|preventDefault={(e) => {
+						if (e.target) {
+							let data = new FormData(e.target);
+							$cookieName = data.get('name');
+						}
+					}}
+				>
+					<div class="flex flex-row space-x-2">
+						<input name="name" class="input-text h-8" placeholder="Name" />
+						<button class="btn btn-primary mt-auto mb-4"> Continue </button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>

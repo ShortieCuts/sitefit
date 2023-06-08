@@ -14,12 +14,13 @@ export const POST = (async ({ request, params }) => {
 		'COMMENT',
 		request,
 		z.object({
-			text: z.string().min(1).max(2000)
+			text: z.string().min(1).max(2000),
+			anonymousName: z.string().min(1).max(200).optional()
 		}),
 		async (input, user) => {
-			if (!user) {
-				throw error(401, 'Not logged in');
-			}
+			// if (!user) {
+			// 	throw error(401, 'Not logged in');
+			// }
 
 			let project = await db()
 				.selectFrom('Project')
@@ -46,7 +47,7 @@ export const POST = (async ({ request, params }) => {
 				.insertInto('Comment')
 				.values({
 					projectId: project.id,
-					authorId: user.id,
+					authorId: user ? user.id : BigInt(0),
 					parentId: parentComment.id,
 					text: input.text,
 					lat: 0,
@@ -54,7 +55,8 @@ export const POST = (async ({ request, params }) => {
 					toLat: 0,
 					toLong: 0,
 					isRoot: false,
-					updatedAt: new Date()
+					updatedAt: new Date(),
+					anonymousName: input.anonymousName ?? ''
 				})
 				.executeTakeFirst();
 
@@ -62,11 +64,13 @@ export const POST = (async ({ request, params }) => {
 				throw error(500, 'Failed to create comment');
 			}
 
-			await db()
-				.deleteFrom('CommentRead')
-				.where('commentId', '=', parentComment.id)
-				.where('userId', '!=', user.id)
-				.execute();
+			if (user) {
+				await db()
+					.deleteFrom('CommentRead')
+					.where('commentId', '=', parentComment.id)
+					.where('userId', '!=', user.id)
+					.execute();
+			}
 
 			return json({
 				id: parseInt(newComment.insertId?.toString() ?? '0')

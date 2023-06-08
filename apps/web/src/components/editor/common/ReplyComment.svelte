@@ -39,7 +39,11 @@
 	class="pt-0.5 pl-4 min-h-[32px] flex flex-row items-center"
 	class:chip-blue-override={$auth.user && comment.authorId == $auth.user.id}
 >
-	<UserChip showName small showPicture={false} userId={comment.authorId} />
+	{#if comment.authorId == ''}
+		<span class="text-gray-400">{comment.anonymousName}</span>
+	{:else}
+		<UserChip showName small showPicture={false} userId={comment.authorId} />
+	{/if}
 </span>
 <div
 	bind:this={commentEl}
@@ -75,7 +79,7 @@
 	<button class=" text-gray-400 text-left" style="font-size: 0.75rem">
 		{new Date(comment.createdAt).toLocaleString()}
 	</button>
-	{#if $auth.user && comment.authorId == $auth.user.id}
+	{#if ($auth.user && comment.authorId == $auth.user.id) || comment.authorId == ''}
 		<button
 			on:click={() => {
 				editing = true;

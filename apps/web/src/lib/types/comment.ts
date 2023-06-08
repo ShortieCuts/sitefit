@@ -10,6 +10,8 @@ export type ProjectComment = {
 	toLat: number;
 	isRoot: boolean;
 	read: boolean;
+	anonymousName: string;
+	anonymousEmail: string;
 };
 export type ProjectCommentReply = {
 	id: number;
@@ -17,4 +19,6 @@ export type ProjectCommentReply = {
 	createdAt: Date;
 	updatedAt: Date;
 	text: string;
+	anonymousName: string;
+	anonymousEmail: string;
 };

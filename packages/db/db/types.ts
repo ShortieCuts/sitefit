@@ -46,6 +46,8 @@ export type Comment = {
     createdAt: Generated<Timestamp>;
     updatedAt: Timestamp;
     text: string;
+    anonymousName: Generated<string>;
+    anonymousEmail: Generated<string>;
     long: number;
     lat: number;
     toLong: number;

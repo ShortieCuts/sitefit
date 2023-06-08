@@ -70,7 +70,9 @@
 	on:click={() => {}}
 	on:keydown={(e) => {}}
 	on:focus={() => {
-		if (!comment.read) broker.markCommentRead(comment.id);
+		if ($auth.user) {
+			if (!comment.read) broker.markCommentRead(comment.id);
+		}
 		if (isPinned) {
 			// Is it pinned?
 			editor.flyTo(comment.long, comment.lat);
@@ -90,7 +92,11 @@
 		<div class="flex flex-row items-center justify-between">
 			<span class="flex flex-row items-center">
 				<Fa class="text-gray-400 text-xs mr-1" icon={isPinned ? faLocationPin : faComment} />
-				<UserChip showName small showPicture={false} userId={comment.authorId} />
+				{#if comment.authorId == ''}
+					<span class="text-gray-400 text-sm">{comment.anonymousName}</span>
+				{:else}
+					<UserChip showName small showPicture={false} userId={comment.authorId} />
+				{/if}
 			</span>
 			<button class="text-gray-400 text-sm hidden group-hover:block" data-context>
 				<Fa icon={faEllipsis} />
@@ -158,7 +164,7 @@
 	</div>
 </div>
 <ContextMenu el={commentEl}>
-	{#if $auth.user && comment.authorId == $auth.user.id}
+	{#if ($auth.user && comment.authorId == $auth.user.id) || comment.authorId == ''}
 		<button
 			on:click={() => {
 				editing = true;

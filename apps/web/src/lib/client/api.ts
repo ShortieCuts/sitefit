@@ -183,6 +183,7 @@ export const createComment = createIdApiEndpointHelper<
 		longitude: number;
 		latitude: number;
 		text: string;
+		anonymousName?: string;
 	},
 	{
 		id: bigint;
@@ -204,6 +205,7 @@ export const updateComment = create2IdApiEndpointHelper<
 export const replyToComment = create2IdApiEndpointHelper<
 	{
 		text: string;
+		anonymousName?: string;
 	},
 	{}
 >('POST', '/api/project/<id1>/comment/<id2>/reply');

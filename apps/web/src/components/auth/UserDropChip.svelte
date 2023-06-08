@@ -22,6 +22,7 @@
 	import IconFile from '../icons/IconFile.svelte';
 	import IconProject from '../icons/IconProject.svelte';
 	import UserProfilePicture from './UserProfilePicture.svelte';
+	import { cookieName } from 'src/store/name';
 
 	$: photoURL = auth.user?.photoURL || '/user-photo-placeholder.svg';
 </script>
@@ -108,6 +109,8 @@
 				class="shadow-xl bg-white border-gray-100 border-2 space-y-2 py-2 rounded-lg min-w-[150px]"
 			>
 				<div>
+					<input class="px-4 mb-2 py-2 hover:bg-gray-100" bind:value={$cookieName} type="text" />
+
 					<a
 						href="/login?redirect={window.location.pathname}"
 						data-sveltekit-reload

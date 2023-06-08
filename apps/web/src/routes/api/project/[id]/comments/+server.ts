@@ -69,6 +69,8 @@ export const POST = (async ({ request, params }) => {
 						'Comment.toLong',
 						'Comment.toLat',
 						'Comment.isRoot',
+						'Comment.anonymousEmail',
+						'Comment.anonymousName',
 						'User.publicId'
 					])
 					.orderBy('createdAt', 'desc')
@@ -89,6 +91,8 @@ export const POST = (async ({ request, params }) => {
 						'Comment.toLong',
 						'Comment.toLat',
 						'Comment.isRoot',
+						'Comment.anonymousEmail',
+						'Comment.anonymousName',
 						'User.publicId'
 					])
 					.where('projectId', '=', project.id)
@@ -122,6 +126,8 @@ export const POST = (async ({ request, params }) => {
 							toLong: c.toLong,
 							toLat: c.toLat,
 							isRoot: c.isRoot,
+							anonymousEmail: c.anonymousEmail,
+							anonymousName: c.anonymousName,
 							read: true
 						})),
 						...commentsUnread.map((c) => ({
@@ -135,6 +141,8 @@ export const POST = (async ({ request, params }) => {
 							toLong: c.toLong,
 							toLat: c.toLat,
 							isRoot: c.isRoot,
+							anonymousEmail: c.anonymousEmail,
+							anonymousName: c.anonymousName,
 							read: false
 						}))
 					]
@@ -142,7 +150,22 @@ export const POST = (async ({ request, params }) => {
 			} else {
 				let comments = await db()
 					.selectFrom('Comment')
-					.selectAll()
+					.innerJoin('User', 'Comment.authorId', 'User.id')
+					.select([
+						'Comment.id',
+						'Comment.authorId',
+						'Comment.createdAt',
+						'Comment.updatedAt',
+						'Comment.text',
+						'Comment.long',
+						'Comment.lat',
+						'Comment.toLong',
+						'Comment.toLat',
+						'Comment.isRoot',
+						'Comment.anonymousEmail',
+						'Comment.anonymousName',
+						'User.publicId'
+					])
 					.where('projectId', '=', project.id)
 					.where('isRoot', '=', true)
 					.orderBy('createdAt', 'desc')
@@ -152,7 +175,7 @@ export const POST = (async ({ request, params }) => {
 				return json({
 					comments: comments.map((c) => ({
 						id: parseInt(c.id.toString()),
-						authorId: c.authorId,
+						authorId: c.publicId,
 						createdAt: c.createdAt,
 						updatedAt: c.updatedAt,
 						text: c.text,
@@ -161,6 +184,8 @@ export const POST = (async ({ request, params }) => {
 						toLong: c.toLong,
 						toLat: c.toLat,
 						isRoot: c.isRoot,
+						anonymousEmail: c.anonymousEmail,
+						anonymousName: c.anonymousName,
 						read: false
 					}))
 				});

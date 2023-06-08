@@ -33,10 +33,6 @@ export const POST = (async ({ request, params }) => {
 			text: z.string().min(1).max(2000)
 		}),
 		async (input, user) => {
-			if (!user) {
-				throw error(401, 'Not logged in');
-			}
-
 			let project = await db()
 				.selectFrom('Project')
 				.selectAll()
@@ -47,12 +43,33 @@ export const POST = (async ({ request, params }) => {
 				throw error(404, 'Project not found');
 			}
 
+			let canUpdate = false;
+
+			let comment = await db()
+				.selectFrom('Comment')
+				.selectAll()
+				.where('id', '=', BigInt(parseInt(params.id2)))
+				.executeTakeFirst();
+
+			if (!comment) {
+				throw error(404, 'Comment not found');
+			}
+
+			if (comment.authorId == BigInt(0)) {
+				canUpdate = true;
+			} else if (user && comment.authorId == user.id) {
+				canUpdate = true;
+			}
+
+			if (!canUpdate) {
+				throw error(403, 'Forbidden');
+			}
+
 			let updateComment = await db()
 				.updateTable('Comment')
 				.set({
 					text: input.text
 				})
-				.where('authorId', '=', user.id)
 				.where('id', '=', BigInt(parseInt(params.id2)))
 				.executeTakeFirst();
 
@@ -72,8 +89,26 @@ export const DELETE = async ({ request, params }) => {
 		request,
 		z.object({}),
 		async (input, user) => {
-			if (!user) {
-				throw error(401, 'Not logged in');
+			let canUpdate = false;
+
+			let comment = await db()
+				.selectFrom('Comment')
+				.selectAll()
+				.where('id', '=', BigInt(parseInt(params.id2)))
+				.executeTakeFirst();
+
+			if (!comment) {
+				throw error(404, 'Comment not found');
+			}
+
+			if (comment.authorId == BigInt(0)) {
+				canUpdate = true;
+			} else if (user && comment.authorId == user.id) {
+				canUpdate = true;
+			}
+
+			if (!canUpdate) {
+				throw error(403, 'Forbidden');
 			}
 
 			let project = await db()
@@ -88,7 +123,6 @@ export const DELETE = async ({ request, params }) => {
 
 			let deleteComment = await db()
 				.deleteFrom('Comment')
-				.where('authorId', '=', user.id)
 				.where('id', '=', BigInt(parseInt(params.id2)))
 				.executeTakeFirst();
 

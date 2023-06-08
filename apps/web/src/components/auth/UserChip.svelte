@@ -15,7 +15,10 @@
 	export let showPicture: boolean = true;
 	export let small: boolean = false;
 
-	$: userStore = userId == 'anon' || userId.startsWith('email:') ? null : getUserInfoStore(userId);
+	$: userStore =
+		userId == '' || userId == 'anon' || userId.startsWith('email:')
+			? null
+			: getUserInfoStore(userId);
 	export let ringColor: string = '#e5e7eb';
 </script>
 

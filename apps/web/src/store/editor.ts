@@ -49,6 +49,7 @@ import type { UserAccessInfo } from '$lib/types/user';
 import type { MetadataProject } from '$lib/types/project';
 import { isMobile } from './responsive';
 import type { ProjectComment, ProjectCommentReply } from '$lib/types/comment';
+import { cookieName } from './name';
 
 export const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
@@ -267,14 +268,27 @@ export class ProjectBroker {
 	}
 
 	async createComment(longitude: number, latitude: number, text: string) {
-		let newId = await createComment(this.projectId, {
-			longitude,
-			latitude,
-			text
-		});
+		if (!get(auth).user) {
+			let newId = await createComment(this.projectId, {
+				longitude,
+				latitude,
+				text,
+				anonymousName: get(cookieName) || 'Anonymous'
+			});
 
-		if (newId.data) {
-			await this.mutatedComment();
+			if (newId.data) {
+				await this.mutatedComment();
+			}
+		} else {
+			let newId = await createComment(this.projectId, {
+				longitude,
+				latitude,
+				text
+			});
+
+			if (newId.data) {
+				await this.mutatedComment();
+			}
 		}
 	}
 
@@ -296,7 +310,8 @@ export class ProjectBroker {
 
 	async replyToComment(id: number, text: string) {
 		await replyToComment(this.projectId, id.toString(), {
-			text
+			text,
+			anonymousName: get(cookieName) || 'Anonymous'
 		});
 
 		await this.mutatedReply(id);

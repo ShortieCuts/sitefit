@@ -31,9 +31,9 @@ export const POST = (async ({ request, params }) => {
 		request,
 		z.object({}),
 		async (input, user) => {
-			if (!user) {
-				throw error(401, 'Not logged in');
-			}
+			// if (!user) {
+			// 	throw error(401, 'Not logged in');
+			// }
 
 			let project = await db()
 				.selectFrom('Project')
@@ -53,7 +53,9 @@ export const POST = (async ({ request, params }) => {
 					'User.publicId',
 					'Comment.createdAt',
 					'Comment.updatedAt',
-					'Comment.text'
+					'Comment.text',
+					'Comment.anonymousName',
+					'Comment.anonymousEmail'
 				])
 				.where('projectId', '=', project.id)
 				.where('parentId', '=', BigInt(parseInt(params.id2)))
@@ -67,6 +69,8 @@ export const POST = (async ({ request, params }) => {
 					authorId: c.publicId,
 					createdAt: c.createdAt,
 					updatedAt: c.updatedAt,
+					anonymousName: c.anonymousName,
+					anonymousEmail: c.anonymousEmail,
 					text: c.text
 				}))
 			});

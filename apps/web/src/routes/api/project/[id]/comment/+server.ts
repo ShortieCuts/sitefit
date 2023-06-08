@@ -3,7 +3,7 @@ import { error, json } from '@sveltejs/kit';
 
 import type { RequestHandler } from './$types';
 
-import { z } from 'zod';
+import { bigint, z } from 'zod';
 
 import { APIDataViewInput, executeDataViewQuery } from '$lib/types/dataView';
 import type { APIDataView } from '$lib/types/dataView';
@@ -32,55 +32,89 @@ export const POST = (async ({ request, params }) => {
 		z.object({
 			longitude: z.number(),
 			latitude: z.number(),
-			text: z.string().min(1).max(2000)
+			text: z.string().min(1).max(2000),
+			anonymousName: z.string().min(1).max(200).optional()
 		}),
 		async (input, user) => {
 			if (!user) {
-				throw error(401, 'Not logged in');
+				let project = await db()
+					.selectFrom('Project')
+					.selectAll()
+					.where('publicId', '=', params.id)
+					.executeTakeFirst();
+
+				if (!project) {
+					throw error(404, 'Project not found');
+				}
+
+				let newComment = await db()
+					.insertInto('Comment')
+					.values({
+						projectId: project.id,
+						authorId: BigInt(0),
+						long: input.longitude,
+						lat: input.latitude,
+						toLong: input.longitude,
+						toLat: input.latitude,
+						updatedAt: new Date(),
+						createdAt: new Date(),
+						isRoot: true,
+						text: input.text,
+						anonymousName: input.anonymousName
+					})
+					.executeTakeFirst();
+
+				if (newComment.insertId == null) {
+					throw error(500, 'Failed to insert comment');
+				}
+
+				return json({
+					id: parseInt(newComment.insertId?.toString() ?? '-1')
+				});
+			} else {
+				let project = await db()
+					.selectFrom('Project')
+					.selectAll()
+					.where('publicId', '=', params.id)
+					.executeTakeFirst();
+
+				if (!project) {
+					throw error(404, 'Project not found');
+				}
+
+				let newComment = await db()
+					.insertInto('Comment')
+					.values({
+						projectId: project.id,
+						authorId: user.id,
+						long: input.longitude,
+						lat: input.latitude,
+						toLong: input.longitude,
+						toLat: input.latitude,
+						updatedAt: new Date(),
+						createdAt: new Date(),
+						isRoot: true,
+						text: input.text
+					})
+					.executeTakeFirst();
+
+				if (newComment.insertId == null) {
+					throw error(500, 'Failed to insert comment');
+				}
+
+				let newCommentRead = await db()
+					.insertInto('CommentRead')
+					.values({
+						userId: user.id,
+						commentId: newComment.insertId,
+						updatedAt: new Date()
+					})
+					.executeTakeFirst();
+
+				return json({
+					id: parseInt(newComment.insertId?.toString() ?? '-1')
+				});
 			}
-
-			let project = await db()
-				.selectFrom('Project')
-				.selectAll()
-				.where('publicId', '=', params.id)
-				.executeTakeFirst();
-
-			if (!project) {
-				throw error(404, 'Project not found');
-			}
-
-			let newComment = await db()
-				.insertInto('Comment')
-				.values({
-					projectId: project.id,
-					authorId: user.id,
-					long: input.longitude,
-					lat: input.latitude,
-					toLong: input.longitude,
-					toLat: input.latitude,
-					updatedAt: new Date(),
-					createdAt: new Date(),
-					isRoot: true,
-					text: input.text
-				})
-				.executeTakeFirst();
-
-			if (newComment.insertId == null) {
-				throw error(500, 'Failed to insert comment');
-			}
-
-			let newCommentRead = await db()
-				.insertInto('CommentRead')
-				.values({
-					userId: user.id,
-					commentId: newComment.insertId,
-					updatedAt: new Date()
-				})
-				.executeTakeFirst();
-
-			return json({
-				id: parseInt(newComment.insertId?.toString() ?? '-1')
-			});
 		}
 	);
 }) satisfies RequestHandler;

@@ -452,8 +452,9 @@
 				map.addListener('mousedown', (ev: google.maps.MapMouseEvent) => {
 					if ($isMobile) return;
 					handleMapTap(ev);
-
-					editor.stagingComment.set(null);
+					if (get(editor.activeTool) != 'comment') {
+						editor.stagingComment.set(null);
+					}
 				});
 
 				map.addListener('click', (ev: google.maps.MapMouseEvent) => {

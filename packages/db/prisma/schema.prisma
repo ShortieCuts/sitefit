@@ -140,6 +140,8 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   text      String  @db.Text
+  anonymousName String @default("")
+  anonymousEmail String @default("")
 
   long Float
   lat  Float
