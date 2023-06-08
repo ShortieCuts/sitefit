@@ -767,9 +767,7 @@
 
 <svelte:window
 	on:keydown={(e) => {
-		if ((e.code == 'KeyS' || e.code == 'KeyG') && (e.ctrlKey || e.metaKey)) {
-			e.preventDefault();
-		}
+		handleKeyboardShortcut(e);
 	}}
 	on:keyup={(e) => {
 		if (e.key === 'Escape') {
@@ -778,7 +776,6 @@
 				editorContext.activateDialog('');
 			}
 		} else {
-			handleKeyboardShortcut(e);
 		}
 	}}
 />
