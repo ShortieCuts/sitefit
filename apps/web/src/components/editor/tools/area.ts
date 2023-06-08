@@ -34,17 +34,20 @@ export const AreaTool = {
 
 			broker.stagingObject.set(obj);
 			isDown = true;
+			editor.measureToolCount.set(1);
 		} else {
 			broker.stagingObject.update((obj) => {
 				if (obj) {
 					let path = obj as Path;
 					path.segments.push(editor.getDesiredPosition());
+					editor.measureToolCount.set(path.segments.length);
 				}
 				return obj;
 			});
 		}
 	},
 	cancel(editor: EditorContext, broker: ProjectBroker) {
+		editor.measureToolCount.set(0);
 		if (active) {
 			clickMoving = false;
 			active = false;
@@ -54,6 +57,7 @@ export const AreaTool = {
 	},
 	commit(editor: EditorContext, broker: ProjectBroker) {
 		let isEmpty = false;
+		editor.measureToolCount.set(0);
 		if (clickMoving) {
 			broker.stagingObject.update((obj) => {
 				if (obj) {

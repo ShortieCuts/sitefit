@@ -16,6 +16,7 @@ export const MeasurementTool = {
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		committed = false;
 		active = true;
+
 		if (!clickMoving) {
 			let obj = new Path();
 			obj.style = new Material();
@@ -31,11 +32,13 @@ export const MeasurementTool = {
 
 			broker.stagingObject.set(obj);
 			isDown = true;
+			editor.measureToolCount.set(1);
 		} else {
 			broker.stagingObject.update((obj) => {
 				if (obj) {
 					let path = obj as Path;
 					path.segments.push(editor.getDesiredPosition());
+					editor.measureToolCount.set(path.segments.length);
 				}
 				return obj;
 			});
@@ -49,9 +52,11 @@ export const MeasurementTool = {
 			isDown = false;
 			broker.stagingObject.set(null);
 		}
+		editor.measureToolCount.set(0);
 	},
 	commit(editor: EditorContext, broker: ProjectBroker) {
 		let isEmpty = false;
+		editor.measureToolCount.set(0);
 		if (clickMoving) {
 			broker.stagingObject.update((obj) => {
 				if (obj) {

@@ -5,6 +5,7 @@
 		faArrowsUpDown,
 		faCheck,
 		faComment,
+		faMapPin,
 		faRemove,
 		faRotateLeft,
 		faRotateRight,
@@ -26,7 +27,7 @@
 
 	$: hasSelection = $effectiveSelection.length > 0;
 
-	const { mobileToolMode, activeTool } = editor;
+	const { mobileToolMode, activeTool, measureToolCount } = editor;
 
 	let selectedSize = { width: 0, height: 0 };
 	let lastLongitude = $longitude;
@@ -154,6 +155,88 @@
 				<button
 					on:click={() => {
 						editor.activeTool.set('');
+						currentComment = '';
+					}}
+					class="text-red-600"
+					style="justify-content: center;">Cancel</button
+				>
+			</div>
+		</MobileDrawer>
+	{/if}
+	{#if $activeTool == 'measurement'}
+		<MobileCrosshair />
+		<MobileDrawer>
+			<div>
+				{#if $measureToolCount == 0}
+					<button
+						class="text-blue-500"
+						on:click={() => {
+							editor.clickDownTool();
+						}}><Fa icon={faMapPin} /> Start Measurement</button
+					>
+				{:else}
+					<button
+						class="text-blue-500"
+						on:click={() => {
+							editor.clickDownTool();
+						}}><Fa icon={faMapPin} /> Continue Measurement</button
+					>
+					<button
+						class="text-green-500"
+						on:click={() => {
+							editor.clickDownTool();
+							editor.commitTool();
+							editor.deselectAll();
+						}}><Fa icon={faCheck} /> End Measurement</button
+					>
+				{/if}
+			</div>
+			<div>
+				<button
+					on:click={() => {
+						editor.cancelTool();
+						editor.activeTool.set('select');
+						currentComment = '';
+					}}
+					class="text-red-600"
+					style="justify-content: center;">Cancel</button
+				>
+			</div>
+		</MobileDrawer>
+	{/if}
+	{#if $activeTool == 'area'}
+		<MobileCrosshair />
+		<MobileDrawer>
+			<div>
+				{#if $measureToolCount == 0}
+					<button
+						class="text-blue-500"
+						on:click={() => {
+							editor.clickDownTool();
+						}}><Fa icon={faMapPin} /> Start Measurement</button
+					>
+				{:else}
+					<button
+						class="text-blue-500"
+						on:click={() => {
+							editor.clickDownTool();
+						}}><Fa icon={faMapPin} /> Continue Measurement</button
+					>
+					<button
+						class="text-green-500"
+						on:click={() => {
+							editor.clickDownTool();
+							editor.commitTool();
+							editor.deselectAll();
+						}}><Fa icon={faCheck} /> End Measurement</button
+					>
+				{/if}
+			</div>
+			<div>
+				<button
+					on:click={() => {
+						editor.cancelTool();
+						editor.activeTool.set('select');
 						currentComment = '';
 					}}
 					class="text-red-600"

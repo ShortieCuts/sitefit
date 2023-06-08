@@ -516,12 +516,55 @@
 					editor.zoom.set(map.getZoom() ?? 0);
 				});
 
+				let updateTimer = 0;
+				let lastFrame = Date.now();
+				let frameEvent = () => {
+					requestAnimationFrame(frameEvent);
+					if (!map) return;
+					let now = Date.now();
+					let delta = now - lastFrame;
+					lastFrame = now;
+					if (updateTimer > 0) {
+						updateTimer -= delta;
+						if ($isMobile) {
+							if (!map) return;
+							let center = map.getCenter();
+							if (!center) return;
+							let latLng = map.getCenter();
+
+							let deg = -$heading;
+							let rad = (deg / 180) * Math.PI;
+
+							editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
+
+							let vec = referenceOverlay?.latLngAltitudeToVector3({
+								lat: latLng?.lat() ?? 0,
+								lng: latLng?.lng() ?? 0,
+								altitude: 0
+							});
+
+							editor.currentMousePositionRelative.set(
+								broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
+							);
+
+							if (editor.currentToolHandlers) {
+								editor.currentToolHandlers.onMove(new MouseEvent('move'), editor, broker);
+							}
+
+							editor.desiredPosition = broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0]);
+						}
+						return;
+					}
+				};
+				requestAnimationFrame(frameEvent);
 				map.addListener('bounds_changed', () => {
 					if (!map) return;
 					let center = map.getCenter();
 					if (!center) return;
 					editor.longitude.set(center.lng());
 					editor.latitude.set(center.lat());
+
+					updateTimer = 5000;
 
 					computeScaling();
 

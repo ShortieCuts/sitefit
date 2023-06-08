@@ -955,6 +955,7 @@ function mirrorArc(startAngle: number, endAngle: number, mirrorX: boolean, mirro
 
 export class EditorContext {
 	activeTool: Writable<string> = writable('pan');
+	measureToolCount: Writable<number> = writable(0);
 	activeToolSmartObject: Writable<string> = writable('');
 	activeToolSmartObjectProperties: Writable<any> = writable({});
 
@@ -1137,6 +1138,25 @@ export class EditorContext {
 			this.activeDialog.set('');
 		} else {
 			this.activeDialog.set(key);
+		}
+	}
+
+	clickDownTool() {
+		if (get(this.activeTool)) {
+			this.currentToolHandlers?.onDown(new MouseEvent('click'), this, this.broker);
+			this.currentToolHandlers?.onUp(new MouseEvent('click'), this, this.broker);
+		}
+	}
+
+	cancelTool() {
+		if (get(this.activeTool)) {
+			this.currentToolHandlers?.cancel(this, this.broker);
+		}
+	}
+
+	commitTool() {
+		if (get(this.activeTool)) {
+			this.currentToolHandlers?.commit(this, this.broker);
 		}
 	}
 
