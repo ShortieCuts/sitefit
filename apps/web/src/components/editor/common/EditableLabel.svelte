@@ -45,7 +45,12 @@
 </script>
 
 <svelte:window
-	on:click={(e) => (e.target != inputEl && e.target != inputEl?.parentElement ? commit() : null)}
+	on:click={(e) => {
+		if (e.target && e.target.matches('button') && e.contains(inputEl)) {
+			return;
+		}
+		e.target != inputEl && e.target != inputEl?.parentElement ? commit() : null;
+	}}
 />
 
 <div
@@ -57,7 +62,9 @@
 	{#if editing}
 		<input
 			{readonly}
+			on:keyup|stopPropagation={() => {}}
 			on:keydown={(e) => {
+				e.stopPropagation();
 				if (e.code == 'Enter' || e.code == 'Tab') {
 					commit();
 				} else if (e.code == 'Escape') {
