@@ -128,7 +128,7 @@
 		align="bottom-right"
 	>
 		<div
-			class="context-menu select-none bg-white shadow-md py-2 context-menu w-40 rounded-md border border-gray-200"
+			class="context-menu select-none bg-white shadow-md py-2 context-menu min-w-[240px] rounded-md border border-gray-200"
 		>
 			<slot />
 		</div>

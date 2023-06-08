@@ -1495,6 +1495,59 @@ export class EditorContext {
 
 		this.select(group.id);
 	}
+
+	ungroupSelection() {
+		let selection = get(this.selection);
+
+		if (selection.length == 0) {
+			return;
+		}
+
+		let obj1 = this.broker.project.objectsMap.get(selection[0]);
+		if (!obj1) {
+			return;
+		}
+
+		let commonParent: string | undefined | null = obj1.parent;
+		let hasCommonParent = true;
+
+		for (let id of selection) {
+			let obj = this.broker.project.objectsMap.get(id);
+			if (obj) {
+				if (obj.parent !== commonParent) {
+					hasCommonParent = false;
+				}
+			}
+		}
+		let transaction = this.broker.project.createTransaction();
+
+		let newSelection = [];
+
+		for (let id of selection) {
+			let obj = this.broker.project.objectsMap.get(id);
+			if (obj && obj.type == ObjectType.Group) {
+				let children = this.broker.project.objectsMapChildren.get(id);
+				if (children) {
+					for (let child of children) {
+						if (hasCommonParent) {
+							transaction.update(child.id, 'parent', commonParent);
+							newSelection.push(child.id);
+						} else {
+							transaction.update(child.id, 'parent', null);
+							newSelection.push(child.id);
+						}
+					}
+				}
+				transaction.delete(id);
+			}
+		}
+
+		console.log(transaction);
+
+		this.broker.commitTransaction(transaction);
+
+		this.selection.set(newSelection);
+	}
 }
 
 export function createProjectBroker(id: string, accessToken?: string) {

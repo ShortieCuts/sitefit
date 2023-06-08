@@ -27,6 +27,7 @@
 	import EditableLabel from './EditableLabel.svelte';
 	import { browser } from '$app/environment';
 	import { compareAccess } from '$lib/util/access';
+	import ObjectContextButtons from './ObjectContextButtons.svelte';
 
 	const { editor, broker } = getSvelteContext();
 	const { sessionAccess } = broker;
@@ -211,6 +212,7 @@
 			}}><Fa icon={faMapPin} /> Locate</button
 		>
 		{#if compareAccess('WRITE', $sessionAccess)}
+			<ObjectContextButtons />
 			<button
 				on:click={(e) => {
 					setTimeout(() => {

@@ -29,9 +29,11 @@
 		if (realPath) {
 			realPathShape = [];
 			let matrix = realPath.getMatrix();
-			for (let [i, point] of realPath.segments.entries()) {
-				let transformed = matrix.transform(point);
-				realPathShape?.push([transformed[0], transformed[1]]);
+			if (realPath.segments.length < 100) {
+				for (let [i, point] of realPath.segments.entries()) {
+					let transformed = matrix.transform(point);
+					realPathShape?.push([transformed[0], transformed[1]]);
+				}
 			}
 		}
 	}

@@ -61,6 +61,8 @@
 	import UserChip from '../auth/UserChip.svelte';
 	import RichSearch from './common/RichSearch.svelte';
 	import ObjectEditor from './common/ObjectEditor.svelte';
+	import ObjectContextButtons from './common/ObjectContextButtons.svelte';
+	import KeyBind from './common/KeyBind.svelte';
 
 	// export let auth: AuthState;
 	export let projectId: string;
@@ -133,6 +135,8 @@
 		}
 
 		if (e.code == 'KeyZ' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+			e.stopPropagation();
 			if (e.shiftKey) {
 				broker.commitRedo();
 			} else {
@@ -141,6 +145,8 @@
 		}
 
 		if (e.code == 'Delete') {
+			e.preventDefault();
+			e.stopPropagation();
 			editorContext.deleteSelection(broker);
 		}
 
@@ -150,12 +156,14 @@
 			editorContext.info('Changes are saved automatically.');
 		}
 
-		console.log(e.code, e.ctrlKey, e.metaKey);
-
 		if (e.code == 'KeyG' && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			e.stopPropagation();
-			editorContext.groupSelection();
+			if (e.shiftKey) {
+				editorContext.ungroupSelection();
+			} else {
+				editorContext.groupSelection();
+			}
 		}
 	}
 
@@ -564,9 +572,12 @@
 				{#if !$isMobile}
 					<ContextMenu el={midEl} disabled={!canContextMenu}>
 						{#if $effectiveSelection.length > 0}
-							<button on:click={doCopy}><Fa icon={faCopy} /> Copy </button>
-							<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>
-							<div class="my-2 w-full border-b border-gray-200" />
+							<button on:click={doCopy}><Fa icon={faCopy} /> Copy <KeyBind to="copy" /></button>
+							<button on:click={doPaste}
+								><Fa icon={faPaste} /> Paste <KeyBind to="paste" />
+							</button>
+
+							<ObjectContextButtons />
 							<button
 								on:click={() => {
 									editorContext.flipSelection(true, false);
@@ -594,18 +605,14 @@
 							</button>
 							<div class="my-2 w-full border-b border-gray-200" />
 
-							{#if $selection.length > 1}
-								<button
-									on:click={() => {
-										editorContext.groupSelection();
-									}}><Fa icon={faLayerGroup} /> Group Selection</button
-								>
-							{/if}
 							<button
 								on:click={() => {
 									editorContext.deleteSelection(broker);
-								}}><Fa icon={faTrash} /> Delete</button
-							>
+								}}
+								><Fa icon={faTrash} />
+								Delete
+								<KeyBind to="delete" />
+							</button>
 						{:else}
 							<button on:click={doPaste}><Fa icon={faPaste} /> Paste </button>
 						{/if}
