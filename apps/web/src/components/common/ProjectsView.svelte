@@ -59,7 +59,7 @@
 			class="btn"
 			on:click={async (e) => {
 				let res = await createProject({
-					name: 'New Project',
+					name: 'New Site',
 					description: ''
 				});
 
@@ -69,7 +69,7 @@
 				setTimeout(() => {
 					newEditId.set(projectId.toString());
 				}, 10);
-			}}><Fa icon={faMapLocation} /> New Project</button
+			}}><Fa icon={faMapLocation} /> New Site</button
 		>
 		<button
 			class="btn"
@@ -122,7 +122,7 @@
 		<button
 			on:click={async (e) => {
 				let res = await createProject({
-					name: 'New Project',
+					name: 'New Site',
 					description: ''
 				});
 
@@ -132,7 +132,7 @@
 				setTimeout(() => {
 					newEditId.set(projectId.toString());
 				}, 10);
-			}}><Fa icon={faMapLocation} /> New Project</button
+			}}><Fa icon={faMapLocation} /> New Site</button
 		>
 		<button
 			on:click={async (e) => {

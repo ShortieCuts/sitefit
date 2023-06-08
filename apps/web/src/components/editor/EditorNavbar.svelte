@@ -39,7 +39,7 @@
 		{
 			icon: 'map',
 			key: 'projects',
-			name: 'Projects',
+			name: 'Sites',
 			access: 'READ',
 			user: true
 		},

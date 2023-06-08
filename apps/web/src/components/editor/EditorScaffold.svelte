@@ -391,19 +391,19 @@
 								class="shadow-xl bg-white border-gray-100 border-2 space-y-2 rounded-lg min-w-[150px] overflow-hidden"
 							>
 								<a
-									href="/"
+									href="/projects"
 									data-sveltekit-reload
 									class="flex flex-row items-center px-4 py-1 hover:bg-gray-100 text-sm"
 								>
 									<div class="icon-sm mr-2"><Fa icon={faArrowLeft} /></div>
-									Back to projects
+									View all Sites
 								</a>
 								<a
 									href="/new"
 									class="flex flex-row items-center px-4 py-1 hover:bg-gray-100 text-sm"
 								>
 									<div class="icon-sm mr-2"><Fa icon={faPlus} /></div>
-									New Project
+									New Site
 								</a>
 							</div>
 						</Popover>

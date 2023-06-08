@@ -11,7 +11,7 @@ export const GET = (async ({ request, params }) => {
 	return validateRequestOnlyAuth(request, async (user) => {
 		let newId = await createProject({
 			owner: user.publicId,
-			name: 'New Project',
+			name: 'New Site',
 			description: ''
 		});
 		if (!newId) {

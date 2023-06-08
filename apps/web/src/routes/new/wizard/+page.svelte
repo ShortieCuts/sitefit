@@ -39,7 +39,7 @@
 	<div class="min-w-[300px] max-w-[300px]">
 		<div class="flex flex-col items-center justify-center bg-gray-200 h-40 rounded-t-lg">
 			<img src="/logo.svg" alt="logo" class="max-w-[80px] mb-2" />
-			<p>New project</p>
+			<p>New site</p>
 		</div>
 		<div class="bg-gray-100 rounded-b-lg p-4 shadow-lg">
 			<WrapLoader {loading}>

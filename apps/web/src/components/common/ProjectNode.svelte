@@ -122,7 +122,7 @@
 	}
 	async function makeSubProject() {
 		let res = await createProject({
-			name: 'New Project',
+			name: 'New Site',
 			description: ''
 		});
 
@@ -287,7 +287,7 @@
 		<ContextMenu el={nodeElement}>
 			{#if node.type == 'folder'}
 				<button on:click={makeSubFolder}><Fa icon={faFolderPlus} /> New folder</button>
-				<button on:click={makeSubProject}><Fa icon={faSquarePlus} /> New project</button>
+				<button on:click={makeSubProject}><Fa icon={faSquarePlus} /> New site</button>
 			{:else}
 				<button
 					on:click={() => {
