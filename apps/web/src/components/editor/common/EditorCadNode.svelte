@@ -202,7 +202,7 @@
 			<span class="ml-2 h-6 w-full flex items-center">
 				<EditableLabel
 					fullWidth
-					class="w-full h-full"
+					class="w-full h-full flex items-center line-height-low"
 					value={node.name ?? node.type}
 					bind:editing={editingName}
 					on:change={(e) => {
@@ -334,5 +334,8 @@
 <style>
 	.selected {
 		@apply bg-blue-200 border border-blue-500;
+	}
+	:global(.line-height-low) {
+		line-height: 1;
 	}
 </style>
