@@ -187,7 +187,12 @@
 </script>
 
 {#key node.id}
-	<div class="flex flex-col">
+	<div
+		class="flex flex-col"
+		style={node.type == 'folder' && node.name == 'Trash'
+			? 'position: absolute; bottom: 0px; width: 100%; background-color: #f9fafb; z-index: 2'
+			: ''}
+	>
 		<Draggable
 			allowReorder={false}
 			draggableKey="files"

@@ -19,6 +19,7 @@
 	let globalBias: Writable<number>;
 	let globalDragging: Writable<boolean>;
 	let globalSignal: Writable<boolean>;
+
 	$: {
 		globalSlot = inst.slot;
 		globalPayload = inst.payload;
