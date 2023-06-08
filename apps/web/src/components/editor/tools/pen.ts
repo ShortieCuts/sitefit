@@ -11,6 +11,7 @@ export const PenTool = {
 	key: 'pen',
 	access: 'WRITE',
 	shortcut: 'v',
+	hidden: true,
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		if (!clickMoving) {
 			let obj = new Path();

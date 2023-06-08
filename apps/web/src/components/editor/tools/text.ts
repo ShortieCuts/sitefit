@@ -8,6 +8,7 @@ export const TextTool = {
 	access: 'WRITE',
 	key: 'text',
 	shortcut: 't',
+	hidden: true,
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		let obj = new Text();
 		obj.style = new Material();

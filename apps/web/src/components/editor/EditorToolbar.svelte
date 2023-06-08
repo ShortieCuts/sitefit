@@ -21,6 +21,7 @@
 	import { AreaTool } from './tools/area';
 	import { SmartTool } from './tools/smart';
 	import { ShapeTool } from './tools/shape';
+	import { InfoPopover } from 'ui';
 
 	const toolbarItems: {
 		icon: any;
@@ -34,8 +35,8 @@
 		onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 		onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => void;
 	}[] = [
-		SelectTool,
 		PanTool,
+		SelectTool,
 		CommentTool,
 		PenTool,
 		TextTool,
@@ -160,6 +161,9 @@
 					}}
 				>
 					<Fa icon={item.icon} />
+					<InfoPopover>
+						{item.key == 'select' ? 'Edit Mode' : 'Navigate Mode'}
+					</InfoPopover>
 				</button>
 			{/if}
 		{/if}

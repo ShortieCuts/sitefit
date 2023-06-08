@@ -13,6 +13,7 @@ export const MeasurementTool = {
 	key: 'measurement',
 	access: 'WRITE',
 	shortcut: 'm',
+	hidden: true,
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		committed = false;
 		active = true;

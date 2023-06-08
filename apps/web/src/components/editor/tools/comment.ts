@@ -8,6 +8,7 @@ export const CommentTool = {
 	key: 'comment',
 	shortcut: 'c',
 	access: 'COMMENT',
+	hidden: true,
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		if (get(isMobile)) return;
 		let latLon = get(editor.currentMousePosition);

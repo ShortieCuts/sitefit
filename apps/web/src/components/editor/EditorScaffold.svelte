@@ -460,15 +460,32 @@
 			{#if !$isMobile && $activeTool == 'pan' && $selection.length > 0}
 				<div
 					transition:fly={{ y: -100 }}
-					class="absolute top-4 left-[50%] z-10 rounded-lg bg-white shadow-lg p-2"
+					class="absolute top-4 left-[50%] z-10 rounded-xl bg-white shadow-lg p-2"
 					style="transform: translate(-50%, 0)"
 				>
 					<button
 						class="btn btn-primary"
 						on:click={() => {
 							$activeTool = 'select';
-						}}>Edit Mode</button
+						}}
 					>
+						Edit Mode
+					</button>
+				</div>
+			{:else if !$isMobile && $activeTool == 'select'}
+				<div
+					transition:fly={{ y: -100 }}
+					class="absolute top-4 left-[50%] z-10 rounded-xl bg-white shadow-lg p-2"
+					style="transform: translate(-50%, 0)"
+				>
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							$activeTool = 'pan';
+						}}
+					>
+						Exit Edit Mode
+					</button>
 				</div>
 			{/if}
 

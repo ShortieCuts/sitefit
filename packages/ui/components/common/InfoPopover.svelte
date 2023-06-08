@@ -4,15 +4,13 @@
 
 <Popover
   showOnHover
-  caretBg="#1f2937"
-  offset={10}
-  caretCurveAmount={1}
-  caretWidth={20}
-  alignAnchor="top-right"
+  caretBg="#e5e7eb"
+  offset={5}
+  caretCurveAmount={0}
+  caretWidth={5}
+  align="right-middle"
 >
-  <div
-    class="shadow-xl bg-gray-800 space-y-2 py-1 px-2 text-sm rounded-lg min-w-[150px]"
-  >
+  <div class="shadow-xl bg-gray-200 space-y-2 py-1 px-2 text-sm rounded-lg">
     <slot />
   </div>
 </Popover>
