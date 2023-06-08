@@ -14,37 +14,6 @@
 	const cadOpacity = broker.writableGlobalProperty<number>('cadOpacity', 1);
 	const overrideCadColor = broker.writableGlobalProperty<string>('overrideCadColor', '');
 
-	const inverseCadOpacity = writable(1 - get(cadOpacity));
-	const inverseBoundaryOpacity = writable(1 - get(boundaryOpacity));
-	let skipCadOpacityUpdate = false;
-	cadOpacity.subscribe((v) => {
-		if (typeof v != 'number') {
-			v = 1;
-		}
-		inverseCadOpacity.set(1 - v);
-		skipCadOpacityUpdate = true;
-	});
-
-	inverseCadOpacity.subscribe((v) => {
-		if (skipCadOpacityUpdate) {
-			skipCadOpacityUpdate = false;
-			return;
-		}
-		debouncify(() => {
-			cadOpacity.set(1 - v);
-		}, 'cadOpacity');
-	});
-
-	boundaryOpacity.subscribe((v) => {
-		inverseBoundaryOpacity.set(1 - v);
-	});
-
-	inverseBoundaryOpacity.subscribe((v) => {
-		debouncify(() => {
-			boundaryOpacity.set(1 - v);
-		}, 'boundaryOpacity');
-	});
-
 	function setTo(mode: 'original' | 'black' | 'white' | 'custom') {
 		return () => {
 			if (mode == 'original') {
@@ -134,9 +103,9 @@
 							min={0}
 							max={1}
 							step={0.01}
-							bind:value={$inverseBoundaryOpacity}
+							bind:value={$boundaryOpacity}
 						/>
-						<span class="text-left pl-1">{Math.floor($inverseBoundaryOpacity * 100)}%</span>
+						<span class="text-left pl-1">{Math.floor($boundaryOpacity * 100)}%</span>
 
 						<span>CAD</span>
 						<input
@@ -145,9 +114,9 @@
 							min={0}
 							max={1}
 							step={0.01}
-							bind:value={$inverseCadOpacity}
+							bind:value={$cadOpacity}
 						/>
-						<span class="text-left pl-1">{Math.floor($inverseCadOpacity * 100)}%</span>
+						<span class="text-left pl-1">{Math.floor($cadOpacity * 100)}%</span>
 					</div>
 				</div>
 			</div>
