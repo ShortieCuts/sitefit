@@ -71,6 +71,7 @@
 			} else {
 				editor.select(node.id);
 			}
+			editor.flyToSelection(true);
 		}
 	}
 
@@ -113,7 +114,6 @@
 		draggableKey="layers"
 		payload={node.id}
 		commit={(from, to, bias) => {
-			console.log(from, to, bias);
 			let transaction = broker.project.createTransaction();
 			if (bias != 0) {
 				let parentId = broker.project.objectsMap.get(to)?.parent ?? null;
