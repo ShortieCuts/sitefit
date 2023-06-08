@@ -23,7 +23,12 @@ export const TextTool = {
 		broker.stagingObject.set(obj);
 
 		let id = broker.commitStagedObject();
-		if (id) editor.select(id);
+		if (id) {
+			editor.select(id);
+			setTimeout(() => {
+				editor.editingObject.set(id);
+			}, 100);
+		}
 	},
 	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {},
 	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {}

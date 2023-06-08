@@ -15,6 +15,7 @@
 		faExclamationCircle,
 		faExclamationTriangle,
 		faFileImport,
+		faFont,
 		faHome,
 		faInfoCircle,
 		faLayerGroup,
@@ -46,7 +47,7 @@
 	import { refreshData } from 'src/store/cads';
 	import LocationInput from './common/LocationInput.svelte';
 	import LocationMap from './common/LocationMap.svelte';
-	import { Cornerstone, makeObject } from 'core';
+	import { Cornerstone, Material, Text, makeObject } from 'core';
 	import { get } from 'svelte/store';
 	import EditorProperties from './EditorProperties.svelte';
 	import { browser } from '$app/environment';
@@ -95,6 +96,9 @@
 	} = editorContext;
 
 	let needsCornerstone = false;
+
+	let rightClickLonLat = [0, 0];
+	let rightClickRelative = [0, 0];
 
 	function checkCornerstone() {
 		if (!broker.connected || !get(broker.synced)) {
@@ -199,6 +203,54 @@
 			}
 		} catch (e) {
 			editorContext.alert('Paste failed, please use Ctrl/Cmd+V instead.');
+		}
+	}
+	function insertComment() {
+		if (get(isMobile)) return;
+		let latLon = rightClickLonLat;
+
+		editorContext.stagingComment.set({
+			longitude: latLon[1],
+			latitude: latLon[0],
+			text: ''
+		});
+
+		setTimeout(() => {
+			let input = document.querySelector('#comment-input') as HTMLInputElement;
+			input.focus();
+		}, 100);
+	}
+
+	function insertText() {
+		let obj = new Text();
+		obj.style = new Material();
+		obj.style.color = [0, 0, 0, 1];
+		obj.style.filled = false;
+		obj.style.type = 'color';
+		obj.name = 'Text';
+		obj.text = 'Text';
+		obj.size = 6;
+
+		obj.transform.position = [rightClickRelative[0], rightClickRelative[1]];
+
+		broker.stagingObject.set(obj);
+
+		let id = broker.commitStagedObject();
+		if (id) {
+			editorContext.select(id);
+			setTimeout(() => {
+				editorContext.editingObject.set(id);
+			}, 100);
+		}
+	}
+
+	let submittingComment = false;
+	async function submitComment() {
+		try {
+			submittingComment = true;
+			await editorContext.submitComment();
+		} finally {
+			submittingComment = false;
 		}
 	}
 
@@ -505,26 +557,28 @@
 											{/if}
 										</div>
 									</div>
-									<div class="flex flex-row items-center pointer-events-auto -mt-16 -ml-2">
-										<input
-											id="comment-input"
-											class="input-text"
-											style="padding-left: 0.5rem; padding-right: 0.5rem;"
-											on:keydown={(e) => {
-												if (e.key === 'Enter') {
-													editorContext.submitComment();
-												}
-											}}
-											bind:value={$stagingComment.text}
-										/>
-										<button
-											on:click={() => {
-												editorContext.submitComment();
-											}}
-											class="bg-blue-500 rounded-md flex flex-row items-center justify-center p-2 w-8 ml-2 text-white hover:bg-blue-400"
-											><Fa icon={faArrowRight} /></button
-										>
-									</div>
+									{#if !submittingComment}
+										<div class="flex flex-row items-center pointer-events-auto -mt-16 -ml-2">
+											<input
+												id="comment-input"
+												class="input-text"
+												style="padding-left: 0.5rem; padding-right: 0.5rem;"
+												on:keydown={(e) => {
+													if (e.code === 'Enter') {
+														submitComment();
+													}
+												}}
+												bind:value={$stagingComment.text}
+											/>
+											<button
+												on:click={() => {
+													submitComment();
+												}}
+												class="bg-blue-500 rounded-md flex flex-row items-center justify-center p-2 w-8 ml-2 text-white hover:bg-blue-400"
+												><Fa icon={faArrowRight} /></button
+											>
+										</div>
+									{/if}
 								</div>
 							{/key}
 						{/if}
@@ -572,7 +626,18 @@
 					</EditorMap>
 				{/key}
 				{#if !$isMobile}
-					<ContextMenu el={midEl} disabled={!canContextMenu}>
+					<ContextMenu
+						on:activate={() => {
+							rightClickLonLat = [...get(editorContext.currentMousePosition)];
+							rightClickRelative = [...get(editorContext.currentMousePositionRelative)];
+						}}
+						el={midEl}
+						disabled={!canContextMenu}
+					>
+						<button on:click={insertComment}><Fa icon={faComment} /> Insert Comment </button>
+						<button on:click={insertText}><Fa icon={faFont} /> Insert Text </button>
+
+						<div class="my-2 w-full border-b border-gray-200" />
 						{#if $effectiveSelection.length > 0}
 							<button on:click={doCopy}><Fa icon={faCopy} /> Copy <KeyBind to="copy" /></button>
 							<button on:click={doPaste}

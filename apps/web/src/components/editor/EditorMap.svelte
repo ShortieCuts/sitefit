@@ -3,7 +3,7 @@
 	import { normalizeWheel } from '$lib/client/normalizeWheel';
 	import { Loader } from '@googlemaps/js-api-loader';
 	import { ThreeJSOverlayView } from '@googlemaps/three';
-	import { getSvelteContext } from 'src/store/editor';
+	import { EditorContext, getSvelteContext } from 'src/store/editor';
 	import { isMobile } from 'src/store/responsive';
 	import { onDestroy, onMount } from 'svelte';
 	import { get, writable } from 'svelte/store';
@@ -452,6 +452,8 @@
 				map.addListener('mousedown', (ev: google.maps.MapMouseEvent) => {
 					if ($isMobile) return;
 					handleMapTap(ev);
+
+					editor.stagingComment.set(null);
 				});
 
 				map.addListener('click', (ev: google.maps.MapMouseEvent) => {

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { isMobile } from 'src/store/responsive';
-	import { onDestroy, onMount } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import Popover from 'svelte-smooth-popover/Popover.svelte';
-
+	const dispatch = createEventDispatcher();
 	export let el: HTMLElement;
 
 	export let disabled = false;
@@ -20,6 +20,7 @@
 		if (disabled) return;
 		if (e.button === 2 || e.target.closest('[data-context]')) {
 			open = true;
+			dispatch('activate');
 			position = { x: e.clientX, y: e.clientY };
 			e.preventDefault();
 			e.stopPropagation();
@@ -34,6 +35,7 @@
 			touchTimer = setTimeout(() => {
 				if (!$isMobile) {
 					open = true;
+					dispatch('activate');
 					position = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 				}
 			}, 500);
