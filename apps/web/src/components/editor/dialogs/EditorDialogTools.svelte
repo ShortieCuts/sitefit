@@ -296,6 +296,9 @@
 					</div>
 				</button>
 			{/each} -->
+		</div>
+
+		<div slot="group-2" class="flex items-center flex-col space-y-2 p-4">
 			<div class="text-lg">Parking</div>
 			<div class="flex flex-row flex-wrap justify-center">
 				<button
@@ -356,8 +359,6 @@
 				</button>
 			</div>
 		</div>
-
-		<div slot="group-2" class="flex flex-col space-y-2 p-4" />
 	</ResponsiveGroup>
 </DialogSlideUp>
 

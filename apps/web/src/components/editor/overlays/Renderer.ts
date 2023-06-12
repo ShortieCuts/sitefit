@@ -205,6 +205,17 @@ class RenderPath implements RenderObject2D {
 			}
 		}
 
+		if (obj.measurement && this.textEl) {
+			let el = this.textEl.querySelector('div') as HTMLDivElement;
+			if (el) {
+				if (this.active) {
+					el.style.background = '#cdefff';
+				} else {
+					el.style.background = 'white';
+				}
+			}
+		}
+
 		let arr = (this.line.geometry.attributes.position as any).array as Float32Array;
 		mat.needsUpdate = true;
 		mat2.needsUpdate = true;
