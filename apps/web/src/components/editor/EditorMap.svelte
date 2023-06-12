@@ -23,6 +23,7 @@
 	import { ZoomRangeModifierService } from '$lib/map/zoom-range-modifier-service';
 	import { SuperZoomMapType } from '$lib/map/super-zoom-map-type';
 	import Fa from 'svelte-fa';
+	import { fade, fly } from 'svelte/transition';
 	const MIN_ZOOM = 1;
 	const MAX_ZOOM = 45;
 
@@ -145,6 +146,25 @@
 
 	let mapRotationNonZero = writable(false);
 	let mapRotation = writable(0);
+	let styleSelectorOpen = false;
+
+	let mapStyles = [
+		{
+			key: 'google-satellite',
+			image: '/img/google-sat.png',
+			name: 'Satellite'
+		},
+		{
+			key: 'google-simple',
+			image: '/img/google-street.png',
+			name: 'Simple'
+		},
+		{
+			key: 'google-dark',
+			image: '/img/google-dark.png',
+			name: 'Dark'
+		}
+	];
 
 	// $: {
 	// 	$heading;
@@ -256,7 +276,10 @@
 				overlayView = new google.maps.OverlayView();
 				overlayView.setMap(map);
 
+				overlayView.onRemove = () => {};
+
 				overlayView.draw = () => {
+					console.log('Draw');
 					for (let overlay of overlays) {
 						for (let draw of overlay.draws) {
 							draw();
@@ -495,21 +518,17 @@
 					let bounds = map.getBounds();
 
 					if (!bounds) {
-						console.log('no bounds');
 						return;
 					}
 
 					let ne = bounds.getNorthEast();
 					let sw = bounds.getSouthWest();
-					console.log('bounds', ne.lat(), sw.lat());
 
 					let scale = Math.abs(ne.lat() - sw.lat()) * 800;
 
 					if (isNaN(scale)) {
-						console.log('scale is NaN');
 						return;
 					}
-					console.log('scale', scale);
 					editor.screenScale.set(scale);
 				}
 
@@ -884,7 +903,12 @@
 			observer.disconnect();
 			observer = null;
 		}
+		overlayView?.setMap(null);
+		overlayView?.unbindAll();
+		overlayView = null;
+		map?.getDiv().remove();
 		map?.unbindAll();
+		map = null;
 	});
 
 	let insideMap = false;
@@ -975,6 +999,52 @@
 >
 	<slot />
 </div>
+
+{#if !$isMobile}
+	<div class="absolute bottom-4 left-4">
+		<div
+			class="flex flex-row items-center justify-center py-2 px-2 select-none rounded-xl"
+			class:bg-white={styleSelectorOpen}
+		>
+			{#each mapStyles as style}
+				{#if styleSelectorOpen || $mapStyle == style.key}
+					<button
+						class="flex flex-col items-center first:ml-0 ml-2 relative"
+						on:click={() => {
+							if (styleSelectorOpen) {
+								$mapStyle = style.key;
+								styleSelectorOpen = false;
+							} else {
+								styleSelectorOpen = true;
+							}
+						}}
+					>
+						<img
+							src={style.image}
+							alt={style.name}
+							class="rounded-xl hover:shadow-md hover:brightness-105 border-white [&.active]:border-blue-500"
+							class:active={styleSelectorOpen && $mapStyle == style.key}
+							class:w-16={!styleSelectorOpen}
+							class:border-2={!styleSelectorOpen}
+							class:border-4={styleSelectorOpen}
+						/>
+						{#if styleSelectorOpen}
+							<b class="mt-2">{style.name}</b>
+						{/if}
+						{#if !styleSelectorOpen}
+							<span
+								class="absolute bottom-2 text-xs"
+								class:text-black={$mapStyle == 'google-simple'}
+								class:text-white={$mapStyle == 'google-satellite' || $mapStyle == 'google-dark'}
+								>Map style</span
+							>
+						{/if}
+					</button>
+				{/if}
+			{/each}
+		</div>
+	</div>
+{/if}
 
 <style lang="scss">
 	:global(.map-container *) {

@@ -7,6 +7,7 @@
 	import { get, writable } from 'svelte/store';
 	import ColorInput from '../common/ColorInput.svelte';
 	import { debouncify } from '$lib/util/debounce';
+	import { isMobile } from 'src/store/responsive';
 
 	const { broker } = getSvelteContext();
 	const mapStyle = broker.writableGlobalProperty<ProjectMapStyle>('mapStyle', 'google-satellite');
@@ -91,12 +92,13 @@
 				<b class="mt-2">Dark</b>
 			</button>
 		</div>
+
 		<div slot="group-1">
 			<div class="flex flex-col items-center pt-4">
 				<div class="flex flex-col w-[337px]">
 					<TransparencySvg />
 					<div class="grid mt-4 text-gray-500" style="grid-template-columns: 1.5fr 4fr 50px;">
-						<span>Boundries</span>
+						<span>Boundaries</span>
 						<input
 							class="w-full"
 							type="range"
