@@ -119,3 +119,7 @@ html {
 body {
 	overscroll-behavior-x: none;
 }
+
+.pointer-events-all {
+	pointer-events: all !important;
+}

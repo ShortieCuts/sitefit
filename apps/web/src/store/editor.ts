@@ -1082,6 +1082,7 @@ export class EditorContext {
 
 	currentMousePosition: Writable<[number, number]> = writable([0, 0]);
 	currentMousePositionRelative: Writable<[number, number]> = writable([0, 0]);
+	currentMousePositionScreen: Writable<[number, number]> = writable([0, 0]);
 
 	constructor(broker: ProjectBroker) {
 		this.broker = broker;

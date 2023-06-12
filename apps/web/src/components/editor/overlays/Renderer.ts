@@ -123,6 +123,8 @@ class RenderPath implements RenderObject2D {
 			childDiv.style.padding = '2px 4px';
 			childDiv.style.borderRadius = '2px';
 			childDiv.style.border = `2px dashed ${colorArrayToCss(obj.style.color)}`;
+			childDiv.dataset.hoverable = 'true';
+			childDiv.dataset.objectId = obj.id;
 
 			this.textEl.appendChild(childDiv);
 

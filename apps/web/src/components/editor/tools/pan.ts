@@ -14,7 +14,8 @@ export const PanTool = {
 		downPosition = [ev.clientX, ev.clientY];
 
 		let cursor = get(editor.currentMousePositionRelative);
-		let hover = getObjectAtCursor(editor, broker, cursor);
+		let cursorScreen = get(editor.currentMousePositionScreen);
+		let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 
 		if (hover) {
 			hover = ascendToRoot(editor, broker, hover);
@@ -34,7 +35,8 @@ export const PanTool = {
 		let dy = downPosition[1] - ev.clientY;
 		if (Math.sqrt(dx * dx + dy * dy) < 0.01) {
 			let cursor = get(editor.currentMousePositionRelative);
-			let hover = getObjectAtCursor(editor, broker, cursor);
+			let cursorScreen = get(editor.currentMousePositionScreen);
+			let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 			if (hover) {
 				hover = ascendToRoot(editor, broker, hover);
 				editor.selection.set([hover]);

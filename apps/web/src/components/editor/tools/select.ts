@@ -403,7 +403,8 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 	editor.selectionDown.set(true);
 
 	let cursor = get(editor.currentMousePositionRelative);
-	let hover = getObjectAtCursor(editor, broker, cursor);
+	let cursorScreen = get(editor.currentMousePositionScreen);
+	let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 
 	let canChangeSelection = true;
 
@@ -465,7 +466,7 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 					}
 				}
 			}
-			hover = getObjectAtCursor(editor, broker, cursor);
+			hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 			if (hover) {
 				hover = ascendToRoot(editor, broker, hover);
 				editor.select(hover);
@@ -957,6 +958,7 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 	} else {
 		// Not transforming
 		let cursor = get(editor.currentMousePositionRelative);
+		let cursorScreen = get(editor.currentMousePositionScreen);
 
 		// Corner grabbing cursor
 		let sels = get(editor.effectiveSelection);
@@ -1101,7 +1103,7 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 		}
 		if (!get(editor.selectionDown) && !(isTranslating || isScaling || isRotating)) {
 			// Hover object highlight
-			let hover = getObjectAtCursor(editor, broker, cursor);
+			let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 
 			if (hover) {
 				hover = ascendToRoot(editor, broker, hover);
@@ -1232,7 +1234,8 @@ function computeSelectionCenter(editor: EditorContext, broker: ProjectBroker): [
 export function getObjectAtCursor(
 	editor: EditorContext,
 	broker: ProjectBroker,
-	cursor: [number, number]
+	cursor: [number, number],
+	cursorScreen: [number, number]
 ): ObjectID | null {
 	let topObject = null;
 	let topZ = -Infinity;
@@ -1242,6 +1245,29 @@ export function getObjectAtCursor(
 		maxX: cursor[0] + 0.0001,
 		maxY: cursor[1] + 0.0001
 	});
+
+	let map = get(editor.map);
+	if (map) {
+		let el = map.getDiv();
+		let hoverables = el.querySelectorAll('[data-hoverable]');
+
+		for (let h of hoverables) {
+			let rect = h.getBoundingClientRect();
+			if (
+				cursorScreen[0] >= rect.left &&
+				cursorScreen[0] <= rect.right &&
+				cursorScreen[1] >= rect.top &&
+				cursorScreen[1] <= rect.bottom
+			) {
+				h.classList.add('pointer-events-all');
+				let el = document.elementFromPoint(cursorScreen[0], cursorScreen[1]);
+				h.classList.remove('pointer-events-all');
+				if (el === h) {
+					return h.dataset.objectId;
+				}
+			}
+		}
+	}
 
 	for (let obj of quadObjects) {
 		if (!obj.flatShape) continue;

@@ -64,10 +64,7 @@
 	}
 	$: canDrag =
 		$isMobile ||
-		(($activeTool == 'pan' || (!ENABLE_TRACKPAD_PAN && $activeTool == 'select')) &&
-			!hoverSelected &&
-			!transformHover &&
-			!transforming) ||
+		($activeTool == 'pan' && !hoverSelected && !transformHover && !transforming) ||
 		$isScrolling
 			? true
 			: $middleMouseDown;
@@ -316,6 +313,7 @@
 					let rad = (deg / 180) * Math.PI;
 
 					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
+					editor.currentMousePositionScreen.set([mevent.clientX, mevent.clientY]);
 
 					let vec = referenceOverlay?.latLngAltitudeToVector3({
 						lat: latLng?.lat() ?? 0,
@@ -743,7 +741,7 @@
 		if (!e.target.closest('.map-container') || e.target.closest('.map-container') != containerEl)
 			return;
 
-		if (e.ctrlKey || e.metaKey) {
+		if (e.ctrlKey || e.metaKey || (get(activeTool) == 'select' && !ENABLE_TRACKPAD_PAN)) {
 			e.preventDefault();
 			if (map && !canDrag) {
 				$isScrolling = true;
@@ -753,7 +751,7 @@
 				}, 100);
 			}
 		} else {
-			if (get(activeTool) == 'pan' || !ENABLE_TRACKPAD_PAN) {
+			if (get(activeTool) == 'pan') {
 				return;
 			}
 			if (!map) return;
