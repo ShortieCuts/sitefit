@@ -23,6 +23,7 @@
 	import EditableLabel from './EditableLabel.svelte';
 	import {
 		createCadFolder,
+		getCads,
 		processCadUploads,
 		updateCadFile,
 		updateCadFolder
@@ -113,9 +114,46 @@
 
 		return false;
 	}
+
+	async function deleteNode() {
+		let tree = await getCads({});
+		if (!tree.data) return;
+		let trashFolder = tree.data.children.find((x) => x.name == 'Trash');
+
+		if (!trashFolder) {
+			let newFolder = await createCadFolder({
+				parentId: tree.data.id
+			});
+			await updateCadFolder(newFolder.data.folderId, {
+				name: 'Trash'
+			});
+			if (!newFolder.data) {
+				console.error('Error making new folder');
+				return;
+			}
+
+			trashFolder = { id: newFolder.data.folderId, name: 'Trash', type: 'folder', children: [] };
+		}
+
+		if (node.type == 'folder') {
+			await updateCadFolder(node.id, {
+				parentId: trashFolder.id.toString()
+			});
+		} else {
+			await updateCadFile(node.id, {
+				parentId: trashFolder.id.toString()
+			});
+		}
+		await refreshData();
+	}
 </script>
 
-<div class="flex flex-col">
+<div
+	class="flex flex-col"
+	style={node.type == 'folder' && node.name == 'Trash'
+		? 'position: absolute; bottom: 0px; width: 100%; background-color: #f9fafb; z-index: 2; max-height: 60%; overflow-y: auto;'
+		: ''}
+>
 	<Draggable
 		allowReorder={false}
 		draggableKey="files"
@@ -196,9 +234,13 @@
 			{:else}
 				<div class="w-6 h-6" />
 			{/if}
-			<span class="w-6 h-6 flex items-center justify-center"
-				><Fa icon={icons[node.type] ?? faQuestion} /></span
-			>
+			<span class="w-6 h-6 flex items-center justify-center">
+				{#if node.type == 'folder' && node.name == 'Trash'}
+					<Fa icon={faTrash} />
+				{:else}
+					<Fa icon={icons[node.type] ?? faQuestion} />
+				{/if}
+			</span>
 			<span class="ml-2 h-6 w-full flex items-center">
 				<EditableLabel
 					fullWidth
@@ -249,7 +291,11 @@
 				});
 			}}><Fa icon={faPenToSquare} /> Rename</button
 		>
-		<button><Fa icon={faTrash} /> Delete</button>
+		<button
+			on:click={async () => {
+				deleteNode();
+			}}><Fa icon={faTrash} /> Delete</button
+		>
 	</ContextMenu>
 </div>
 {#if selected}
@@ -261,23 +307,25 @@
 			: 'absolute'} bottom-0 left-0 w-full z-50"
 	>
 		{#if node.type == 'folder'}
-			<TabWrap names={['Actions', 'Details']}>
-				<TabWrapTab class="flex flex-col space-y-2" tab={0}>
-					<button
-						class="flex flex-row items-center justify-start py-2 px-4"
-						on:click={makeSubFolder}><Fa class="pr-4" icon={faFolderPlus} /> New folder</button
-					>
-					<button
-						class="flex flex-row items-center justify-start py-2 px-4"
-						on:click={(e) => {
-							setTimeout(() => {
-								editingName = true;
-							});
-						}}><Fa class="pr-4" icon={faPenToSquare} /> Rename</button
-					>
-				</TabWrapTab>
-				<TabWrapTab class="bg-green-500" tab={1}>Details</TabWrapTab>
-			</TabWrap>
+			{#if $isMobile}
+				<TabWrap names={['Actions', 'Details']}>
+					<TabWrapTab class="flex flex-col space-y-2" tab={0}>
+						<button
+							class="flex flex-row items-center justify-start py-2 px-4"
+							on:click={makeSubFolder}><Fa class="pr-4" icon={faFolderPlus} /> New folder</button
+						>
+						<button
+							class="flex flex-row items-center justify-start py-2 px-4"
+							on:click={(e) => {
+								setTimeout(() => {
+									editingName = true;
+								});
+							}}><Fa class="pr-4" icon={faPenToSquare} /> Rename</button
+						>
+					</TabWrapTab>
+					<TabWrapTab class="bg-green-500" tab={1}>Details</TabWrapTab>
+				</TabWrap>
+			{/if}
 		{:else}
 			<TabWrap names={$isMobile ? ['Actions', 'Preview', 'Details'] : ['Preview', 'Details']}>
 				{#if $isMobile}
@@ -304,8 +352,13 @@
 								});
 							}}><Fa class="pr-4" icon={faPenToSquare} /> Rename</button
 						>
-						<button class="flex flex-row items-center justify-start py-2 px-4"
-							><Fa class="pr-4" icon={faTrash} /> Delete</button
+						<button
+							class="flex flex-row items-center justify-start py-2 px-4"
+							on:click={async () => {
+								deleteNode();
+							}}
+						>
+							<Fa class="pr-4" icon={faTrash} /> Delete</button
 						>
 					</TabWrapTab>
 				{/if}

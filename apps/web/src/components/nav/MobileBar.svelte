@@ -58,15 +58,15 @@
 
 {#if $isMobile && $mobileToolMode == ''}
 	<div
-		class="editor-mobile-bottom-bar-container fixed bottom-4 left-0 right-0 pointer-events-none h-14 flex flex-row items-center justify-center z-40"
+		class="editor-mobile-bottom-bar-container fixed bottom-4 left-0 right-0 landscape:right-4 landscape:top-0 landscape:bottom-0 landscape:left-auto landscape:h-auto pointer-events-none h-14 flex flex-row items-center justify-center z-40"
 	>
 		<div
-			class="editor-mobile-bottom-bar bg-white rounded-lg flex flex-row h-12 pointer-events-auto shadow-lg"
+			class="editor-mobile-bottom-bar bg-white rounded-lg flex flex-row h-12 pointer-events-auto shadow-lg landscape:flex-col landscape:h-auto"
 		>
 			<button
-				class="flex flex-1 justify-center items-center w-16 text-xl"
+				class="flex flex-1 justify-center items-center w-16 text-xl landscape:min-h-[64px]"
 				on:click={() => {
-					window.location.href = '/';
+					window.location.href = '/projects';
 				}}
 				class:text-blue-500={isHome}
 			>
@@ -75,7 +75,7 @@
 			{#if !isHome}
 				<button
 					class:text-blue-500={$activeDialog == ''}
-					class="flex flex-1 justify-center items-center w-16 text-xl"
+					class="flex flex-1 justify-center items-center w-16 text-xl landscape:min-h-[64px]"
 					on:click={() => {
 						if (get(editor.activeDialog) == '') {
 							editor.flyHome();
@@ -86,12 +86,15 @@
 				>
 					<Fa icon={faEarth} />
 				</button>
-				<button class="flex flex-1 justify-center items-center w-16 text-xl" on:click={() => {}}>
+				<button
+					class="flex flex-1 justify-center items-center w-16 text-xl landscape:min-h-[64px]"
+					on:click={() => {}}
+				>
 					<Fa icon={faCog} />
 				</button>
 			{/if}
 			<button
-				class="flex flex-1 justify-center items-center w-16 text-xl"
+				class="flex flex-1 justify-center items-center w-16 text-xl landscape:min-h-[64px]"
 				class:text-blue-500={$activeDialog == 'cads'}
 				on:click={() => {
 					if ($activeDialog == 'cads') {
