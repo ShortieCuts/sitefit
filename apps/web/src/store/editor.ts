@@ -968,6 +968,12 @@ function mirrorArc(startAngle: number, endAngle: number, mirrorX: boolean, mirro
 	return a;
 }
 
+type Upload = {
+	name: string;
+	status: 'initializing' | 'uploading' | 'converting' | 'queued' | 'done' | 'error';
+	progress: number;
+};
+
 export class EditorContext {
 	activeTool: Writable<string> = writable('pan');
 	measureToolCount: Writable<number> = writable(0);
@@ -1051,6 +1057,9 @@ export class EditorContext {
 	uploadStatus: Writable<'idle' | 'uploading' | 'processing' | 'finished'> = writable('idle');
 	uploadCounter: Writable<number> = writable(0);
 	uploadId: Writable<string> = writable('');
+
+	uploadInProgress: Writable<boolean> = writable(false);
+	uploads: Writable<Upload[]> = writable([]);
 
 	toasts: Writable<
 		{

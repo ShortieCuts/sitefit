@@ -86,7 +86,7 @@
 	<input
 		bind:this={searchEl}
 		class="absolute top-0 left-0 right-0 bottom-0 pl-10 rounded-lg outline-none"
-		placeholder="Search (by Address, CAD name, Project name)"
+		placeholder="Search (by Address, City)"
 		type="search"
 		bind:value={search}
 	/>

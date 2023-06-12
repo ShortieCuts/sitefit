@@ -5,6 +5,7 @@ import type { PublicUserInfo } from '$lib/types/user';
 import type { User } from 'auth';
 import type { EditorContext } from 'src/store/editor';
 import { VertexBufferReader } from './VertexBuffer';
+import { get } from 'svelte/store';
 
 export async function getAuthHeader(): Promise<string> {
 	let { firebaseAuth } = await import('src/store/firebase');
@@ -490,18 +491,24 @@ async function convertAutodeskToObjects(viewer: AutodeskViewer): Promise<string>
 
 let globalViewer: any = null;
 
-async function convertDwgToDxf(dwg: any): Promise<any> {
+async function uploadDwgToDxf(dwg: any): Promise<any> {
+	let arrBufIn = new Uint8Array(await dwg.arrayBuffer());
+	let result = await fetch('https://autodesk.server-a.workers.dev', {
+		method: 'POST',
+		body: arrBufIn,
+		headers: {
+			'Content-Type': 'application/octet-stream',
+			'Content-Disposition': 'attachment; filename=file.dwg'
+		}
+	}).then((r) => r.json());
+
+	return result;
+}
+
+async function convertDwgToDxf(uploadedDwgData: any): Promise<any> {
 	if (USE_AUTODESK) {
 		return await new Promise(async (restop, reject) => {
-			let arrBufIn = new Uint8Array(await dwg.arrayBuffer());
-			let result = await fetch('https://autodesk.server-a.workers.dev', {
-				method: 'POST',
-				body: arrBufIn,
-				headers: {
-					'Content-Type': 'application/octet-stream',
-					'Content-Disposition': 'attachment; filename=file.dwg'
-				}
-			}).then((r) => r.json());
+			let result = uploadedDwgData;
 			// let result = {
 			// 	accessToken:
 			// 		'eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIiwicGkuYXRtIjoiN3ozaCJ9',
@@ -529,7 +536,7 @@ async function convertDwgToDxf(dwg: any): Promise<any> {
 					viewDiv.style.top = '0px';
 					viewDiv.style.width = '100%';
 					viewDiv.style.height = '100%';
-					viewDiv.style.opacity = '1';
+					viewDiv.style.opacity = '0';
 					viewDiv.style.pointerEvents = 'none';
 
 					document.body.appendChild(viewDiv);
@@ -570,8 +577,7 @@ async function convertDwgToDxf(dwg: any): Promise<any> {
 					async function onDocumentLoadSuccess(viewerDocument) {
 						var defaultModel = viewerDocument.getRoot().getDefaultGeometry();
 						viewer.loadDocumentNode(viewerDocument, defaultModel);
-
-						console.log(viewer);
+						// viewer.console.log(viewer);
 						while (
 							!viewer.model ||
 							!viewer.model.getData() ||
@@ -580,9 +586,10 @@ async function convertDwgToDxf(dwg: any): Promise<any> {
 							await new Promise((resolve) => setTimeout(resolve, 1000));
 						}
 						let raw = await convertAutodeskToObjects(viewer);
-						viewer.finish();
+						// viewer.finish();
+
 						viewer = null;
-						Autodesk.Viewing.shutdown();
+						//Autodesk.Viewing.shutdown();
 						resolvei(raw);
 					}
 					function onDocumentLoadFailure() {
@@ -645,48 +652,63 @@ export async function processCadUploads(
 	files: FileList,
 	targetFolder: number | null = null
 ): Promise<string[]> {
+	editor.uploadInProgress.set(true);
 	let promises: Promise<string>[] = [];
 	editor.uploadStatus.set('idle');
 
+	let uploads: { name: string; data: any; id: number }[] = [];
+
+	function updateUpload(
+		id: number,
+		status: 'initializing' | 'uploading' | 'converting' | 'queued' | 'done' | 'error',
+		progress: number
+	) {
+		let u = get(editor.uploads);
+		u[id].status = status;
+		u[id].progress = progress;
+		editor.uploads.set(u);
+	}
+
+	let counter = -1;
+	editor.uploads.set(
+		[...files].map((f) => ({
+			name: f.name,
+			status: 'initializing',
+			progress: 0
+		}))
+	);
 	for (let f of files) {
+		counter++;
+		let i = counter;
 		if (f.name.endsWith('.dwg')) {
 			promises.push(
 				new Promise((resolve, reject) => {
-					let uploadToast = editor.info("Uploading '" + f.name + "'...", 50000);
-					editor.uploadStatus.set('uploading');
+					// let uploadToast = editor.info("Uploading '" + f.name + "'...", 50000);
+					// editor.uploadStatus.set('uploading');
 					let reader = new FileReader();
 					reader.onload = async (e) => {
 						let data = e.target?.result;
 						if (data) {
-							uploadToast();
-							let convertToast = editor.info("Converting '" + f.name + "'...", 50000);
+							// uploadToast();
+							// let convertToast = editor.info("Converting '" + f.name + "'...", 50000);
 							editor.uploadStatus.set('processing');
+							updateUpload(i, 'uploading', 10);
 							try {
-								let dxf = await convertDwgToDxf(f);
-								convertToast();
-								let createToast = editor.info("Finalizing '" + f.name + "'...", 50000);
-
-								let cad = await createCad({
-									data: dxf,
-									description: '',
-									filename: f.name,
-									lat: 0,
-									long: 0,
+								let data = await uploadDwgToDxf(f);
+								updateUpload(i, 'queued', 60);
+								uploads.push({
+									data,
 									name: f.name,
-									parent: targetFolder
+									id: i
 								});
-
-								createToast();
-								editor.info("Finished '" + f.name + "'");
-								editor.uploadStatus.set('finished');
-								editor.uploadId.set(cad.data.cadId);
-								editor.uploadCounter.update((x) => x + 1);
-								resolve(cad.data.cadId);
+								resolve(data);
 							} catch (e) {
+								updateUpload(i, 'error', 0);
 								console.error(e);
-								convertToast();
+								// convertToast();
 								editor.alert("Failed to convert '" + f.name + "'");
 								editor.uploadStatus.set('idle');
+								reject();
 							}
 						} else {
 							reject();
@@ -698,5 +720,36 @@ export async function processCadUploads(
 		}
 	}
 
-	return Promise.all(promises);
+	await Promise.all(promises);
+
+	let finals = [];
+
+	for (let upload of uploads) {
+		updateUpload(upload.id, 'converting', 65);
+		let dxf = await convertDwgToDxf(upload.data);
+
+		updateUpload(upload.id, 'converting', 95);
+
+		let cad = await createCad({
+			data: dxf,
+			description: '',
+			filename: upload.name,
+			lat: 0,
+			long: 0,
+			name: upload.name,
+			parent: targetFolder
+		});
+
+		updateUpload(upload.id, 'done', 100);
+
+		// createToast();
+
+		editor.uploadStatus.set('finished');
+		editor.uploadId.set(cad.data.cadId);
+		editor.uploadCounter.update((x) => x + 1);
+		finals.push(cad.data.cadId);
+	}
+
+	editor.uploadInProgress.set(false);
+	return finals;
 }

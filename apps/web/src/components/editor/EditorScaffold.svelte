@@ -26,7 +26,8 @@
 		faRotateRight,
 		faSearch,
 		faShare,
-		faTrash
+		faTrash,
+		faUpload
 	} from '@fortawesome/free-solid-svg-icons';
 	import { fade, slide, fly } from 'svelte/transition';
 	import { auth } from '../../store/auth';
@@ -94,7 +95,9 @@
 		stagingComment,
 		editingObject,
 		focusComment,
-		activeTool
+		activeTool,
+		uploadInProgress,
+		uploads
 	} = editorContext;
 
 	let needsCornerstone = false;
@@ -726,6 +729,37 @@
 	</div>
 {/if}
 
+{#if $uploadInProgress}
+	<div
+		class="bg-black bg-opacity-75 flex items-center justify-center fixed top-0 right-0 bottom-0 left-0 z-50"
+	>
+		<div class="bg-white rounded-md shadow-md p-4 w-[400px] flex flex-col">
+			<div class="text-4xl flex flex-col items-center justify-center p-8">
+				<Fa class="blink" icon={faUpload} />
+				<h2 class="mt-4 text-lg">Uploading CAD{$uploads.length > 1 ? 's' : ''}</h2>
+			</div>
+			{#each $uploads as upload}
+				<div class="flex flex-row items-center min-h-12 border-b border-gray-100 py-4">
+					<div class="flex-1">
+						{upload.name}
+					</div>
+					<div class="text-gray-400 uppercase text-sm px-2">
+						{upload.status}
+					</div>
+					<div>
+						<div class="h-2 w-24 relative bg-gray-100 overflow-hidden rounded">
+							<div
+								class="rounded absolute top-0 left-0 bottom-0 bg-blue-500 transition-all duration-[2s] ease-in-out"
+								style="width: {upload.progress}%;"
+							/>
+						</div>
+					</div>
+				</div>
+			{/each}
+		</div>
+	</div>
+{/if}
+
 <div
 	class="toasts w-[300px] fixed bottom-10 z-20 h-auto rounded-lg space-y-2 px-2 transition-all"
 	style="right: {!$isMobile && $effectiveSelection.length > 0 ? '340px' : '2.5rem'}; {$isMobile
@@ -1134,6 +1168,22 @@
 
 		100% {
 			width: 90%;
+		}
+	}
+
+	:global(.blink) {
+		animation: blink 2s infinite;
+	}
+
+	@keyframes blink {
+		0% {
+			transform: translate(0, 0);
+		}
+		80% {
+			transform: translate(0, -4px);
+		}
+		100% {
+			transform: translate(0, 0px);
 		}
 	}
 </style>
