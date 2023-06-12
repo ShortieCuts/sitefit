@@ -21,6 +21,7 @@ import createDOMPurify from 'dompurify';
 import { colorArrayToCss } from '$lib/util/color';
 import { getSmartObject, smartObjectRender } from './SmartObjects';
 
+const fontAspectRatio = 0.6109113885585942; // Roboto Mono
 const ACTIVE_COLOR = '#0c8ae5';
 
 export interface RenderObject2D {
@@ -103,7 +104,7 @@ class RenderPath implements RenderObject2D {
 			this.textEl.style.fontWeight = 'bold';
 			this.textEl.style.pointerEvents = 'none';
 			this.textEl.style.transformOrigin = 'center';
-			this.textEl.style.fontFamily = 'monospace';
+			this.textEl.style.fontFamily = '"Roboto Mono", monospace';
 			this.textEl.style.lineHeight = '1em';
 			this.textEl.style.overflow = 'visible';
 			this.textEl.style.height = '0px';
@@ -380,7 +381,8 @@ class RenderPath implements RenderObject2D {
 		let screenSize = 16;
 
 		if (obj.style.color) this.textEl.style.color = colorArrayToCss(obj.style.color);
-		let fontAspectRatio = 0.5498070069642946;
+		// let fontAspectRatio = fontAspectRatio;
+
 		let charCount = text.length;
 
 		// Algebra: text.length * fontAspectRatio * fontSize = lineSize;
@@ -388,7 +390,7 @@ class RenderPath implements RenderObject2D {
 		let fontSize = (lineSize - lineGap * 2) / (text.length * fontAspectRatio);
 
 		this.textEl.style.fontSize = `${Math.min(fontSize, 18)}px`;
-		// this.textEl.style.width = `${screenSize * text.length * 0.5498070069642946}px`;
+		// this.textEl.style.width = `${screenSize * text.length * fontAspectRatio}px`;
 		// this.textEl.style.top = pos.y + 'px';
 		// this.textEl.style.left = pos.x + 'px';
 
@@ -566,7 +568,7 @@ class RenderText implements RenderObject2D {
 		this.el.style.fontWeight = 'bold';
 		this.el.style.pointerEvents = 'none';
 		this.el.style.transformOrigin = 'top left';
-		this.el.style.fontFamily = 'monospace';
+		this.el.style.fontFamily = '"Roboto Mono", monospace';
 		this.el.style.lineHeight = '1em';
 		this.el.style.overflow = 'hidden';
 		this.el.style.resize = 'none';
@@ -712,7 +714,7 @@ class RenderText implements RenderObject2D {
 		}
 
 		let inViewport =
-			pos.x + obj.text.length * screenSize * 0.5498070069642946 > 0 &&
+			pos.x + obj.text.length * screenSize * fontAspectRatio > 0 &&
 			pos.y + screenSize > 0 &&
 			pos.x < window.innerWidth &&
 			pos.y < window.innerHeight;
@@ -723,7 +725,7 @@ class RenderText implements RenderObject2D {
 				this.el.style.color = overlay.cadOverrideColor;
 			}
 			this.el.style.fontSize = `${screenSize}px`;
-			this.el.style.width = `${screenSize * obj.text.length * 0.5498070069642946}px`;
+			this.el.style.width = `${screenSize * obj.text.length * fontAspectRatio}px`;
 			// this.el.style.top = pos.y + 'px';
 			// this.el.style.left = pos.x + 'px';
 			let trans = `translate(${pos.x}px, ${pos.y}px) rotate(${
@@ -753,7 +755,7 @@ class RenderSVG implements RenderObject2D {
 
 		this.el.style.pointerEvents = 'none';
 		this.el.style.transformOrigin = 'top left';
-		this.el.style.fontFamily = 'monospace';
+		this.el.style.fontFamily = '"Roboto Mono", monospace';
 		this.el.style.lineHeight = '1em';
 		this.el.style.overflow = 'hidden';
 

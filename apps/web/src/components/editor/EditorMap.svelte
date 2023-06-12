@@ -735,10 +735,11 @@
 	}
 
 	function handleMouseWheel(e: any) {
+		console.log(e);
 		if (!e.target.closest('.map-container') || e.target.closest('.map-container') != containerEl)
 			return;
 
-		if (e.ctrlKey) {
+		if (e.ctrlKey || e.metaKey) {
 			e.preventDefault();
 			if (map && !canDrag) {
 				$isScrolling = true;
@@ -967,7 +968,7 @@
 	}
 </script>
 
-<svelte:window on:mousewheel|capture={handleMouseWheel} />
+<svelte:window on:wheel|capture={handleMouseWheel} />
 
 <div
 	class="map-container h-full z-0"

@@ -463,7 +463,7 @@ export class Text extends Object2D implements Serializable {
   maxWidth: number = 0;
 
   computeShape() {
-    const fontRatio = 0.5498070069642946; // Calculated by dividing the monospace font height by a single character width
+    const fontRatio = 0.6002113885585942; // Calculated by dividing the monospace font height by a single character width
     const m = this.getMatrix();
     let width = this.text.length * fontRatio * this.size;
     let height = this.size;

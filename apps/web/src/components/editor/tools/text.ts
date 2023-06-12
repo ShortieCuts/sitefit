@@ -26,6 +26,7 @@ export const TextTool = {
 		let id = broker.commitStagedObject();
 		if (id) {
 			editor.select(id);
+			editor.activeTool.set('pan');
 			setTimeout(() => {
 				editor.editingObject.set(id);
 			}, 100);

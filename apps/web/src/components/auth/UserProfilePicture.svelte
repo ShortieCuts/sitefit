@@ -49,7 +49,7 @@
 {#if photoURL}
 	<img
 		referrerpolicy="no-referrer"
-		class="w-10 h-10 rounded-full border-[2px] shadow-md"
+		class="w-10 h-10 min-w-[2.5rem] min-h-[2.5rem] rounded-full border-[2px] shadow-md"
 		style="border-color: {ringColor}; {small ? 'width: 2rem; height: 2rem' : ''}"
 		src={photoURL}
 		alt="User profile"
