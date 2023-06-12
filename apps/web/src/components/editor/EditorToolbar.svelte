@@ -22,6 +22,7 @@
 	import { SmartTool } from './tools/smart';
 	import { ShapeTool } from './tools/shape';
 	import { InfoPopover } from 'ui';
+	import { get } from 'svelte/store';
 
 	const toolbarItems: {
 		icon: any;
@@ -113,7 +114,18 @@
 			if (editor.currentToolHandlers) {
 				editor.currentToolHandlers.cancel(editor, broker);
 			}
-			editor.activeTool.set('select');
+			let activeToolNow = get(editor.activeTool);
+			if (activeToolNow == 'select') {
+				if (get(editor.selection).length > 0) {
+					editor.deselectAll();
+				} else {
+					editor.activeTool.set('pan');
+				}
+			} else if (activeToolNow == 'pan') {
+				if (get(editor.selection).length > 0) {
+					editor.deselectAll();
+				}
+			}
 		}
 	}
 
