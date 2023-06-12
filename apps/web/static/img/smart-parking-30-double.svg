@@ -1,0 +1,17 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="128" height="128" fill="white"/>
+<path d="M25 29V118" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25 88L39 65" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25 118L39 95" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25 58L39 35" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25 29L39 6" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="25" cy="29" r="2.5" fill="white" stroke="#55B8FF"/>
+<circle cx="25" cy="118" r="2.5" fill="white" stroke="#55B8FF"/>
+<path d="M103 29V118" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M103 88L89 65" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M103 118L89 95" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M103 58L89 35" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M103 29L89 6" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="3" cy="3" r="2.5" transform="matrix(-1 0 0 1 106 26)" fill="white" stroke="#55B8FF"/>
+<circle cx="3" cy="3" r="2.5" transform="matrix(-1 0 0 1 106 115)" fill="white" stroke="#55B8FF"/>
+</svg>

@@ -7,13 +7,16 @@
 		type ObjectProperty,
 		Object2D,
 		ObjectType,
-		Path
+		Path,
+		getSmartObject,
+		smartObjectProps
 	} from 'core';
 	import Fa from 'svelte-fa';
 	import { faAngleDown, faCompassDrafting } from '@fortawesome/free-solid-svg-icons';
 
 	import ColorInput from './common/ColorInput.svelte';
-	import { getSmartObject, smartObjectProps } from './overlays/SmartObjects';
+
+	import { feetToMeters, metersToFeet } from '$lib/util/distance';
 
 	const { broker, editor } = getSvelteContext();
 
@@ -203,6 +206,16 @@
 				}
 
 				setTo = deg2rad(num);
+			} else if (prop.type == 'meters') {
+				let num = parseFloat((e.target as HTMLInputElement).value);
+				if (isNaN(num)) {
+					recalculateProperties();
+					return;
+				}
+
+				setTo = feetToMeters(num);
+			} else if (prop.type == 'boolean') {
+				setTo = (e.target as HTMLInputElement).checked;
 			} else if (prop.type == 'string') {
 				setTo = (e.target as HTMLInputElement).value;
 			}
@@ -457,12 +470,27 @@
 								bind:value={propertiesDisplay.props[prop.name]}
 								on:change={doPropChange(prop)}
 							/>
+						{:else if prop.type == 'meters'}
+							<input
+								class="w-full px-1"
+								type="number"
+								step={1 / 12}
+								value={metersToFeet(propertiesDisplay.props[prop.name])}
+								on:change={doPropChange(prop)}
+							/>
 						{:else if prop.type == 'angle'}
 							<input
 								class="w-full px-1"
 								step="1"
 								type="number"
 								value={rad2deg(propertiesDisplay.props[prop.name])}
+								on:change={doPropChange(prop)}
+							/>
+						{:else if prop.type == 'boolean'}
+							<input
+								class="ml-2 px-1"
+								type="checkbox"
+								checked={propertiesDisplay.props[prop.name]}
 								on:change={doPropChange(prop)}
 							/>
 						{:else if prop.type == 'geo'}

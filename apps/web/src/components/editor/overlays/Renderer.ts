@@ -12,14 +12,15 @@ import {
 	type Object2D,
 	type ObjectID,
 	ObjectType,
-	SVG
+	SVG,
+	getSmartObject,
+	smartObjectRender
 } from 'core';
 import type { Vector3 } from 'three';
 import Flatten from '@flatten-js/core';
 import { metersAreaToFootArea, metersToFeetPrettyPrint } from '$lib/util/distance';
 import createDOMPurify from 'dompurify';
 import { colorArrayToCss } from '$lib/util/color';
-import { getSmartObject, smartObjectRender } from './SmartObjects';
 
 const fontAspectRatio = 0.6109113885585942; // Roboto Mono
 const ACTIVE_COLOR = '#0c8ae5';
@@ -170,6 +171,7 @@ class RenderPath implements RenderObject2D {
 
 				for (let child of children) {
 					let ro = createRenderObject(overlay, child);
+					ro.active = this.active;
 					ro.refresh(overlay, child);
 					this.smartObjects.push([child, ro]);
 				}
@@ -198,6 +200,11 @@ class RenderPath implements RenderObject2D {
 			if (overlay.cadOverrideColor) {
 				mat.color.set(overlay.cadOverrideColor as any);
 				mat2.color.set(overlay.cadOverrideColor as any);
+			}
+
+			if (obj.smartObject && !this.active) {
+				mat.transparent = true;
+				mat.opacity = 0;
 			}
 
 			if (this.active) {

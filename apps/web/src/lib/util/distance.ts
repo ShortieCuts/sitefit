@@ -20,3 +20,11 @@ export function metersAreaToFootArea(meters: number) {
 	let feet = meters * 10.764;
 	return feet.toFixed(1).replace(/\.0$/, '') + "' ft²";
 }
+
+export function feetToMeters(feet: number) {
+	return feet / 3.28084;
+}
+
+export function metersToFeet(meters: number) {
+	return meters * 3.28084;
+}

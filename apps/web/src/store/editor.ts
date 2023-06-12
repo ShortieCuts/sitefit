@@ -1264,6 +1264,9 @@ export class EditorContext {
 	flyToObject(id: ObjectID, zoom = true) {
 		let bounds = this.broker.project.computeBoundsMulti([id]);
 		let center = this.getBoundsCenter(bounds);
+		if (isNaN(center[0]) || isNaN(center[1])) {
+			return;
+		}
 
 		let [lon, lat] = this.positionToLonLat(center[0], center[1]);
 		let map = get(this.map);

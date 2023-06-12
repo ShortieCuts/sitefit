@@ -17,8 +17,9 @@
 	import { onMount } from 'svelte';
 
 	import { hexColorToArray } from '$lib/util/color';
-	import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+	import { faArrowLeft, faArrowRight, faRulerHorizontal } from '@fortawesome/free-solid-svg-icons';
 	import Fa from 'svelte-fa';
+	import { feetToMeters } from '$lib/util/distance';
 
 	const { broker, editor } = getSvelteContext();
 
@@ -240,16 +241,44 @@
 		import('src/lib/client/path-data-polyfill.js');
 	});
 
-	function smartParking(degrees: number) {
+	function smartParking(degrees: 90 | 60 | 45 | 30, double: boolean = false) {
 		editor.activeTool.set('smart');
 		editor.activateDialog('');
 		editor.activeToolSmartObject.set('parking');
 
-		editor.activeToolSmartObjectProperties.set({
-			angle: degrees > 0 ? 180 - degrees : Math.abs(degrees),
-			direction: Math.sign(degrees),
-			spacing: Math.abs(degrees) == 30 ? 4 : 2.59
-		});
+		let lineLengthGivenAngleAndBase = (a: number, b: number) => b / Math.sin(a);
+		let measures: any = {
+			'90': {
+				distance: feetToMeters(18),
+				spacing: feetToMeters(9),
+				rowSpacing: feetToMeters(60),
+				double,
+				angle: 90
+			},
+			'60': {
+				distance: feetToMeters(23.209480821422957), // lineLengthGivenAngleAndBase(degreesToRadians(60), 20.1),
+				spacing: feetToMeters(10.4),
+				rowSpacing: feetToMeters(54.7),
+				double,
+				angle: 60
+			},
+			'45': {
+				distance: feetToMeters(26.87005768508881), // lineLengthGivenAngleAndBase(degreesToRadians(45), 19),
+				spacing: feetToMeters(12.7),
+				rowSpacing: feetToMeters(50),
+				double,
+				angle: 45
+			},
+			'30': {
+				distance: feetToMeters(33.60000000000001), // lineLengthGivenAngleAndBase(degreesToRadians(30), 16.8),
+				spacing: feetToMeters(18),
+				rowSpacing: feetToMeters(45.8),
+				double,
+				angle: 30
+			}
+		};
+
+		editor.activeToolSmartObjectProperties.set(measures[degrees.toString()]);
 	}
 </script>
 
@@ -307,17 +336,35 @@
 						smartParking(90);
 					}}
 				>
-					<div class="mb-2 flex flex-row items-center"><Fa icon={faArrowLeft} /> 90°</div>
+					<div class="mb-2 flex flex-row items-center">90°</div>
 					<img class="rounded -scale-100" src="/img/smart-parking-90.svg" alt="90deg" />
 				</button>
 				<button
 					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
 					on:click={() => {
-						smartParking(-90);
+						smartParking(90, true);
 					}}
 				>
-					<div class="mb-2 flex flex-row items-center">90° <Fa icon={faArrowRight} /></div>
-					<img class="rounded" src="/img/smart-parking-90.svg" alt="90deg" />
+					<div class="mb-2 flex flex-row items-center">90°</div>
+					<img class="rounded" src="/img/smart-parking-90-double.svg" alt="90deg" />
+				</button>
+				<button
+					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					on:click={() => {
+						smartParking(60);
+					}}
+				>
+					<div class="mb-2 flex flex-row items-center">60°</div>
+					<img class="rounded -scale-x-100" src="/img/smart-parking-60.svg" alt="60deg" />
+				</button>
+				<button
+					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+					on:click={() => {
+						smartParking(60, true);
+					}}
+				>
+					<div class="mb-2 flex flex-row items-center">60°</div>
+					<img class="rounded" src="/img/smart-parking-60-double.svg" alt="60deg" />
 				</button>
 
 				<button
@@ -326,17 +373,17 @@
 						smartParking(45);
 					}}
 				>
-					<div class="mb-2 flex flex-row items-center"><Fa icon={faArrowLeft} /> 45</div>
+					<div class="mb-2 flex flex-row items-center">45°</div>
 					<img class="rounded -scale-x-100" src="/img/smart-parking-45.svg" alt="45deg" />
 				</button>
 				<button
 					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
 					on:click={() => {
-						smartParking(-45);
+						smartParking(45, true);
 					}}
 				>
-					<div class="mb-2 flex flex-row items-center">45° <Fa icon={faArrowRight} /></div>
-					<img class="rounded" src="/img/smart-parking-45.svg" alt="45deg" />
+					<div class="mb-2 flex flex-row items-center">45°</div>
+					<img class="rounded" src="/img/smart-parking-45-double.svg" alt="45deg" />
 				</button>
 
 				<button
@@ -345,17 +392,17 @@
 						smartParking(30);
 					}}
 				>
-					<div class="mb-2 flex flex-row items-center"><Fa icon={faArrowLeft} /> 30</div>
+					<div class="mb-2 flex flex-row items-center">30°</div>
 					<img class="rounded -scale-x-100" src="/img/smart-parking-30.svg" alt="30deg" />
 				</button>
 				<button
 					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
 					on:click={() => {
-						smartParking(-30);
+						smartParking(30, true);
 					}}
 				>
-					<div class="mb-2 flex flex-row items-center">30° <Fa icon={faArrowRight} /></div>
-					<img class="rounded" src="/img/smart-parking-30.svg" alt="30deg" />
+					<div class="mb-2 flex flex-row items-center">30°</div>
+					<img class="rounded" src="/img/smart-parking-30-double.svg" alt="30deg" />
 				</button>
 			</div>
 		</div>

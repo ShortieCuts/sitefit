@@ -316,6 +316,20 @@ export class Path extends Object2D implements Serializable {
         let poly = new Flatten.Polygon(points);
         segs.push(poly);
       }
+
+      if (this.smartObject) {
+        let tempObjs = smartObjectRender(
+          this,
+          this.smartObject,
+          this.smartProperties
+        );
+        for (let obj of tempObjs) {
+          obj.computeShape();
+          for (let seg of obj.flatShape) {
+            segs.push(seg);
+          }
+        }
+      }
       this.flatShape = segs;
     } catch (e) {
       console.error(e);
@@ -712,7 +726,8 @@ export type ObjectProperty = {
     | "select"
     | "text"
     | "geo"
-    | "transform";
+    | "transform"
+    | "meters";
   options?: string[];
 };
 
@@ -720,9 +735,9 @@ export const ObjectProperties: {
   [key in ObjectType]: ObjectProperty[];
 } = {
   [ObjectType.Path]: [
-    {
-      name: "stroke",
-    },
+    // {
+    //   name: "stroke",
+    // },
   ],
   [ObjectType.Group]: [],
   [ObjectType.Note]: [
@@ -783,3 +798,249 @@ export const ObjectProperties: {
   ],
   [ObjectType.SVG]: [],
 };
+
+export type SmartObject<
+  T extends {
+    [key: string]: {
+      default: any;
+      type: ObjectProperty;
+    };
+  } = any
+> = {
+  id: string;
+  properties: T;
+  render: (
+    path: Path,
+    properties: {
+      [key in keyof T]: T[key]["default"];
+    }
+  ) => Object2D[];
+};
+
+function makeSmartObject<
+  T extends {
+    [key: string]: {
+      default: any;
+      type: ObjectProperty;
+    };
+  }
+>(obj: SmartObject<T>): SmartObject<T> {
+  return obj;
+}
+
+function walkPath(
+  path: Path,
+  step: number,
+  fn: (
+    position: [number, number],
+    normal: [number, number],
+    tangent: [number, number]
+  ) => void
+) {
+  let distanceCounter = 0;
+  if (path.segments.length <= 1) return;
+
+  let currentSegment = 0;
+  while (true) {
+    let start = path.segments[currentSegment];
+    let end = path.segments[currentSegment + 1];
+    let dx = end[0] - start[0];
+    let dy = end[1] - start[1];
+    let segmentLength = Math.sqrt(dx * dx + dy * dy);
+
+    let t = distanceCounter / segmentLength;
+    let normal: [number, number] = [dy, -dx];
+    let tangent: [number, number] = [dx, dy];
+    fn([start[0] + dx * t, start[1] + dy * t], normal, tangent);
+    distanceCounter += step;
+    if (distanceCounter > segmentLength) {
+      distanceCounter -= segmentLength;
+      currentSegment++;
+      if (currentSegment >= path.segments.length - 1) break;
+      continue;
+    }
+    if (currentSegment >= path.segments.length - 1) break;
+  }
+}
+
+const Parking = makeSmartObject({
+  id: "parking",
+  properties: {
+    spacing: {
+      default: 2.59, // Meters
+      type: {
+        name: "spacing",
+        type: "meters",
+      },
+    },
+    angle: {
+      default: 90, // Degrees
+      type: {
+        name: "angle",
+        type: "number",
+      },
+    },
+    distance: {
+      default: 5, // Meters
+      type: {
+        name: "distance",
+        type: "meters",
+      },
+    },
+    direction: {
+      default: 1,
+      type: {
+        name: "direction",
+        type: "number",
+      },
+    },
+    double: {
+      default: false,
+      type: {
+        name: "double",
+        type: "boolean",
+      },
+    },
+    rowSpacing: {
+      default: 10,
+      type: {
+        name: "rowSpacing",
+        type: "meters",
+      },
+    },
+    showLine: {
+      default: true,
+      type: {
+        name: "showLine",
+        type: "boolean",
+      },
+    },
+  },
+  render(path: Path, props) {
+    let objs: Path[] = [];
+
+    let spacing = props.spacing;
+    let angle = props.angle;
+    let distance = props.distance;
+    let direction = props.direction ?? 1;
+
+    let x = 0;
+    let y = 0;
+
+    const DEG2RAD = Math.PI / 180;
+
+    const generateOnPath = (p: Path, flip = false) => {
+      let i = 0;
+      let matrix = p.getMatrix();
+      walkPath(p, spacing, ([x, y], normal, tangent) => {
+        i++;
+        let obj = new Path();
+        obj.id = `${p.id}-parking-${i}`;
+        obj.name = `Parking Line ${i}`;
+        let normalAngle = Math.atan2(tangent[1], tangent[0]);
+        let applyAngle = angle;
+        if (flip) {
+          applyAngle = -applyAngle;
+        }
+        let dx =
+          Math.cos(normalAngle + applyAngle * DEG2RAD) * distance * direction;
+        let dy =
+          Math.sin(normalAngle + applyAngle * DEG2RAD) * distance * direction;
+        obj.segments = [
+          matrix.transform([x, y]),
+          matrix.transform([x + dx, y + dy]),
+        ];
+
+        obj.style = new Material();
+        obj.style.color = [...p.style.color];
+
+        objs.push(obj);
+      });
+    };
+
+    generateOnPath(path);
+
+    if (props.showLine) {
+      let p = new Path();
+      p.id = `${path.id}-parking-line`;
+      p.name = `${path.name} (Line)`;
+      p.segments = path.segments.map((s) => [...s]);
+      p.style = new Material();
+      p.style.color = [...path.style.color];
+      p.transform.position = [...path.transform.position];
+      p.transform.rotation = path.transform.rotation;
+      p.transform.size = [...path.transform.size];
+
+      objs.push(p);
+    }
+
+    if (props.double) {
+      let p = new Path();
+      p.id = `${path.id}-parking-double`;
+      p.name = `${path.name} (Double)`;
+      p.segments = path.segments.map((s) => [...s]);
+      p.style = new Material();
+      p.style.color = [...path.style.color];
+      p.transform.position = [...path.transform.position];
+      p.transform.rotation = path.transform.rotation;
+      p.transform.size = [...path.transform.size];
+
+      let newSegments: [number, number][] = [];
+
+      let gap = props.rowSpacing;
+      for (let i = 1; i < p.segments.length; i++) {
+        let [x1, y1] = p.segments[i - 1];
+        let [x2, y2] = p.segments[i];
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+        let length = Math.sqrt(dx * dx + dy * dy);
+        let normalAngle = Math.atan2(dy, dx);
+        let normal: [number, number] = [
+          Math.cos(normalAngle),
+          Math.sin(normalAngle),
+        ];
+        let tangent: [number, number] = [
+          Math.cos(normalAngle + Math.PI / 2),
+          Math.sin(normalAngle + Math.PI / 2),
+        ];
+
+        newSegments.push([x1 + tangent[0] * gap, y1 + tangent[1] * gap]);
+        newSegments.push([x2 + tangent[0] * gap, y2 + tangent[1] * gap]);
+      }
+
+      p.segments = newSegments;
+
+      generateOnPath(p, true);
+      if (props.showLine) {
+        objs.push(p);
+      }
+    }
+
+    return objs;
+  },
+});
+
+export const smartObjects: SmartObject[] = [Parking];
+export function getSmartObject(id: string) {
+  return smartObjects.find((x) => x.id === id);
+}
+export function smartObjectRender(path: Path, id: string, props: any) {
+  let obj = getSmartObject(id);
+  if (!obj) return [];
+  props = structuredClone(props);
+  for (let key in obj.properties) {
+    if (typeof props[key] === "undefined")
+      props[key] = obj.properties[key].default;
+  }
+  return obj.render(path, props);
+}
+export function smartObjectProps(path: Path, id: string, props: any) {
+  let obj = getSmartObject(id);
+  if (!obj) return {};
+  props = structuredClone(props);
+  for (let key in obj.properties) {
+    if (typeof props[key] === "undefined")
+      props[key] = obj.properties[key].default;
+  }
+  return props;
+}

@@ -1,0 +1,15 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="128" height="128" fill="white"/>
+<path d="M23 29V118L46 95" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M23 88L46 65" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M23 58L46 35" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M23 29L46 6" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="23" cy="29" r="2.5" fill="white" stroke="#55B8FF"/>
+<circle cx="23" cy="118" r="2.5" fill="white" stroke="#55B8FF"/>
+<path d="M104 29V118L81 95" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M104 88L81 65" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M104 58L81 35" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M104 29L81 6" stroke="#55B8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="3" cy="3" r="2.5" transform="matrix(-1 0 0 1 107 26)" fill="white" stroke="#55B8FF"/>
+<circle cx="3" cy="3" r="2.5" transform="matrix(-1 0 0 1 107 115)" fill="white" stroke="#55B8FF"/>
+</svg>
