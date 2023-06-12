@@ -26,6 +26,7 @@
 	import { fade, fly } from 'svelte/transition';
 	const MIN_ZOOM = 1;
 	const MAX_ZOOM = 45;
+	const ENABLE_TRACKPAD_PAN = false;
 
 	const { editor, broker } = getSvelteContext();
 	const { geo, heading } = broker.watchCornerstone();
@@ -63,7 +64,10 @@
 	}
 	$: canDrag =
 		$isMobile ||
-		($activeTool == 'pan' && !hoverSelected && !transformHover && !transforming) ||
+		(($activeTool == 'pan' || (!ENABLE_TRACKPAD_PAN && $activeTool == 'select')) &&
+			!hoverSelected &&
+			!transformHover &&
+			!transforming) ||
 		$isScrolling
 			? true
 			: $middleMouseDown;
@@ -749,7 +753,7 @@
 				}, 100);
 			}
 		} else {
-			if (get(activeTool) == 'pan') {
+			if (get(activeTool) == 'pan' || !ENABLE_TRACKPAD_PAN) {
 				return;
 			}
 			if (!map) return;
