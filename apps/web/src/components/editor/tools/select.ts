@@ -69,11 +69,13 @@ function computeStartBox(editor: EditorContext, broker: ProjectBroker) {
 	let objs = [];
 	for (let id of sels) {
 		let obj = broker.project.objectsMap.get(id);
-		let data = obj?.serialize();
-		let copyObj = makeObject(data);
-		copyObj.deserialize(data);
-		transformStartObjects.set(id, copyObj);
-		if (obj) objs.push(obj);
+		if (obj) {
+			let data = obj?.serialize();
+			let copyObj = makeObject(data);
+			copyObj.deserialize(data);
+			transformStartObjects.set(id, copyObj);
+			if (obj) objs.push(obj);
+		}
 	}
 
 	transformStartBox = computeBounds(objs);
@@ -374,6 +376,8 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 		return;
 	}
 
+	selectionAdditional = [];
+
 	editor.selectionStart.set(get(editor.currentMousePosition));
 
 	if (get(editor.canScale)) {
@@ -442,6 +446,8 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 
 				editor.computeEffectiveSelection(broker);
 				editor.rootGroup.set(null);
+			} else {
+				selectionAdditional = [...get(editor.selection)];
 			}
 		}
 	} else {
@@ -1110,6 +1116,8 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 	}
 }
 
+let selectionAdditional: ObjectID[] = [];
+
 export const SelectTool = {
 	icon: faArrowPointer,
 	access: 'READ',
@@ -1215,7 +1223,7 @@ function computeSelectionBox(
 		}
 	}
 
-	editor.selection.set(selection);
+	editor.selection.set([...selectionAdditional, ...selection]);
 	editor.computeEffectiveSelection(broker);
 }
 
