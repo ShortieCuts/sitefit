@@ -2,6 +2,7 @@
 	import { isMobile } from 'src/store/responsive';
 
 	export let groups: string[] = [];
+	export let hide: `group-${0 | 1 | 2 | 3 | 4 | 5 | 6}`[] = [];
 
 	export let activeGroup: string = groups[0];
 
@@ -21,35 +22,35 @@
 			</button>
 		{/each}
 	</div>
-	{#if slotCount >= 1 && activeGroup === groups[0]}
+	{#if slotCount >= 1 && activeGroup === groups[0] && !hide.includes('group-0')}
 		<slot name="group-0" />
 	{/if}
 
-	{#if slotCount >= 2 && activeGroup === groups[1]}
+	{#if slotCount >= 2 && activeGroup === groups[1] && !hide.includes('group-1')}
 		<slot name="group-1" />
 	{/if}
 
-	{#if slotCount >= 3 && activeGroup === groups[2]}
+	{#if slotCount >= 3 && activeGroup === groups[2] && !hide.includes('group-2')}
 		<slot name="group-2" />
 	{/if}
 
-	{#if slotCount >= 4 && activeGroup === groups[3]}
+	{#if slotCount >= 4 && activeGroup === groups[3] && !hide.includes('group-3')}
 		<slot name="group-3" />
 	{/if}
 
-	{#if slotCount >= 5 && activeGroup === groups[4]}
+	{#if slotCount >= 5 && activeGroup === groups[4] && !hide.includes('group-4')}
 		<slot name="group-4" />
 	{/if}
 
-	{#if slotCount >= 6 && activeGroup === groups[5]}
+	{#if slotCount >= 6 && activeGroup === groups[5] && !hide.includes('group-5')}
 		<slot name="group-5" />
 	{/if}
 
-	{#if slotCount >= 7 && activeGroup === groups[6]}
+	{#if slotCount >= 7 && activeGroup === groups[6] && !hide.includes('group-6')}
 		<slot name="group-6" />
 	{/if}
 {:else}
-	{#if slotCount >= 1}
+	{#if slotCount >= 1 && !hide.includes('group-0')}
 		<div class="flex flex-row items-center">
 			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[0]}</div>
@@ -58,7 +59,7 @@
 		<slot name="group-0" />
 	{/if}
 
-	{#if slotCount >= 2}
+	{#if slotCount >= 2 && !hide.includes('group-1')}
 		<div class="flex flex-row items-center">
 			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[1]}</div>
@@ -67,7 +68,7 @@
 		<slot name="group-1" />
 	{/if}
 
-	{#if slotCount >= 3}
+	{#if slotCount >= 3 && !hide.includes('group-2')}
 		<div class="flex flex-row items-center">
 			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[2]}</div>
@@ -76,7 +77,7 @@
 		<slot name="group-2" />
 	{/if}
 
-	{#if slotCount >= 4}
+	{#if slotCount >= 4 && !hide.includes('group-3')}
 		<div class="flex flex-row items-center">
 			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[3]}</div>
@@ -85,7 +86,7 @@
 		<slot name="group-3" />
 	{/if}
 
-	{#if slotCount >= 5}
+	{#if slotCount >= 5 && !hide.includes('group-4')}
 		<div class="flex flex-row items-center">
 			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[4]}</div>
@@ -94,7 +95,7 @@
 		<slot name="group-4" />
 	{/if}
 
-	{#if slotCount >= 6}
+	{#if slotCount >= 6 && !hide.includes('group-5')}
 		<div class="flex flex-row items-center">
 			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[5]}</div>
@@ -103,7 +104,7 @@
 		<slot name="group-5" />
 	{/if}
 
-	{#if slotCount >= 7}
+	{#if slotCount >= 7 && !hide.includes('group-6')}
 		<div class="flex flex-row items-center">
 			<div class="bg-gray-200 h-[2px] flex-1" />
 			<div class="mx-2 font-bold">{groups[6]}</div>

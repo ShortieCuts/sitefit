@@ -44,7 +44,7 @@
 </script>
 
 <DialogSlideUp>
-	<ResponsiveGroup groups={['Map', 'Transparency', 'Colors']}>
+	<ResponsiveGroup hide={$isMobile ? [] : ['group-0']} groups={['Map', 'Transparency', 'Colors']}>
 		<div
 			slot="group-0"
 			class="flex flex-row items-center justify-center space-x-4 py-8 select-none"

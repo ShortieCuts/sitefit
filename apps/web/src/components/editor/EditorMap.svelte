@@ -1082,11 +1082,13 @@
 						{/if}
 						{#if !styleSelectorOpen}
 							<span
-								class="absolute bottom-2 text-xs"
+								class="absolute bottom-2 text-sm font-bold"
+								style="line-height: 1"
 								class:text-black={$mapStyle == 'google-simple'}
 								class:text-white={$mapStyle == 'google-satellite' || $mapStyle == 'google-dark'}
-								>Map style</span
 							>
+								Map<br />Type
+							</span>
 						{/if}
 					</button>
 				{/if}
