@@ -685,7 +685,7 @@
 					if (map.getTilt() != 0) {
 						mapRotationNonZero.set(true);
 					} else {
-						if (map.getHeading() != 0) {
+						if (map.getHeading() != $heading) {
 							mapRotationNonZero.set(true);
 						} else {
 							mapRotationNonZero.set(false);
@@ -1032,11 +1032,11 @@
 
 {#if $mapRotationNonZero && !$isMobile}
 	<button
-		class="absolute top-4 right-4 text-2xl text-white rounded-full shadow-lg shadow-black"
+		class="absolute top-4 right-4 text-4xl text-white rounded-full"
 		style="transform: rotate(-{$mapRotation + 45}deg)"
 		on:click={() => {
 			map?.setTilt(0);
-			map?.setHeading(0);
+			map?.setHeading($heading);
 		}}
 	>
 		<Fa icon={faCompass} />
