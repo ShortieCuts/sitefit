@@ -734,11 +734,7 @@ export type ObjectProperty = {
 export const ObjectProperties: {
   [key in ObjectType]: ObjectProperty[];
 } = {
-  [ObjectType.Path]: [
-    // {
-    //   name: "stroke",
-    // },
-  ],
+  [ObjectType.Path]: [],
   [ObjectType.Group]: [],
   [ObjectType.Note]: [
     {

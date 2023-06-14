@@ -345,7 +345,7 @@
 						case 'filled':
 							transaction.update(object.id, 'style', {
 								...style,
-								filled: value === 'true'
+								filled: value || value === 'true'
 							});
 							break;
 					}
@@ -437,11 +437,18 @@
 					/>
 				</div>
 				<div class="flex-1 w-auto">
-					<select class="border-gray-200 rounded-md border w-full">
-						<option> Solid </option>
-						<option> Dashed </option>
-						<option> Filled </option>
-						<option> Hatch </option>
+					<select
+						class="border-gray-200 rounded-md border w-full"
+						value={propertiesDisplay.style.filled?.toString() ?? 'false'}
+						on:change={(e) => {
+							console.log('Custom event', e);
+							doStyleChange('filled')(
+								new CustomEvent('change', { detail: e.target.value == 'true' })
+							);
+						}}
+					>
+						<option value="false"> Line </option>
+						<option value="true"> Filled </option>
 					</select>
 				</div>
 			</div>

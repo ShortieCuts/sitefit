@@ -50,6 +50,7 @@ import type { MetadataProject } from '$lib/types/project';
 import { isMobile } from './responsive';
 import type { ProjectComment, ProjectCommentReply } from '$lib/types/comment';
 import { cookieName } from './name';
+import type { ParcelProvider } from './parcels';
 
 export const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
@@ -988,6 +989,9 @@ export class EditorContext {
 	latitude: Writable<number> = writable(0);
 	zoom: Writable<number> = writable(0);
 
+	selectedParcelLonLat: Writable<[number, number]> = writable([0, 0]);
+	parcelProvider: Writable<ParcelProvider> = writable('reportall');
+
 	previewObjects: Writable<Object2D[]> = writable([]);
 	needsPreviewRender: Writable<boolean> = writable(false);
 
@@ -1155,6 +1159,11 @@ export class EditorContext {
 		if (get(isMobile)) {
 			history.pushState('popover', '', location.pathname);
 		}
+		if (get(this.activeDialog) === 'parcels') {
+			this.broker.stagingObject.set(null);
+		}
+
+		this.selectedParcelLonLat.set([0, 0]);
 		this.stagingComment.set(null);
 		if (get(isMobile) && key != '') {
 			this.deselectAll();

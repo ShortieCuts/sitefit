@@ -24,21 +24,27 @@
 	import { SuperZoomMapType } from '$lib/map/super-zoom-map-type';
 	import Fa from 'svelte-fa';
 	import { fade, fly } from 'svelte/transition';
+	import { loadTile, type Parcel, type ParcelProvider } from 'src/store/parcels';
+	import { ParcelOverlay } from './overlays/Parcel';
+
 	const MIN_ZOOM = 1;
 	const MAX_ZOOM = 45;
 	const ENABLE_TRACKPAD_PAN = false;
 
 	const { editor, broker } = getSvelteContext();
 	const { geo, heading } = broker.watchCornerstone();
+	const zoomLevel = writable(0);
 
 	const {
 		activeTool,
+		activeDialog,
 		selectToolCursor,
 		hoveringObject,
 		selection,
 		translating,
 		scaling,
-		rotating
+		rotating,
+		parcelProvider
 	} = editor;
 	const mapStyle = broker.writableGlobalProperty('mapStyle', 'google-satellite');
 
@@ -50,6 +56,7 @@
 	let isScrolling = writable(false);
 	let svelteOverlaysEl: HTMLElement;
 	let overlays: Overlay[] = [];
+	let parcelOverlay: ParcelOverlay | null = null;
 	const overlayTypes: (typeof Overlay)[] = [SelectionOverlay, RendererOverlay, GuidesOverlay];
 	let referenceOverlay: ThreeJSOverlayView | null = null;
 	let overlayView: google.maps.OverlayView | null = null;
@@ -81,6 +88,25 @@
 				minZoom: MIN_ZOOM
 			});
 			map.setMapTypeId(getMapTypeId());
+		}
+	}
+
+	let activeProvider: ParcelProvider = $parcelProvider;
+
+	$: {
+		if ($activeDialog == 'parcels' && map && $zoomLevel >= 17) {
+			if (!parcelOverlay || $parcelProvider != activeProvider) {
+				if (parcelOverlay) parcelOverlay.destroy();
+
+				parcelOverlay = new ParcelOverlay(map, $parcelProvider);
+				parcelOverlay.loadViewport();
+				activeProvider = $parcelProvider;
+			}
+		} else {
+			if (parcelOverlay) {
+				parcelOverlay.destroy();
+				parcelOverlay = null;
+			}
 		}
 	}
 
@@ -234,6 +260,7 @@
 					maxZoom: MAX_ZOOM,
 					minZoom: MIN_ZOOM
 				});
+				zoomLevel.set(map.getZoom() ?? 0);
 
 				flyToLatestCad();
 
@@ -482,8 +509,18 @@
 					}
 				});
 
+				map.data.addListener('click', (ev: google.maps.MapMouseEvent) => {
+					if (get(editor.activeDialog) == 'parcels') {
+						editor.selectedParcelLonLat.set([ev.latLng?.lng() ?? 0, ev.latLng?.lat() ?? 0]);
+					}
+				});
 				map.addListener('click', (ev: google.maps.MapMouseEvent) => {
+					if (get(editor.activeDialog) == 'parcels') {
+						editor.selectedParcelLonLat.set([0, 0]);
+					}
+
 					if (!$isMobile) return;
+
 					handleMapTap(ev);
 				});
 
@@ -538,6 +575,8 @@
 					if (!map) return;
 					// computeScaling();
 					editor.zoom.set(map.getZoom() ?? 0);
+
+					zoomLevel.set(map.getZoom() ?? 0);
 				});
 
 				let updateTimer = 0;
@@ -581,6 +620,9 @@
 					}
 				};
 				requestAnimationFrame(frameEvent);
+				let firstTile = true;
+				let robustParcels = {} as any;
+
 				map.addListener('bounds_changed', () => {
 					if (!map) return;
 					let center = map.getCenter();
@@ -591,6 +633,10 @@
 					updateTimer = 5000;
 
 					computeScaling();
+
+					if (parcelOverlay) {
+						parcelOverlay.loadViewport();
+					}
 
 					let floatingDlon = center.lng() - $geo[0];
 					let floatingDlat = center.lat() - $geo[1];

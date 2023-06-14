@@ -242,13 +242,6 @@ class RenderPath implements RenderObject2D {
 
 		this.line.geometry.setDrawRange(0, obj.segments.length + (obj.closed ? 1 : 0));
 
-		// let indices = [];
-		// for (let i = 0; i < obj.segments.length; i++) {
-		// 	indices.push(i);
-		// }
-
-		// this.line.geometry.setIndex(indices);
-
 		this.line.geometry.attributes.position.needsUpdate = true;
 
 		this.line.geometry.computeBoundingSphere();
@@ -266,6 +259,7 @@ class RenderPath implements RenderObject2D {
 		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 
 		if (obj.style && obj.style.filled) {
+			this.filled.visible = true;
 			if (obj.disconnected) {
 				this.line.visible = false;
 
@@ -316,6 +310,9 @@ class RenderPath implements RenderObject2D {
 
 				this.filled.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 			}
+		} else {
+			this.filled.visible = false;
+			this.line.visible = true;
 		}
 
 		if (this.textEl) {
