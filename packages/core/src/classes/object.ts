@@ -911,6 +911,20 @@ const Parking = makeSmartObject({
         type: "boolean",
       },
     },
+    showAisleCurb: {
+      default: true,
+      type: {
+        name: "showAisleCurb",
+        type: "boolean",
+      },
+    },
+    curbDistance: {
+      default: 10,
+      type: {
+        name: "curbDistance",
+        type: "meters",
+      },
+    },
   },
   render(path: Path, props) {
     let objs: Path[] = [];
@@ -919,6 +933,7 @@ const Parking = makeSmartObject({
     let angle = props.angle;
     let distance = props.distance;
     let direction = props.direction ?? 1;
+    let showAisleCurb = props.showAisleCurb ?? true;
 
     let x = 0;
     let y = 0;
@@ -1008,6 +1023,45 @@ const Parking = makeSmartObject({
 
       generateOnPath(p, true);
       if (props.showLine) {
+        objs.push(p);
+      }
+    } else {
+      if (props.showAisleCurb) {
+        let p = new Path();
+        p.id = `${path.id}-parking-aisle`;
+        p.name = `${path.name} (Aisle)`;
+        p.segments = path.segments.map((s) => [...s]);
+        p.style = new Material();
+        p.style.color = [...path.style.color];
+        p.transform.position = [...path.transform.position];
+        p.transform.rotation = path.transform.rotation;
+        p.transform.size = [...path.transform.size];
+
+        let newSegments: [number, number][] = [];
+
+        let gap = props.curbDistance;
+        for (let i = 1; i < p.segments.length; i++) {
+          let [x1, y1] = p.segments[i - 1];
+          let [x2, y2] = p.segments[i];
+          let dx = x2 - x1;
+          let dy = y2 - y1;
+          let length = Math.sqrt(dx * dx + dy * dy);
+          let normalAngle = Math.atan2(dy, dx);
+          let normal: [number, number] = [
+            Math.cos(normalAngle),
+            Math.sin(normalAngle),
+          ];
+          let tangent: [number, number] = [
+            Math.cos(normalAngle + Math.PI / 2),
+            Math.sin(normalAngle + Math.PI / 2),
+          ];
+
+          newSegments.push([x1 + tangent[0] * gap, y1 + tangent[1] * gap]);
+          newSegments.push([x2 + tangent[0] * gap, y2 + tangent[1] * gap]);
+        }
+
+        p.segments = newSegments;
+
         objs.push(p);
       }
     }

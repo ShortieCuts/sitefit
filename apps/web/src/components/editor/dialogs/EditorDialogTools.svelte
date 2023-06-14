@@ -252,29 +252,37 @@
 				distance: feetToMeters(18),
 				spacing: feetToMeters(9),
 				rowSpacing: feetToMeters(60),
+				curbDistance: feetToMeters(42),
 				double,
-				angle: 90
+				angle: 90,
+				showAisleCurb: false
 			},
 			'60': {
 				distance: feetToMeters(23.209480821422957), // lineLengthGivenAngleAndBase(degreesToRadians(60), 20.1),
 				spacing: feetToMeters(10.4),
 				rowSpacing: feetToMeters(54.7),
+				curbDistance: feetToMeters(34.6),
 				double,
-				angle: 60
+				angle: 60,
+				showAisleCurb: false
 			},
 			'45': {
 				distance: feetToMeters(26.87005768508881), // lineLengthGivenAngleAndBase(degreesToRadians(45), 19),
 				spacing: feetToMeters(12.7),
 				rowSpacing: feetToMeters(50),
+				curbDistance: feetToMeters(31.1),
 				double,
-				angle: 45
+				angle: 45,
+				showAisleCurb: false
 			},
 			'30': {
 				distance: feetToMeters(33.60000000000001), // lineLengthGivenAngleAndBase(degreesToRadians(30), 16.8),
 				spacing: feetToMeters(18),
 				rowSpacing: feetToMeters(45.8),
+				curbDistance: feetToMeters(28.8),
 				double,
-				angle: 30
+				angle: 30,
+				showAisleCurb: false
 			}
 		};
 

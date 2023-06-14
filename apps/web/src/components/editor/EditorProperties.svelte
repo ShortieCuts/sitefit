@@ -459,7 +459,7 @@
 				{#each properties as prop}
 					<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
 						<span
-							class="flex-shrink-0 h-full w-20 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-center"
+							class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-end pr-2"
 						>
 							{prop.name.startsWith('smartProperties') ? prop.name.slice(16) : prop.name}
 						</span>
