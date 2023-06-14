@@ -30,7 +30,7 @@
 		faUpload
 	} from '@fortawesome/free-solid-svg-icons';
 	import { fade, slide, fly } from 'svelte/transition';
-	import { auth } from '../../store/auth';
+	import { auth, refreshUserData } from '../../store/auth';
 	import { createEditorContext, createProjectBroker, setSvelteContext } from 'src/store/editor';
 
 	import Fa from 'svelte-fa';
@@ -44,7 +44,7 @@
 	import EditorSessions from './EditorSessions.svelte';
 	import EditorMap from './EditorMap.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import { processCadUploads } from '$lib/client/api';
+	import { processCadUploads, updateMe } from '$lib/client/api';
 	import { refreshData } from 'src/store/cads';
 	import LocationInput from './common/LocationInput.svelte';
 	import LocationMap from './common/LocationMap.svelte';
@@ -66,6 +66,7 @@
 	import ObjectContextButtons from './common/ObjectContextButtons.svelte';
 	import KeyBind from './common/KeyBind.svelte';
 	import { cookieName } from 'src/store/name';
+	import { WrapLoader } from 'ui';
 
 	// export let auth: AuthState;
 	export let projectId: string;
@@ -361,6 +362,8 @@
 		}
 		broker.dispose();
 	});
+
+	let nameUpdating = false;
 
 	$: {
 		fileEl;
@@ -1069,6 +1072,56 @@
 						<input name="name" class="input-text h-8" placeholder="Name" />
 						<button class="btn btn-primary mt-auto mb-4"> Continue </button>
 					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if $auth.user && $auth.user.firstName == '' && $auth.user.firstName == ''}
+	<div
+		transition:fade={{ duration: 100 }}
+		class="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center
+		"
+	>
+		<div
+			on:click|stopPropagation={() => {}}
+			on:keydown={() => {}}
+			transition:fly={{
+				y: 20
+			}}
+			class="dialog-slide bg-white fixed z-30 rounded-lg flex flex-col lg:flex-row w-full h-full sm:w-auto sm:h-auto"
+		>
+			<div class="flex-1 flex flex-col p-4">
+				<h2 class="flex text-lg">Please enter your name</h2>
+				<p class="text-gray-400 mb-4">This is what you'll go by when commenting.</p>
+
+				<form
+					on:submit|preventDefault={async (e) => {
+						if (e.target) {
+							let data = new FormData(e.target);
+							nameUpdating = true;
+							try {
+								await updateMe({
+									firstName: data.get('firstName')?.toString() ?? '',
+									lastName: data.get('lastName')?.toString() ?? ''
+								});
+								await refreshUserData();
+							} catch (e) {
+								console.error(e);
+							} finally {
+								nameUpdating = false;
+							}
+						}
+					}}
+				>
+					<WrapLoader loading={nameUpdating}>
+						<div class="flex flex-row space-x-2">
+							<input name="firstName" class="input-text h-8" placeholder="First name" />
+							<input name="lastName" class="input-text h-8" placeholder="Last name" />
+							<button class="btn btn-primary mt-auto mb-4"> Continue </button>
+						</div>
+					</WrapLoader>
 				</form>
 			</div>
 		</div>

@@ -151,17 +151,7 @@ export const sendPasswordReset = async (email: string) => {
 };
 
 export const refreshUserData = async () => {
-	let { firebaseAuth } = await import('./firebase');
-	let user = await getMyUserInfo();
-	let firebaseUser = firebaseAuth.currentUser;
-
-	auth.update((state) => {
-		return {
-			...state,
-			user,
-			firebaseUser
-		};
-	});
+	sessionCounter.update((val) => val + 1);
 };
 
 export const getSession = async (noCreate: boolean = false): Promise<string> => {
