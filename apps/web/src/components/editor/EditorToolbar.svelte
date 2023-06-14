@@ -125,7 +125,11 @@
 				if (get(editor.selection).length > 0) {
 					editor.deselectAll();
 				}
+			} else {
+				editor.activeTool.set('pan');
 			}
+
+			editor.activateDialog('');
 		}
 	}
 
