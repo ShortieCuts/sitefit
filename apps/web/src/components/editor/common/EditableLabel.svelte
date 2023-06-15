@@ -46,7 +46,7 @@
 
 <svelte:window
 	on:click={(e) => {
-		if (e.target && e.target.matches('button') && e.contains(inputEl)) {
+		if (e.target && e.target.matches('button') && e.target.contains(inputEl)) {
 			return;
 		}
 		e.target != inputEl && e.target != inputEl?.parentElement ? commit() : null;

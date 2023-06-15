@@ -47,6 +47,7 @@
 		parcelProvider
 	} = editor;
 	const mapStyle = broker.writableGlobalProperty('mapStyle', 'google-satellite');
+	console.log('Map style', $mapStyle);
 
 	let containerEl: HTMLElement | null = null;
 	let map: google.maps.Map | null = null;
@@ -319,9 +320,9 @@
 						);
 					}
 				});
-				map.mapTypes.set('test', superZoom);
+				// map.mapTypes.set('test', superZoom);
 				// map.setMapTypeId('test');
-				console.log(map.mapTypes);
+				// console.log(map.mapTypes);
 				// let oldFunc = map.mapTypes.set;
 				// map.mapTypes.set = function (key: string, value: any) {
 				// 	value.maxZoom = 50;

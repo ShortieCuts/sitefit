@@ -1,4 +1,4 @@
-import { get, writable, readable, type Readable, type Writable } from 'svelte/store';
+import { get, writable, readable, type Readable, type Writable, derived } from 'svelte/store';
 import {
 	Arc,
 	Cornerstone,
@@ -552,18 +552,22 @@ export class ProjectBroker {
 			this.globalPropertyStores.set(key, internalWritable);
 		}
 
+		let proxySubscriber = derived([internalWritable], ([value]) => {
+			return value ?? defaultValue;
+		});
+
 		return {
-			subscribe: internalWritable.subscribe,
+			subscribe: proxySubscriber.subscribe,
 			set: (value) => {
 				this.enqueueMessage(SocketMessage.writeGlobalProperty(key, value));
-				internalWritable.set(value);
+				internalWritable.set(value ?? defaultValue);
 			},
 			update: (fn) => {
 				internalWritable.update((value) => {
 					let newValue = fn(value);
 					this.enqueueMessage(SocketMessage.writeGlobalProperty(key, newValue));
 
-					return newValue;
+					return newValue ?? defaultValue;
 				});
 			}
 		};

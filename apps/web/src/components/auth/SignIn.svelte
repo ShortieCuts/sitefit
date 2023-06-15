@@ -93,7 +93,7 @@
 	<div class="flex flex-col items-center justify-center bg-gray-200 h-40 rounded-t-lg">
 		<img src="/logo.svg" alt="logo" class="max-w-[80px] mb-2" />
 
-		<span class="font-bold opacity-30 mt-2">CAD Mapper Login</span>
+		<span class="font-bold opacity-30 mt-2">Site Fit Login</span>
 	</div>
 	<div class="bg-gray-100 rounded-b-lg p-4 shadow-lg">
 		{#if !passwordResetForm}
