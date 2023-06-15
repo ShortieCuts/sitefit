@@ -49,8 +49,37 @@ function parseHexColor(hex: string): [number, number, number, number] {
 	return [r / 255, g / 255, b / 255, 255 / 255];
 }
 
+type CadPropertyAttribute = {
+	attributeName?: string;
+	displayCategory?: string;
+	displayValue?: string;
+	displayName?: string;
+	hidden?: number;
+	type?: number;
+	precision?: number;
+	unit?: string;
+};
+type CadProperty = {
+	dbId: number;
+	externalId?: string;
+	name?: string;
+	properties: CadPropertyAttribute[];
+};
+
 function translateJSON(json: any): Object2D[] {
 	let objects: Object2D[] = [];
+
+	let propMap = new Map<number, CadProperty>();
+
+	for (let prop of json.props) {
+		propMap.set(prop.dbId, prop);
+	}
+
+	function getProp(dbId: number | string, name: string): CadPropertyAttribute | undefined {
+		let prop = propMap.get(parseInt(dbId.toString()));
+		if (!prop) return;
+		return prop.properties.find((p) => p.attributeName == name);
+	}
 
 	let unitMap = {
 		unitless: 0,
@@ -62,6 +91,29 @@ function translateJSON(json: any): Object2D[] {
 		meters: 6,
 		kilometers: 7,
 		microinches: 8,
+		mils: 9,
+		yards: 1,
+		angstroms: 1,
+		nanometers: 1,
+		microns: 1,
+		decimeters: 1,
+		decameters: 1,
+		hectometers: 1,
+		gigameters: 1,
+		'astronomical units': 1,
+		'light years': 1,
+		parsecs: 2
+	};
+	let unitMapShort = {
+		unitless: 0,
+		in: 1,
+		ft: 2,
+		miles: 3,
+		mm: 4,
+		cm: 5,
+		m: 6,
+		km: 7,
+		mi: 8,
 		mils: 9,
 		yards: 1,
 		angstroms: 1,
@@ -120,12 +172,22 @@ function translateJSON(json: any): Object2D[] {
 
 	objects.push(rootObj);
 	let i = 0;
-	let groups: Map<number, Group> = new Map();
-	function getdbidGroup(dbid: number): Group {
+	let groups: Map<number | string, Group> = new Map();
+	function getdbidGroup(dbid: number | string): Group {
+		let parentId = getProp(dbid, 'Layer');
+		if (parentId) {
+			dbid = parentId.displayValue ?? dbid;
+			console.log('parent', dbid);
+		}
 		if (groups.has(dbid)) return groups.get(dbid)!;
 
 		let group = new Group();
 		let groupInfo = json.props.find((p) => p.dbId == dbid);
+		if (!groupInfo) {
+			groupInfo = {
+				name: dbid
+			};
+		}
 
 		group.id = 'group' + dbid;
 		group.name = groupInfo?.name || 'Group';
@@ -165,6 +227,56 @@ function translateJSON(json: any): Object2D[] {
 		console.log('merged', json.objects.length, 'objects');
 	}
 
+	let textLocations: Map<string, RelativeCoordinate> = new Map();
+
+	// Remove text paths
+	for (let i = json.objects.length - 1; i >= 0; i--) {
+		let frag = json.objects[i];
+		let type = frag[0];
+		let dbid = frag[1];
+		let color = frag[2];
+		if (type == 't' || type == 'l') {
+			let prop = propMap.get(parseInt(dbid.toString()));
+
+			if (prop && (prop.name?.startsWith('MText') || prop.name?.startsWith('Text'))) {
+				let positions: [number, number][] = [];
+				if (type == 'l') {
+					for (let i = frag[3].length - 1; i >= 0; i--) {
+						let l = frag[3][i];
+						let c1 = transformCoord([l[0], l[1]]);
+						let c2 = transformCoord([l[2], l[3]]);
+						positions.push(c1, c2);
+					}
+				} else {
+					for (let i = frag[3].length - 1; i >= 0; i--) {
+						let t = frag[3][i];
+
+						let c1 = transformCoord([t[0], t[1]]);
+						let c2 = transformCoord([t[2], t[3]]);
+						let c3 = transformCoord([t[4], t[5]]);
+
+						positions.push(c1, c2, c3);
+					}
+				}
+
+				let minx = Math.min(...positions.map((p) => p[0]));
+				let maxx = Math.max(...positions.map((p) => p[0]));
+				let miny = Math.min(...positions.map((p) => p[1]));
+				let maxy = Math.max(...positions.map((p) => p[1]));
+
+				if (textLocations.has(dbid.toString())) {
+					let location = textLocations.get(dbid.toString())!;
+					if (minx < location[0]) location[0] = minx;
+					if (miny < location[1]) location[1] = miny;
+				} else {
+					textLocations.set(dbid.toString(), [minx, miny]);
+				}
+
+				json.objects.splice(i, 1);
+			}
+		}
+	}
+
 	let lineSize = 1 / 1000; // 1mm
 	let purgeCount = 0;
 
@@ -176,7 +288,7 @@ function translateJSON(json: any): Object2D[] {
 		for (let fragI = json.objects.length - 1; fragI >= 0; fragI--) {
 			let frag = json.objects[fragI];
 			let type = frag[0];
-			let dbid = frag[2];
+			let dbid = frag[1];
 			let color = frag[2];
 			if (type == 't') {
 				for (let i = frag[3].length - 1; i >= 0; i--) {
@@ -371,23 +483,23 @@ function translateJSON(json: any): Object2D[] {
 		// 	}
 		// }
 
-		for (let i = objects.length - 1; i >= 0; i--) {
-			let obj = objects[i];
-			if (obj.type == ObjectType.Group) {
-				if (obj.id.startsWith('group')) {
-					let dbid = parseInt(obj.id.substr(5));
-					if (childCounts.has(dbid) && childCounts.get(dbid)!.length <= 1) {
-						objects.splice(i, 1);
+		// for (let i = objects.length - 1; i >= 0; i--) {
+		// 	let obj = objects[i];
+		// 	if (obj.type == ObjectType.Group) {
+		// 		if (obj.id.startsWith('group')) {
+		// 			let dbid = parseInt(obj.id.substr(5));
+		// 			if (childCounts.has(dbid) && childCounts.get(dbid)!.length <= 1) {
+		// 				objects.splice(i, 1);
 
-						let children = childCounts.get(dbid)!;
-						for (let child of children) {
-							child.parent = obj.parent;
-							child.name = obj.name;
-						}
-					}
-				}
-			}
-		}
+		// 				let children = childCounts.get(dbid)!;
+		// 				for (let child of children) {
+		// 					child.parent = obj.parent;
+		// 					child.name = obj.name;
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 
 		i++;
 		// let path = new Path();
@@ -419,7 +531,62 @@ function translateJSON(json: any): Object2D[] {
 		// 	objects.push(arcObj);
 	}
 
+	for (let [dbid, loc] of textLocations.entries()) {
+		let text = new Text();
+		text.transform.position = loc;
+		text.text = cleanCadText(getProp(dbid, 'Contents')?.displayValue ?? '');
+		text.style = new Material();
+		let textHeight = getProp(dbid, 'Text height');
+		if (textHeight) {
+			let val = parseInt(textHeight.displayValue?.toString() ?? '0');
+			let unit = (textHeight as any).units;
+
+			if (unit) {
+				let mapping = unitMapShort[unit];
+				if (mapping) {
+					val *= unitScale[mapping];
+				}
+			}
+			console.log('Text height', val);
+
+			text.size = val;
+		}
+		text.style.color = [1, 1, 1, 1];
+		text.id = 'text' + i;
+		text.parent = rootObj.id;
+		text.name = 'T';
+		objects.push(text);
+		i++;
+	}
+
 	return objects;
+}
+
+function cleanCadText(text: string) {
+	text = text.replaceAll('\\P', '\n');
+
+	if (text.startsWith('{\\')) {
+		let style = text.match(/{\\([^;]+);/);
+		if (style) {
+			let styleName = style[1];
+			let styleDef = text.match(/{\\[^;]+;(.*)}/);
+			if (styleDef) {
+				let styleDefStr = styleDef[1];
+				let styleDefParts = styleDefStr.split(';');
+				let styleDefObj: any = {};
+				for (let part of styleDefParts) {
+					let [key, val] = part.split('=');
+					styleDefObj[key] = val;
+				}
+				let styleObj: any = {};
+			}
+		}
+
+		text = text.replace(/{\\[^;]+;/, '');
+		text = text.replace(/}/, '');
+	}
+
+	return text;
 }
 
 export function translateDXF(rawDXF: string): Object2D[] | null {
@@ -834,28 +1001,7 @@ export function translateDXF(rawDXF: string): Object2D[] | null {
 				text.size = textEnt.height * unitScaleMeters;
 				text.maxWidth = textEnt.width * unitScaleMeters;
 
-				text.text = textEnt.text.replaceAll('\\P', '\n');
-
-				if (text.text.startsWith('{\\')) {
-					let style = text.text.match(/{\\([^;]+);/);
-					if (style) {
-						let styleName = style[1];
-						let styleDef = text.text.match(/{\\[^;]+;(.*)}/);
-						if (styleDef) {
-							let styleDefStr = styleDef[1];
-							let styleDefParts = styleDefStr.split(';');
-							let styleDefObj: any = {};
-							for (let part of styleDefParts) {
-								let [key, val] = part.split('=');
-								styleDefObj[key] = val;
-							}
-							let styleObj: any = {};
-						}
-					}
-
-					text.text = text.text.replace(/{\\[^;]+;/, '');
-					text.text = text.text.replace(/}/, '');
-				}
+				text.text = cleanCadText(textEnt.text);
 
 				let dirVec = textEnt.directionVector;
 
