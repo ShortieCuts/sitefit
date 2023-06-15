@@ -225,6 +225,32 @@
 	// 	}
 	// }
 
+	class CoordMapType implements google.maps.MapType {
+		tileSize: google.maps.Size;
+		alt: string | null = null;
+		maxZoom: number = 17;
+		minZoom: number = 0;
+		name: string | null = null;
+		projection: google.maps.Projection | null = null;
+		radius: number = 6378137;
+
+		constructor(tileSize: google.maps.Size) {
+			this.tileSize = tileSize;
+		}
+		getTile(coord: google.maps.Point, zoom: number, ownerDocument: Document): HTMLElement {
+			const div = ownerDocument.createElement('div');
+
+			div.innerHTML = String(coord);
+			div.style.width = this.tileSize.width + 'px';
+			div.style.height = this.tileSize.height + 'px';
+			div.style.fontSize = '10';
+			div.style.borderStyle = 'solid';
+			div.style.borderWidth = '1px';
+			div.style.borderColor = '#AAAAAA';
+			return div;
+		}
+		releaseTile(tile: Element): void {}
+	}
 	onMount(() => {
 		if (browser) {
 			const loader = new Loader({
@@ -260,40 +286,53 @@
 					maxZoom: MAX_ZOOM,
 					minZoom: MIN_ZOOM
 				});
+
 				zoomLevel.set(map.getZoom() ?? 0);
 
 				flyToLatestCad();
+				console.log('Map', map);
 
-				// map.mapTypes.set(
-				// 	'test',
-				// 	new SuperZoomMapType({
-				// 		tileSize: new google.maps.Size(256, 256),
-				// 		maxZoom: 40,
-				// 		name: 'Satellite',
-				// 		getTileUrl: (tileCoord: google.maps.Point, zoom: number): string => {
-				// 			if (zoom > 40) {
-				// 				return '';
-				// 			}
-				// 			let zoomDiff: number = zoom - 40;
-				// 			let normTile: any = { x: tileCoord.x, y: tileCoord.y };
-				// 			if (zoomDiff > 0) {
-				// 				let dScale: number = Math.pow(2, zoomDiff);
-				// 				normTile.x = Math.floor(normTile.x / dScale);
-				// 				normTile.y = Math.floor(normTile.y / dScale);
-				// 			} else {
-				// 				zoomDiff = 0;
-				// 			}
-				// 			return (
-				// 				'https://khms1.googleapis.com/kh?v=949&hl=en-US&&x=' +
-				// 				normTile.x +
-				// 				'&y=' +
-				// 				normTile.y +
-				// 				'&z=' +
-				// 				(zoom - zoomDiff)
-				// 			);
-				// 		}
-				// 	})
-				// );
+				let superZoom = new SuperZoomMapType({
+					tileSize: new google.maps.Size(256, 256),
+					maxZoom: 40,
+					name: 'Satellite',
+					getTileUrl: (tileCoord: google.maps.Point, zoom: number): string => {
+						if (zoom > 40) {
+							return '';
+						}
+						let zoomDiff: number = zoom - 40;
+						let normTile: any = { x: tileCoord.x, y: tileCoord.y };
+						if (zoomDiff > 0) {
+							let dScale: number = Math.pow(2, zoomDiff);
+							normTile.x = Math.floor(normTile.x / dScale);
+							normTile.y = Math.floor(normTile.y / dScale);
+						} else {
+							zoomDiff = 0;
+						}
+						return (
+							'https://khms1.googleapis.com/kh?v=949&hl=en-US&&x=' +
+							normTile.x +
+							'&y=' +
+							normTile.y +
+							'&z=' +
+							(zoom - zoomDiff)
+						);
+					}
+				});
+				map.mapTypes.set('test', superZoom);
+				// map.setMapTypeId('test');
+				console.log(map.mapTypes);
+				// let oldFunc = map.mapTypes.set;
+				// map.mapTypes.set = function (key: string, value: any) {
+				// 	value.maxZoom = 50;
+				// 	console.log('set', key, value);
+				// 	value.getTi;
+				// 	oldFunc.call(map.mapTypes, key, value);
+				// };
+				// superZoom.setOpacity(0.5);
+				// const coordMapType = new CoordMapType(new google.maps.Size(256, 256));
+				// map.overlayMapTypes.insertAt(0, coordMapType);
+				// map.overlayMapTypes.insertAt(-2, superZoom);
 
 				let scene = new THREE.Scene();
 				let deg = -$heading;

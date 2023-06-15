@@ -406,7 +406,15 @@ class RenderPath implements RenderObject2D {
 		let lineGap = 20;
 		let fontSize = (lineSize - lineGap * 2) / (text.length * fontAspectRatio);
 
-		this.textEl.style.fontSize = `${Math.min(fontSize, 18)}px`;
+		if (fontSize <= 10) {
+			this.textEl.style.fontSize = `10px`;
+			let dx = Math.cos(angle + Math.PI / 2);
+			let dy = Math.sin(angle + Math.PI / 2);
+			pos.x += dx * 15;
+			pos.y += dy * 15;
+		} else {
+			this.textEl.style.fontSize = `${Math.min(fontSize, 18)}px`;
+		}
 		// this.textEl.style.width = `${screenSize * text.length * fontAspectRatio}px`;
 		// this.textEl.style.top = pos.y + 'px';
 		// this.textEl.style.left = pos.x + 'px';

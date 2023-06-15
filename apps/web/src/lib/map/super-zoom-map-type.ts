@@ -1,5 +1,5 @@
 // based heavily on https://github.com/tilemapjp/ZoomTMSLayer
-export class SuperZoomMapType implements google.maps.MapType {
+export class SuperZoomMapType implements google.maps.ImageMapType {
 	public maxZoom: number = null;
 	public minZoom: number = 0;
 	public opacity: number = 100;
