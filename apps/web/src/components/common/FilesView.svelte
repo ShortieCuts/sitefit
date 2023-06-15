@@ -59,6 +59,19 @@
 
 		return null;
 	}
+
+	async function newFolder() {
+		let res = await createCadFolder({
+			parentId: ''
+		});
+
+		let folderId = res.data.folderId;
+
+		await refreshData();
+		setTimeout(() => {
+			newEditId.set(folderId.toString());
+		}, 10);
+	}
 </script>
 
 <div
@@ -99,6 +112,23 @@
 		fileDragging = false;
 	}}
 >
+	<div class="flex flex-row px-6 py-2 space-x-4">
+		<button
+			class="btn"
+			on:click={async (e) => {
+				let fileInput = document.querySelector('#import-file');
+				if (fileInput && fileInput instanceof HTMLInputElement) {
+					fileInput.click();
+				}
+			}}><Fa icon={faUpload} /> Upload DWG</button
+		>
+		<button
+			class="btn"
+			on:click={async (e) => {
+				newFolder();
+			}}><Fa icon={faFolderPlus} /> New folder</button
+		>
+	</div>
 	{#each $cadStore.children as node}
 		<EditorCadNode {node} />
 	{/each}
@@ -141,16 +171,7 @@
 		>
 		<button
 			on:click={async (e) => {
-				let res = await createCadFolder({
-					parentId: ''
-				});
-
-				let folderId = res.data.folderId;
-
-				await refreshData();
-				setTimeout(() => {
-					newEditId.set(folderId.toString());
-				}, 10);
+				newFolder();
 			}}><Fa icon={faFolderPlus} /> New folder</button
 		>
 		<button
