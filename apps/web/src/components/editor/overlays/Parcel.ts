@@ -2,28 +2,29 @@ import { loadTile, type ParcelProvider, type Tile } from 'src/store/parcels';
 import polygonClipping from 'polygon-clipping';
 import { get } from 'svelte/store';
 import type { EditorContext } from 'src/store/editor';
+import type { MapProvider } from '../maps/generic';
 
 const TILE_SIZE = 256;
-function project(latLng: google.maps.LatLng) {
-	let siny = Math.sin((latLng.lat() * Math.PI) / 180);
+function project(lonLat: [number, number]) {
+	let siny = Math.sin((lonLat[1] * Math.PI) / 180);
 
 	// Truncating to 0.9999 effectively limits latitude to 89.189. This is
 	// about a third of a tile past the edge of the world tile.
 	siny = Math.min(Math.max(siny, -0.9999), 0.9999);
 
-	return new google.maps.Point(
-		TILE_SIZE * (0.5 + latLng.lng() / 360),
+	return [
+		TILE_SIZE * (0.5 + lonLat[0] / 360),
 		TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI))
-	);
+	];
 }
 
 export class ParcelOverlay {
-	map: google.maps.Map | null = null;
+	map: MapProvider | null = null;
 	provider: ParcelProvider;
 	robustParcels: any = {};
 	loadedTiles: Map<string, Tile | null> = new Map();
 	destroyed = false;
-	constructor(map: google.maps.Map, provider: ParcelProvider) {
+	constructor(map: MapProvider, provider: ParcelProvider) {
 		this.provider = provider;
 		this.map = map;
 	}
@@ -33,11 +34,11 @@ export class ParcelOverlay {
 		let map = this.map;
 		if (!map) return;
 		for (let key in this.robustParcels) {
-			if (this.robustParcels[key].data) map.data.remove(this.robustParcels[key].data);
+			if (this.robustParcels[key].data) this.robustParcels[key].data.destroy();
 		}
 	}
 
-	async loadTile(latLng: google.maps.LatLng) {
+	async loadTile(lonLat: [number, number]) {
 		if (this.destroyed) return;
 		let robustParcels = this.robustParcels;
 		let map = this.map;
@@ -48,16 +49,16 @@ export class ParcelOverlay {
 
 		const scale = 1 << zoomFloored;
 
-		const worldCoordinate = project(latLng);
+		const worldCoordinate = project(lonLat);
 
 		const pixelCoordinate = new google.maps.Point(
-			Math.floor(worldCoordinate.x * scale),
-			Math.floor(worldCoordinate.y * scale)
+			Math.floor(worldCoordinate[0] * scale),
+			Math.floor(worldCoordinate[1] * scale)
 		);
 
 		const tileCoordinate = new google.maps.Point(
-			Math.floor((worldCoordinate.x * scale) / TILE_SIZE),
-			Math.floor((worldCoordinate.y * scale) / TILE_SIZE)
+			Math.floor((worldCoordinate[0] * scale) / TILE_SIZE),
+			Math.floor((worldCoordinate[1] * scale) / TILE_SIZE)
 		);
 		let tileKey = `${tileCoordinate.x},${tileCoordinate.y},${zoomFloored}`;
 		if (this.loadedTiles.has(tileKey)) {
@@ -67,14 +68,6 @@ export class ParcelOverlay {
 		let t = await loadTile(tileCoordinate.x, tileCoordinate.y, zoomFloored, this.provider);
 		if (this.destroyed) return;
 		this.loadedTiles.set(tileKey, t);
-		const featureStyleOptions: google.maps.FeatureStyleOptions = {
-			strokeColor: '#ffeb3b',
-			strokeOpacity: 1.0,
-			strokeWeight: 3.0,
-			fillColor: '#ffeb3b',
-			fillOpacity: 0.01
-		};
-		map.data.setStyle(featureStyleOptions);
 
 		for (let poly of t.geoJson) {
 			if (!robustParcels[poly.properties.robust_id]) {
@@ -124,15 +117,16 @@ export class ParcelOverlay {
 				});
 			});
 
-			let mp = new google.maps.Data.MultiPolygon(
-				geoOutput.map((g) => {
-					return new google.maps.Data.Polygon(g);
-				})
-			);
+			// let mp = new google.maps.Data.MultiPolygon(
+			// 	geoOutput.map((g) => {
+			// 		return new google.maps.Data.Polygon(g);
+			// 	})
+			// );
 			if (!d.data) {
-				d.data = map.data.add({ geometry: mp });
+				let inst = map.addMultiPoly(output);
+				d.data = inst;
 			} else {
-				d.data.setGeometry(mp);
+				d.data.setValue(output);
 			}
 		}
 	}
@@ -150,16 +144,16 @@ export class ParcelOverlay {
 			let bounds = map.getBounds();
 			if (!bounds) return;
 
-			let ne = bounds.getNorthEast();
-			let sw = bounds.getSouthWest();
+			let ne = { lat: bounds.north, lng: bounds.east };
+			let sw = { lat: bounds.south, lng: bounds.west };
 			let lerpSteps = 4;
 			for (let x = 0; x <= lerpSteps; x++) {
 				for (let y = 0; y <= lerpSteps; y++) {
-					let latLng = new google.maps.LatLng(
-						lerp(sw.lat(), ne.lat(), x / lerpSteps),
-						lerp(sw.lng(), ne.lng(), y / lerpSteps)
-					);
-					await this.loadTile(latLng);
+					let lonLat: [number, number] = [
+						lerp(sw.lng, ne.lng, y / lerpSteps),
+						lerp(sw.lat, ne.lat, x / lerpSteps)
+					];
+					await this.loadTile(lonLat);
 				}
 			}
 

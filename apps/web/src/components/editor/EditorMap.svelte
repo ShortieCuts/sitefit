@@ -486,22 +486,22 @@
 
 	let activeProvider: ParcelProvider = $parcelProvider;
 
-	// $: {
-	// 	if ($activeDialog == 'parcels' && map && $zoomLevel >= 17) {
-	// 		if (!parcelOverlay || $parcelProvider != activeProvider) {
-	// 			if (parcelOverlay) parcelOverlay.destroy();
+	$: {
+		if ($activeDialog == 'parcels' && map && $zoomLevel >= 17) {
+			if (!parcelOverlay || $parcelProvider != activeProvider) {
+				if (parcelOverlay) parcelOverlay.destroy();
 
-	// 			parcelOverlay = new ParcelOverlay(map, $parcelProvider);
-	// 			parcelOverlay.loadViewport();
-	// 			activeProvider = $parcelProvider;
-	// 		}
-	// 	} else {
-	// 		if (parcelOverlay) {
-	// 			parcelOverlay.destroy();
-	// 			parcelOverlay = null;
-	// 		}
-	// 	}
-	// }
+				parcelOverlay = new ParcelOverlay(map, $parcelProvider);
+				parcelOverlay.loadViewport();
+				activeProvider = $parcelProvider;
+			}
+		} else {
+			if (parcelOverlay) {
+				parcelOverlay.destroy();
+				parcelOverlay = null;
+			}
+		}
+	}
 
 	let filesDraggable = getDraggable('files');
 
@@ -637,10 +637,22 @@
 		}
 	}
 
-	function handleMouseWheel(e: any) {
-		console.log(e);
+	function handleMouseWheel(e: WheelEvent) {
 		if (!e.target.closest('.map-container') || e.target.closest('.map-container') != containerEl)
 			return;
+
+		if (map instanceof GoogleMapsProvider) {
+			if (e.deltaY < 0) {
+				let currentZoom = map.getZoom();
+				setTimeout(() => {
+					if (!map) return;
+					if (map.getZoom() == currentZoom) {
+						editor.info('Map switched to Mapbox for increased zoom level.');
+						$mapStyle = $mapStyle.replace('google', 'mapbox');
+					}
+				}, 1);
+			}
+		}
 
 		if (e.ctrlKey || e.metaKey || (get(activeTool) == 'select' && !ENABLE_TRACKPAD_PAN)) {
 			e.preventDefault();

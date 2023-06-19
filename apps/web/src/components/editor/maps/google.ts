@@ -1,5 +1,11 @@
 import { Loader } from '@googlemaps/js-api-loader';
-import { MapProvider, type MapStyle, type MouseMapEvent } from './generic';
+import {
+	MapProvider,
+	type MapMultiPolyInstance,
+	type MapStyle,
+	type MouseMapEvent,
+	type MapMultiPolyValue
+} from './generic';
 import { ThreeJSOverlayView } from '@googlemaps/three';
 import * as THREE from 'three';
 import type { MapProviderOverlay, Overlay } from '../overlays/Overlay';
@@ -150,6 +156,56 @@ export class GoogleMapsProvider extends MapProvider {
 		this.setupMap();
 	}
 
+	addMultiPoly(val: MapMultiPolyValue): MapMultiPolyInstance {
+		let geoOutput = val.map((a) => {
+			return a.map((c) => {
+				return c.map((p) => {
+					return { lat: p[1], lng: p[0] };
+				});
+			});
+		});
+		let mp = new google.maps.Data.MultiPolygon(
+			geoOutput.map((g) => {
+				return new google.maps.Data.Polygon(g);
+			})
+		);
+
+		let inst = this.map.data.add({ geometry: mp });
+		const featureStyleOptions: google.maps.FeatureStyleOptions = {
+			strokeColor: '#ffeb3b',
+			strokeOpacity: 1.0,
+			strokeWeight: 3.0,
+			fillColor: '#ffeb3b',
+			fillOpacity: 0.01
+		};
+		this.map.data.setStyle(featureStyleOptions);
+
+		return {
+			key: '',
+			destroy: () => {
+				this.map.data.remove(inst);
+			},
+			setValue: (val: MapMultiPolyValue) => {
+				let geoOutput = val.map((a) => {
+					return a.map((c) => {
+						return c.map((p) => {
+							return { lat: p[1], lng: p[0] };
+						});
+					});
+				});
+				let mp = new google.maps.Data.MultiPolygon(
+					geoOutput.map((g) => {
+						return new google.maps.Data.Polygon(g);
+					})
+				);
+				inst.setGeometry(mp);
+			},
+			getValue() {
+				return val;
+			}
+		};
+	}
+
 	setupMap() {
 		const map = this.map;
 
@@ -178,6 +234,15 @@ export class GoogleMapsProvider extends MapProvider {
 		});
 
 		map.addListener('click', (ev: google.maps.MapMouseEvent) => {
+			this.listeners.click.forEach((cb) =>
+				cb({
+					lon: ev.latLng?.lng() ?? 0,
+					lat: ev.latLng?.lat() ?? 0,
+					domEvent: ev.domEvent as MouseEvent
+				})
+			);
+		});
+		map.data.addListener('click', (ev: google.maps.MapMouseEvent) => {
 			this.listeners.click.forEach((cb) =>
 				cb({
 					lon: ev.latLng?.lng() ?? 0,

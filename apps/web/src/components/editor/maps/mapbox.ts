@@ -7,7 +7,12 @@ mapboxgl.accessToken =
 
 import * as THREE from 'three';
 import type { MapProviderOverlay, Overlay } from '../overlays/Overlay';
-import { MapProvider, type MapStyle } from './generic';
+import {
+	MapProvider,
+	type MapMultiPolyInstance,
+	type MapStyle,
+	type MapMultiPolyValue
+} from './generic';
 
 type MapboxMapStyle = 'mapbox-satellite' | 'mapbox-simple' | 'mapbox-dark';
 
@@ -245,6 +250,88 @@ export class MapboxMapsProvider extends MapProvider {
 
 	getOverlayProxy() {
 		return this.mapProviderOverlay;
+	}
+
+	sourceCounter = 0;
+	sources: MapMultiPolyInstance[] = [];
+	refreshSources() {
+		let sourceData = {
+			type: 'geojson',
+			data: {
+				properties: {},
+				type: 'FeatureCollection',
+				features: [] as any[]
+			}
+		};
+
+		for (let source of this.sources) {
+			let data = source.getValue();
+			if (data) {
+				sourceData.data.features.push({
+					type: 'Feature',
+					geometry: {
+						type: 'MultiPolygon',
+						coordinates: data
+					}
+				});
+			}
+		}
+		let sour = this.map.getSource('source');
+		if (sour) {
+			(sour as any).setData(sourceData.data);
+		} else {
+			this.map.addSource('source', sourceData as mapboxgl.AnySourceData);
+		}
+
+		if (!this.map.getLayer('source-fill')) {
+			this.map.addLayer({
+				id: 'source-fill',
+				type: 'fill',
+				source: 'source',
+				paint: {
+					'fill-color': '#ffeb3b',
+					'fill-opacity': 0.1
+				}
+			});
+		}
+
+		if (!this.map.getLayer('source-line')) {
+			this.map.addLayer({
+				id: 'source-line',
+				type: 'line',
+				source: 'source',
+				paint: {
+					'line-color': '#ffeb3b',
+					'line-width': 3
+				}
+			});
+		}
+	}
+	addMultiPoly(val: MapMultiPolyValue): MapMultiPolyInstance {
+		let key = `source`;
+
+		let privateVal = val;
+
+		let source = {
+			key,
+			destroy: () => {
+				this.sources = this.sources.filter((x) => x.key != key);
+				this.refreshSources();
+			},
+			setValue: (val: MapMultiPolyValue) => {
+				privateVal = val;
+				this.refreshSources();
+			},
+			getValue() {
+				return privateVal;
+			}
+		} as MapMultiPolyInstance;
+
+		this.sources.push(source);
+
+		this.refreshSources();
+
+		return source;
 	}
 
 	setupOverlays() {

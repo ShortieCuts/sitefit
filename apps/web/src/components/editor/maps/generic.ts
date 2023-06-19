@@ -24,6 +24,14 @@ export type MapStyle = {
 	thumbnail: string;
 };
 
+export type MapMultiPolyValue = number[][][][];
+export type MapMultiPolyInstance = {
+	key: string;
+	destroy(): void;
+	setValue(value: MapMultiPolyValue): void;
+	getValue(): MapMultiPolyValue;
+};
+
 export class MapProvider {
 	listeners: {
 		click: ((ev: MouseMapEvent) => void)[];
@@ -58,6 +66,16 @@ export class MapProvider {
 
 	static async createMap(parent: HTMLElement, makeOverlays: () => Overlay[]): Promise<MapProvider> {
 		return new MapProvider();
+	}
+
+	addMultiPoly(val: MapMultiPolyValue): MapMultiPolyInstance {
+		return {
+			destroy() {},
+			setValue() {},
+			getValue() {
+				return [];
+			}
+		};
 	}
 
 	onMakeOverlays(fn: (map: MapProvider) => Overlay[]) {
