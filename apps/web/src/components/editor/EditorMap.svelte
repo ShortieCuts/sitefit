@@ -893,50 +893,53 @@
 </div>
 
 {#if !$isMobile}
-	<div class="absolute bottom-4 left-4">
-		<div
-			class="flex flex-row items-center justify-center py-2 px-2 select-none rounded-xl"
-			class:bg-white={styleSelectorOpen}
-		>
-			{#each MAP_STYLES as style}
-				{#if styleSelectorOpen || $mapStyle == style.key}
-					<button
-						class="flex flex-col items-center first:ml-0 ml-2 relative"
-						on:click={() => {
-							if (styleSelectorOpen) {
-								$mapStyle = style.key;
-								styleSelectorOpen = false;
-							} else {
-								styleSelectorOpen = true;
-							}
-						}}
-					>
-						<img
-							src={style.image}
-							alt={style.name}
-							class="rounded-xl hover:shadow-md hover:brightness-105 border-white [&.active]:border-blue-500"
-							class:active={styleSelectorOpen && $mapStyle == style.key}
-							class:w-20={!styleSelectorOpen}
-							class:border-2={!styleSelectorOpen}
-							class:border-4={styleSelectorOpen}
-						/>
-						{#if styleSelectorOpen}
-							<b class="mt-2 text-sm">{style.name}</b>
-						{/if}
-						{#if !styleSelectorOpen}
-							<span
-								class="absolute bottom-2 text-sm font-bold top-1 mt-1"
-								style="line-height: 1"
-								class:text-black={$mapStyle.endsWith('simple')}
-								class:text-white={$mapStyle.endsWith('satellite') || $mapStyle.endsWith('dark')}
-							>
-								Map Type
-							</span>
-						{/if}
-					</button>
-				{/if}
-			{/each}
-		</div>
+	<div class="absolute bottom-4 left-4 rounded-xl" class:bg-white={styleSelectorOpen}>
+		{#each [MAP_STYLES.slice(0, 3), MAP_STYLES.slice(3, 6)] as subStyles, i}
+			<div
+				class="flex flex-row items-center justify-center py-2 px-2 select-none"
+				class:border-t-2={styleSelectorOpen && i == 1}
+				class:border-gray-100={styleSelectorOpen && i == 1}
+			>
+				{#each subStyles as style}
+					{#if styleSelectorOpen || $mapStyle == style.key}
+						<button
+							class="flex flex-col items-center first:ml-0 ml-2 relative"
+							on:click={() => {
+								if (styleSelectorOpen) {
+									$mapStyle = style.key;
+									styleSelectorOpen = false;
+								} else {
+									styleSelectorOpen = true;
+								}
+							}}
+						>
+							<img
+								src={style.image}
+								alt={style.name}
+								class="rounded-xl hover:shadow-md hover:brightness-105 border-white [&.active]:border-blue-500"
+								class:active={styleSelectorOpen && $mapStyle == style.key}
+								class:w-20={!styleSelectorOpen}
+								class:border-2={!styleSelectorOpen}
+								class:border-4={styleSelectorOpen}
+							/>
+							{#if styleSelectorOpen}
+								<b class="mt-2 text-sm">{style.name}</b>
+							{/if}
+							{#if !styleSelectorOpen}
+								<span
+									class="absolute bottom-2 text-sm font-bold top-1 mt-1"
+									style="line-height: 1"
+									class:text-black={$mapStyle.endsWith('simple')}
+									class:text-white={$mapStyle.endsWith('satellite') || $mapStyle.endsWith('dark')}
+								>
+									Map Type
+								</span>
+							{/if}
+						</button>
+					{/if}
+				{/each}
+			</div>
+		{/each}
 	</div>
 {/if}
 
