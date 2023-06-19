@@ -500,9 +500,14 @@ export class EngineInstance {
         const clampedNumbers = ["cadOpacity", "boundaryOpacity"];
         if (data.key == "mapStyle") {
           if (
-            ["google-satellite", "google-simple", "google-dark"].includes(
-              data.value
-            )
+            [
+              "google-satellite",
+              "google-simple",
+              "google-dark",
+              "mapbox-satellite",
+              "mapbox-simple",
+              "mapbox-dark",
+            ].includes(data.value)
           ) {
             this.project.globalProperties.mapStyle = data.value;
             this.enqueueBroadcast(data);

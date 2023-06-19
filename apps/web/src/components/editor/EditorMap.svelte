@@ -26,6 +26,10 @@
 	import { fade, fly } from 'svelte/transition';
 	import { loadTile, type Parcel, type ParcelProvider } from 'src/store/parcels';
 	import { ParcelOverlay } from './overlays/Parcel';
+	import type { MapProvider, MouseMapEvent } from './maps/generic';
+	import { GoogleMapsProvider } from './maps/google';
+	import { MapboxMapsProvider } from './maps/mapbox';
+	import { MAP_STYLES } from './maps/mapStyles';
 
 	const MIN_ZOOM = 1;
 	const MAX_ZOOM = 45;
@@ -47,10 +51,409 @@
 		parcelProvider
 	} = editor;
 	const mapStyle = broker.writableGlobalProperty('mapStyle', 'google-satellite');
-	console.log('Map style', $mapStyle);
 
-	let containerEl: HTMLElement | null = null;
-	let map: google.maps.Map | null = null;
+	let containerEl: HTMLElement;
+
+	const mapProviders = {
+		google: GoogleMapsProvider,
+		mapbox: MapboxMapsProvider
+	};
+	let map: MapProvider | null = null;
+
+	let buildingMap = false;
+
+	async function buildMap() {
+		if (buildingMap) return;
+
+		buildingMap = true;
+		try {
+			console.log('Building map');
+			let cachedLonLat = {
+				lng: 0,
+				lat: 0,
+				zoom: 0
+			};
+			if (map) {
+				let scaleFactorDiff = 1;
+				if (map instanceof MapboxMapsProvider || map instanceof GoogleMapsProvider) {
+					cachedLonLat = { ...map.cacheViewState };
+				}
+				if (map instanceof GoogleMapsProvider) {
+					if ($mapStyle.startsWith('mapbox')) {
+						scaleFactorDiff = -1;
+					} else {
+						scaleFactorDiff = 0;
+					}
+				} else if (map instanceof MapboxMapsProvider) {
+					if ($mapStyle.startsWith('google')) {
+						scaleFactorDiff = 1;
+					} else {
+						scaleFactorDiff = 0;
+					}
+				}
+				cachedLonLat.zoom += scaleFactorDiff;
+				map.destroy();
+				map = null;
+			}
+
+			let makeOverlays = (map: MapProvider) => {
+				overlays = [];
+				for (let overlayType of overlayTypes) {
+					overlays.push(new overlayType(map, map.getOverlayProxy(), editor, broker));
+				}
+
+				return [...overlays];
+			};
+
+			if ($mapStyle.startsWith('mapbox')) {
+				map = await mapProviders.mapbox.createMap(containerEl, makeOverlays);
+			} else if ($mapStyle.startsWith('google')) {
+				map = await mapProviders.google.createMap(containerEl, makeOverlays);
+			}
+			if (!map) return;
+			let geoData = $geo;
+			map.setAnchor(geoData[0], geoData[1], $heading);
+			map.setStyle($mapStyle);
+
+			editor.map.set(map);
+			editor.overlay.set(map.getOverlayProxy());
+			broker.markAllDirty();
+			broker.needsRender.set(true);
+
+			if (!map) return;
+
+			map.setZoom($zoomLevel);
+
+			flyToLatestCad();
+
+			if (cachedLonLat.lat !== 0 || cachedLonLat.lng !== 0) {
+				map.setCenter(cachedLonLat.lng, cachedLonLat.lat);
+				map.setZoom(cachedLonLat.zoom);
+
+				if (map instanceof GoogleMapsProvider || map instanceof MapboxMapsProvider) {
+					map.cacheViewState = { ...cachedLonLat };
+				}
+			}
+			console.log('Map', map);
+
+			map.onDraw(() => {
+				updateSvelteOverlays();
+			});
+
+			map.onMove((ev) => {
+				if (!map) return;
+
+				let mevent = ev.domEvent as MouseEvent;
+				if (mevent.shiftKey && mevent.button == 0 && mevent.buttons == 1) {
+					map?.setTilt(0);
+				}
+
+				let deg = -$heading;
+				let rad = (deg / 180) * Math.PI;
+
+				editor.currentMousePosition.set([ev.lat, ev.lon]);
+				editor.currentMousePositionScreen.set([mevent.clientX, mevent.clientY]);
+				const referenceOverlay = map.getOverlayProxy();
+				let vec = referenceOverlay.lonLatToVector3(ev.lon, ev.lat);
+
+				editor.currentMousePositionRelative.set(broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0]));
+
+				if (referenceOverlay) {
+					let vectorPos = referenceOverlay.lonLatToVector3(ev.lon, ev.lat);
+					let normalized = broker.normalizeVector([vectorPos.x, vectorPos.z]);
+					let deltaX = 0;
+					let deltaY = 0;
+
+					if (
+						get(editor.activeTool) == 'pen' ||
+						get(editor.activeTool) == 'measurement' ||
+						get(editor.activeTool) == 'area' ||
+						get(editor.activeTool) == 'smart' ||
+						get(editor.editingObject)
+					) {
+						if (!(ev.domEvent as MouseEvent).ctrlKey) {
+							let guides = calculateGuides(
+								editor,
+								broker,
+								Flatten.point(normalized[0], normalized[1])
+							);
+							if (guides.lines.length > 0 || guides.points.length > 0) {
+								editor.guides.set({
+									lines: guides.lines.map((l) => [
+										[l.start.x, l.start.y],
+										[l.end.x, l.end.y]
+									]),
+									points: guides.points.map((p) => [p.x, p.y])
+								});
+								deltaX = guides.translation[0];
+								deltaY = guides.translation[1];
+							} else {
+								editor.guides.set({
+									lines: [],
+									points: []
+								});
+							}
+						}
+					}
+					editor.desiredPosition = [normalized[0] + deltaX, normalized[1] + deltaY];
+				}
+
+				let e = ev.domEvent as MouseEvent;
+
+				if (editor.currentToolHandlers) {
+					editor.currentToolHandlers.onMove(e, editor, broker);
+				}
+
+				if (get(filesDraggable.dragging)) {
+					let draggingCad = get(filesDraggable.payload);
+
+					if (previewCad != draggingCad) {
+						previewCad = draggingCad;
+						(async () => {
+							let rawDXF = await fetch('/api/cad/' + previewCad).then((res) => res.text());
+
+							if (!get(filesDraggable.dragging)) {
+								return;
+							}
+
+							let objects = translateDXF(rawDXF);
+
+							if (!objects) {
+								return;
+							}
+
+							let bounds = computeBoundsMulti(objects);
+
+							previewCadOffsets = {
+								x: (bounds.maxX + bounds.minX) / 2,
+								y: (bounds.maxY + bounds.minY) / 2
+							};
+
+							editor.previewObjects.set(objects);
+							for (let object of objects) {
+								(object as any).$originalPosition = [
+									object.transform.position[0],
+									object.transform.position[1]
+								];
+							}
+
+							for (let object of objects) {
+								let anyObj = object as any;
+								object.transform.position[0] =
+									anyObj.$originalPosition[0] + editor.desiredPosition[0] - previewCadOffsets.x;
+								object.transform.position[1] =
+									anyObj.$originalPosition[1] + editor.desiredPosition[1] - previewCadOffsets.y;
+							}
+
+							editor.needsPreviewRender.set(true);
+						})();
+					}
+
+					let objects = get(editor.previewObjects);
+					for (let object of objects) {
+						let anyObj = object as any;
+						object.transform.position[0] =
+							anyObj.$originalPosition[0] + editor.desiredPosition[0] - previewCadOffsets.x;
+						object.transform.position[1] =
+							anyObj.$originalPosition[1] + editor.desiredPosition[1] - previewCadOffsets.y;
+					}
+
+					editor.needsPreviewRender.set(true);
+				} else {
+					if (previewCad) {
+						previewCad = '';
+						editor.previewObjects.set([]);
+					}
+				}
+			});
+
+			function handleMapTap(ev: MouseMapEvent) {
+				if (!map) return;
+
+				const referenceOverlay = map.getOverlayProxy();
+
+				let deg = -$heading;
+				let rad = (deg / 180) * Math.PI;
+
+				editor.currentMousePosition.set([ev.lat, ev.lon]);
+
+				let vec = referenceOverlay.lonLatToVector3(ev.lon, ev.lat);
+
+				editor.currentMousePositionRelative.set(broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0]));
+
+				let e = ev.domEvent as MouseEvent;
+
+				if (e.button === 0) {
+					if (editor.currentToolHandlers) {
+						editor.currentToolHandlers.onDown(e, editor, broker);
+					}
+				} else if (e.button == 2) {
+					if (
+						editor.currentToolHandlers &&
+						($activeTool == 'area' || $activeTool == 'measurement')
+					) {
+						// editor.currentToolHandlers.onDown(e, editor, broker);
+						editor.currentToolHandlers.commit(editor, broker);
+						e.preventDefault();
+					}
+				}
+			}
+
+			map.onDown((ev: MouseMapEvent) => {
+				if ($isMobile) return;
+				handleMapTap(ev);
+				if (get(editor.activeTool) != 'comment') {
+					editor.stagingComment.set(null);
+				}
+			});
+
+			map.onClick((ev: MouseMapEvent) => {
+				if (get(editor.activeDialog) == 'parcels') {
+					editor.selectedParcelLonLat.set([ev.lon, ev.lat]);
+				}
+
+				if (!$isMobile) return;
+
+				handleMapTap(ev);
+			});
+
+			map.onUp((ev: MouseMapEvent) => {
+				if (!map) return;
+
+				const referenceOverlay = map.getOverlayProxy();
+
+				editor.currentMousePosition.set([ev.lat, ev.lon]);
+
+				let vec = referenceOverlay.lonLatToVector3(ev.lon, ev.lat);
+
+				let deg = -$heading;
+				let rad = (deg / 180) * Math.PI;
+
+				editor.currentMousePositionRelative.set(broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0]));
+
+				let e = ev.domEvent as MouseEvent;
+				if (e.button === 0) {
+					if (editor.currentToolHandlers) {
+						editor.currentToolHandlers.onUp(e, editor, broker);
+					}
+				}
+			});
+
+			map.onZoom(() => {
+				if (!map) return;
+
+				editor.zoom.set(map.getZoom());
+				zoomLevel.set(map.getZoom());
+			});
+
+			let updateTimer = 0;
+			let lastFrame = Date.now();
+			let frameEvent = () => {
+				requestAnimationFrame(frameEvent);
+				if (!map) return;
+				let now = Date.now();
+				let delta = now - lastFrame;
+				lastFrame = now;
+				if (updateTimer > 0) {
+					updateTimer -= delta;
+					if ($isMobile) {
+						if (!map) return;
+						let center = map.getCenter();
+						if (!center) return;
+						let latLng = map.getCenter();
+
+						let deg = -$heading;
+						let rad = (deg / 180) * Math.PI;
+
+						editor.currentMousePosition.set([latLng[1], latLng[0]]);
+						const referenceOverlay = map.getOverlayProxy();
+						let vec = referenceOverlay.lonLatToVector3(latLng[0], latLng[1]);
+
+						editor.currentMousePositionRelative.set(
+							broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
+						);
+
+						if (editor.currentToolHandlers) {
+							editor.currentToolHandlers.onMove(new MouseEvent('move'), editor, broker);
+						}
+
+						editor.desiredPosition = broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0]);
+					}
+					return;
+				}
+			};
+			requestAnimationFrame(frameEvent);
+			let firstTile = true;
+			let robustParcels = {} as any;
+
+			map.onBoundsChange(() => {
+				if (!map) return;
+				editor.screenScale.set(map.getScale());
+
+				const referenceOverlay = map.getOverlayProxy();
+
+				let center = map.getCenter();
+
+				editor.longitude.set(center[0]);
+				editor.latitude.set(center[1]);
+
+				updateTimer = 5000;
+
+				if (parcelOverlay) {
+					parcelOverlay.loadViewport();
+				}
+
+				let floatingDlon = center[0] - $geo[0];
+				let floatingDlat = center[1] - $geo[1];
+				let closeLng = center[0];
+				let closeLat = center[1];
+				let floatingDist = Math.sqrt(floatingDlon * floatingDlon + floatingDlat * floatingDlat);
+				if (floatingDist > 0.05 && broker.project.objects.length <= 1) {
+					(async () => {
+						await broker.getOrCreateCornerstone();
+						$geo = [closeLng, closeLat];
+					})();
+				}
+
+				let mapBounds = map.getBounds();
+				let bounds = {
+					minX: Infinity,
+					minY: Infinity,
+					maxX: -Infinity,
+					maxY: -Infinity
+				};
+
+				let relativeTopLeft = referenceOverlay.lonLatToVector3(mapBounds.west, mapBounds.north);
+
+				let relativeBottomRight = referenceOverlay.lonLatToVector3(mapBounds.east, mapBounds.south);
+
+				if (relativeTopLeft && relativeBottomRight) {
+					bounds.minX = Math.min(relativeTopLeft.x, relativeBottomRight.x);
+					bounds.minY = Math.min(relativeTopLeft.z, relativeBottomRight.z);
+					bounds.maxX = Math.max(relativeTopLeft.x, relativeBottomRight.x);
+					bounds.maxY = Math.max(relativeTopLeft.z, relativeBottomRight.z);
+				}
+
+				if (isNaN(bounds.minX) || isNaN(bounds.minY) || isNaN(bounds.maxX) || isNaN(bounds.maxY))
+					return;
+				editor.viewBounds.set(bounds);
+
+				if (map.getTilt() != 0) {
+					mapRotationNonZero.set(true);
+				} else {
+					if (map.getHeading() != $heading) {
+						mapRotationNonZero.set(true);
+					} else {
+						mapRotationNonZero.set(false);
+					}
+				}
+
+				mapRotation.set(map.getHeading());
+			});
+		} finally {
+			buildingMap = false;
+		}
+	}
 
 	let leftMouseDown = writable(false);
 	let middleMouseDown = writable(false);
@@ -59,8 +462,6 @@
 	let overlays: Overlay[] = [];
 	let parcelOverlay: ParcelOverlay | null = null;
 	const overlayTypes: (typeof Overlay)[] = [SelectionOverlay, RendererOverlay, GuidesOverlay];
-	let referenceOverlay: ThreeJSOverlayView | null = null;
-	let overlayView: google.maps.OverlayView | null = null;
 
 	let origin = { lat: 0, lng: 0 };
 
@@ -80,678 +481,95 @@
 	$: {
 		canDrag;
 		$activeTool;
-		if (map) {
-			map.setOptions({
-				gestureHandling: canDrag ? 'greedy' : 'none',
-				keyboardShortcuts: canDrag,
-				draggableCursor: $activeTool == 'pan' ? 'grab' : 'default',
-				maxZoom: MAX_ZOOM,
-				minZoom: MIN_ZOOM
-			});
-			map.setMapTypeId(getMapTypeId());
-		}
+		map?.setInputMode(canDrag ? 'greedy' : 'none', canDrag);
 	}
 
 	let activeProvider: ParcelProvider = $parcelProvider;
 
-	$: {
-		if ($activeDialog == 'parcels' && map && $zoomLevel >= 17) {
-			if (!parcelOverlay || $parcelProvider != activeProvider) {
-				if (parcelOverlay) parcelOverlay.destroy();
+	// $: {
+	// 	if ($activeDialog == 'parcels' && map && $zoomLevel >= 17) {
+	// 		if (!parcelOverlay || $parcelProvider != activeProvider) {
+	// 			if (parcelOverlay) parcelOverlay.destroy();
 
-				parcelOverlay = new ParcelOverlay(map, $parcelProvider);
-				parcelOverlay.loadViewport();
-				activeProvider = $parcelProvider;
-			}
-		} else {
-			if (parcelOverlay) {
-				parcelOverlay.destroy();
-				parcelOverlay = null;
-			}
-		}
-	}
+	// 			parcelOverlay = new ParcelOverlay(map, $parcelProvider);
+	// 			parcelOverlay.loadViewport();
+	// 			activeProvider = $parcelProvider;
+	// 		}
+	// 	} else {
+	// 		if (parcelOverlay) {
+	// 			parcelOverlay.destroy();
+	// 			parcelOverlay = null;
+	// 		}
+	// 	}
+	// }
 
 	let filesDraggable = getDraggable('files');
 
 	let previewCad = '';
 	let previewCadOffsets = { x: 0, y: 0 };
 
-	function rebuildOverlays(map: google.maps.Map) {
-		if (!referenceOverlay || !overlayView) return;
-
-		for (const overlay of overlays) {
-			overlay.destroy();
-		}
-
-		overlays = [];
-
-		for (let i = 0; i < overlayTypes.length; i++) {
-			const overlay = new overlayTypes[i](map, referenceOverlay, overlayView, editor, broker);
-			overlays.push(overlay);
-		}
-
-		overlays.forEach((overlay) => overlay.init());
-		overlays.forEach((overlay) => overlay.refresh());
-
-		broker.markAllDirty();
-	}
-
-	function getMapId() {
-		if ($mapStyle == 'google-satellite') return 'c0f380f46a9601c5';
-		if ($mapStyle == 'google-simple') return '44130cd24e816b48';
-		if ($mapStyle == 'google-dark') return '3a922666b5448450';
-		return 'c0f380f46a9601c5';
-	}
-	function getMapTypeId() {
-		// return 'test';
-		if ($mapStyle == 'google-satellite') return google.maps.MapTypeId.HYBRID;
-		if ($mapStyle == 'google-simple') return google.maps.MapTypeId.ROADMAP;
-		if ($mapStyle == 'google-dark') return google.maps.MapTypeId.ROADMAP;
-		return google.maps.MapTypeId.HYBRID;
-	}
-
 	let floatingAnchor = {
 		lat: 0,
 		lng: 0
 	};
 
-	$: {
-		$mapStyle;
+	function checkMap() {
+		if (!browser) return false;
 
 		if (map) {
-			map.setOptions({
-				mapTypeId: getMapTypeId(),
-				mapId: getMapId(),
+			let sameType = true;
+			if (map instanceof GoogleMapsProvider) {
+				if (!$mapStyle.startsWith('google')) {
+					sameType = false;
+				}
+			} else if (map instanceof MapboxMapsProvider) {
+				if (!$mapStyle.startsWith('mapbox')) {
+					sameType = false;
+				}
+			}
 
-				tilt: 0,
-				maxZoom: MAX_ZOOM,
-				minZoom: MIN_ZOOM
-			});
-
-			map.setMapTypeId(getMapTypeId());
+			if (!sameType) {
+				buildMap();
+			} else {
+				map.setStyle($mapStyle);
+			}
+		} else {
+			if (get(broker.synced)) {
+				buildMap();
+			}
 		}
 	}
+
+	let unsubs: (() => void)[] = [];
+
+	unsubs.push(
+		broker.synced.subscribe((synced) => {
+			if (synced) {
+				checkMap();
+			}
+		})
+	);
+
+	unsubs.push(
+		mapStyle.subscribe((style) => {
+			checkMap();
+		})
+	);
+
+	onMount(() => {
+		checkMap();
+	});
 
 	let mapRotationNonZero = writable(false);
 	let mapRotation = writable(0);
 	let styleSelectorOpen = false;
 
-	let mapStyles = [
-		{
-			key: 'google-satellite',
-			image: '/img/google-sat.png',
-			name: 'Satellite'
-		},
-		{
-			key: 'google-simple',
-			image: '/img/google-street.png',
-			name: 'Simple'
-		},
-		{
-			key: 'google-dark',
-			image: '/img/google-dark.png',
-			name: 'Dark'
-		}
-	];
-
-	// $: {
-	// 	$heading;
-	// 	$geo;
-
-	// 	if (map && referenceOverlay) {
-	// 		map.setHeading($heading);
-
-	// 		map.setCenter({
-	// 			lat: $geo[1],
-	// 			lng: $geo[0]
-	// 		});
-
-	// 		if ($geo[1] != 0 || $geo[0] != 0) {
-	// 			map.setZoom(25);
-	// 		} else {
-	// 			map.setZoom(1);
-	// 		}
-
-	// 		referenceOverlay.setAnchor({
-	// 			lat: $geo[1],
-	// 			lng: $geo[0]
-	// 		});
-
-	// 		let deg = -$heading;
-	// 		let rad = (deg / 180) * Math.PI;
-
-	// 		referenceOverlay.scene.rotateY(rad);
-
-	// 		map.setTilt(0);
-	// 	}
-	// }
-
-	class CoordMapType implements google.maps.MapType {
-		tileSize: google.maps.Size;
-		alt: string | null = null;
-		maxZoom: number = 17;
-		minZoom: number = 0;
-		name: string | null = null;
-		projection: google.maps.Projection | null = null;
-		radius: number = 6378137;
-
-		constructor(tileSize: google.maps.Size) {
-			this.tileSize = tileSize;
-		}
-		getTile(coord: google.maps.Point, zoom: number, ownerDocument: Document): HTMLElement {
-			const div = ownerDocument.createElement('div');
-
-			div.innerHTML = String(coord);
-			div.style.width = this.tileSize.width + 'px';
-			div.style.height = this.tileSize.height + 'px';
-			div.style.fontSize = '10';
-			div.style.borderStyle = 'solid';
-			div.style.borderWidth = '1px';
-			div.style.borderColor = '#AAAAAA';
-			return div;
-		}
-		releaseTile(tile: Element): void {}
-	}
-	onMount(() => {
-		if (browser) {
-			const loader = new Loader({
-				apiKey: 'AIzaSyDhS6djMo2An6CdMlEY1zMQUkRGorXI7SU',
-				version: 'weekly'
-			});
-
-			loader.load().then(async () => {
-				if (!containerEl) return;
-
-				const { Map, MaxZoomService } = (await google.maps.importLibrary(
-					'maps'
-				)) as google.maps.MapsLibrary;
-
-				map = new Map(containerEl, {
-					center: {
-						lat: $geo[1],
-						lng: $geo[0]
-					},
-					zoom: $geo[1] != 0 || $geo[0] != 0 ? 18 : 3,
-					heading: $heading,
-					disableDefaultUI: true,
-
-					mapId: getMapId(),
-					mapTypeId: getMapTypeId(),
-
-					streetViewControl: false,
-					draggableCursor: 'default',
-					gestureHandling: canDrag ? 'greedy' : 'none',
-					keyboardShortcuts: canDrag,
-					scrollwheel: true,
-					isFractionalZoomEnabled: true,
-					maxZoom: MAX_ZOOM,
-					minZoom: MIN_ZOOM
-				});
-
-				zoomLevel.set(map.getZoom() ?? 0);
-
-				flyToLatestCad();
-				console.log('Map', map);
-
-				let superZoom = new SuperZoomMapType({
-					tileSize: new google.maps.Size(256, 256),
-					maxZoom: 40,
-					name: 'Satellite',
-					getTileUrl: (tileCoord: google.maps.Point, zoom: number): string => {
-						if (zoom > 40) {
-							return '';
-						}
-						let zoomDiff: number = zoom - 40;
-						let normTile: any = { x: tileCoord.x, y: tileCoord.y };
-						if (zoomDiff > 0) {
-							let dScale: number = Math.pow(2, zoomDiff);
-							normTile.x = Math.floor(normTile.x / dScale);
-							normTile.y = Math.floor(normTile.y / dScale);
-						} else {
-							zoomDiff = 0;
-						}
-						return (
-							'https://khms1.googleapis.com/kh?v=949&hl=en-US&&x=' +
-							normTile.x +
-							'&y=' +
-							normTile.y +
-							'&z=' +
-							(zoom - zoomDiff)
-						);
-					}
-				});
-				// map.mapTypes.set('test', superZoom);
-				// map.setMapTypeId('test');
-				// console.log(map.mapTypes);
-				// let oldFunc = map.mapTypes.set;
-				// map.mapTypes.set = function (key: string, value: any) {
-				// 	value.maxZoom = 50;
-				// 	console.log('set', key, value);
-				// 	value.getTi;
-				// 	oldFunc.call(map.mapTypes, key, value);
-				// };
-				// superZoom.setOpacity(0.5);
-				// const coordMapType = new CoordMapType(new google.maps.Size(256, 256));
-				// map.overlayMapTypes.insertAt(0, coordMapType);
-				// map.overlayMapTypes.insertAt(-2, superZoom);
-
-				let scene = new THREE.Scene();
-				let deg = -$heading;
-				let rad = (deg / 180) * Math.PI;
-
-				scene.rotateY(rad);
-
-				overlayView = new google.maps.OverlayView();
-				overlayView.setMap(map);
-
-				overlayView.onRemove = () => {};
-
-				overlayView.draw = () => {
-					console.log('Draw');
-					for (let overlay of overlays) {
-						for (let draw of overlay.draws) {
-							draw();
-						}
-					}
-
-					updateSvelteOverlays();
-				};
-
-				referenceOverlay = new ThreeJSOverlayView({
-					map,
-					scene,
-					upAxis: 'Y',
-					anchor: map.getCenter()
-				});
-
-				editor.overlay.set(referenceOverlay);
-				editor.map.set(map);
-
-				map.setTilt(0);
-
-				map.addListener('mousemove', (ev: google.maps.MapMouseEvent) => {
-					const { latLng } = ev;
-					let mevent = ev.domEvent as MouseEvent;
-					if (mevent.shiftKey && mevent.button == 0 && mevent.buttons == 1) {
-						map?.setTilt(0);
-					}
-
-					let deg = -$heading;
-					let rad = (deg / 180) * Math.PI;
-
-					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
-					editor.currentMousePositionScreen.set([mevent.clientX, mevent.clientY]);
-
-					let vec = referenceOverlay?.latLngAltitudeToVector3({
-						lat: latLng?.lat() ?? 0,
-						lng: latLng?.lng() ?? 0,
-						altitude: 0
-					});
-
-					editor.currentMousePositionRelative.set(
-						broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
-					);
-
-					if (referenceOverlay) {
-						let vectorPos = referenceOverlay.latLngAltitudeToVector3({
-							lat: latLng?.lat() ?? 0,
-							lng: latLng?.lng() ?? 0,
-							altitude: 0
-						});
-						let normalized = broker.normalizeVector([vectorPos.x, vectorPos.z]);
-						let deltaX = 0;
-						let deltaY = 0;
-
-						if (
-							get(editor.activeTool) == 'pen' ||
-							get(editor.activeTool) == 'measurement' ||
-							get(editor.activeTool) == 'area' ||
-							get(editor.activeTool) == 'smart' ||
-							get(editor.editingObject)
-						) {
-							if (!(ev.domEvent as MouseEvent).ctrlKey) {
-								let guides = calculateGuides(
-									editor,
-									broker,
-									Flatten.point(normalized[0], normalized[1])
-								);
-								if (guides.lines.length > 0 || guides.points.length > 0) {
-									editor.guides.set({
-										lines: guides.lines.map((l) => [
-											[l.start.x, l.start.y],
-											[l.end.x, l.end.y]
-										]),
-										points: guides.points.map((p) => [p.x, p.y])
-									});
-									deltaX = guides.translation[0];
-									deltaY = guides.translation[1];
-								} else {
-									editor.guides.set({
-										lines: [],
-										points: []
-									});
-								}
-							}
-						}
-						editor.desiredPosition = [normalized[0] + deltaX, normalized[1] + deltaY];
-					}
-
-					let e = ev.domEvent as MouseEvent;
-
-					if (editor.currentToolHandlers) {
-						editor.currentToolHandlers.onMove(e, editor, broker);
-					}
-
-					if (get(filesDraggable.dragging)) {
-						let draggingCad = get(filesDraggable.payload);
-
-						if (previewCad != draggingCad) {
-							previewCad = draggingCad;
-							(async () => {
-								let rawDXF = await fetch('/api/cad/' + previewCad).then((res) => res.text());
-
-								if (!get(filesDraggable.dragging)) {
-									return;
-								}
-
-								let objects = translateDXF(rawDXF);
-
-								if (!objects) {
-									return;
-								}
-
-								let bounds = computeBoundsMulti(objects);
-
-								previewCadOffsets = {
-									x: (bounds.maxX + bounds.minX) / 2,
-									y: (bounds.maxY + bounds.minY) / 2
-								};
-
-								editor.previewObjects.set(objects);
-								for (let object of objects) {
-									(object as any).$originalPosition = [
-										object.transform.position[0],
-										object.transform.position[1]
-									];
-								}
-
-								for (let object of objects) {
-									let anyObj = object as any;
-									object.transform.position[0] =
-										anyObj.$originalPosition[0] + editor.desiredPosition[0] - previewCadOffsets.x;
-									object.transform.position[1] =
-										anyObj.$originalPosition[1] + editor.desiredPosition[1] - previewCadOffsets.y;
-								}
-
-								editor.needsPreviewRender.set(true);
-							})();
-						}
-
-						let objects = get(editor.previewObjects);
-						for (let object of objects) {
-							let anyObj = object as any;
-							object.transform.position[0] =
-								anyObj.$originalPosition[0] + editor.desiredPosition[0] - previewCadOffsets.x;
-							object.transform.position[1] =
-								anyObj.$originalPosition[1] + editor.desiredPosition[1] - previewCadOffsets.y;
-						}
-
-						editor.needsPreviewRender.set(true);
-					} else {
-						if (previewCad) {
-							previewCad = '';
-							editor.previewObjects.set([]);
-						}
-					}
-				});
-
-				function handleMapTap(ev: google.maps.MapMouseEvent) {
-					const { latLng } = ev;
-
-					let deg = -$heading;
-					let rad = (deg / 180) * Math.PI;
-
-					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
-
-					let vec = referenceOverlay?.latLngAltitudeToVector3({
-						lat: latLng?.lat() ?? 0,
-						lng: latLng?.lng() ?? 0,
-						altitude: 0
-					});
-
-					editor.currentMousePositionRelative.set(
-						broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
-					);
-
-					let e = ev.domEvent as MouseEvent;
-
-					if (e.button === 0) {
-						if (editor.currentToolHandlers) {
-							editor.currentToolHandlers.onDown(e, editor, broker);
-						}
-					} else if (e.button == 2) {
-						if (
-							editor.currentToolHandlers &&
-							($activeTool == 'area' || $activeTool == 'measurement')
-						) {
-							// editor.currentToolHandlers.onDown(e, editor, broker);
-							editor.currentToolHandlers.commit(editor, broker);
-							e.preventDefault();
-						}
-					}
-				}
-
-				map.addListener('mousedown', (ev: google.maps.MapMouseEvent) => {
-					if ($isMobile) return;
-					handleMapTap(ev);
-					if (get(editor.activeTool) != 'comment') {
-						editor.stagingComment.set(null);
-					}
-				});
-
-				map.data.addListener('click', (ev: google.maps.MapMouseEvent) => {
-					if (get(editor.activeDialog) == 'parcels') {
-						editor.selectedParcelLonLat.set([ev.latLng?.lng() ?? 0, ev.latLng?.lat() ?? 0]);
-					}
-				});
-				map.addListener('click', (ev: google.maps.MapMouseEvent) => {
-					if (get(editor.activeDialog) == 'parcels') {
-						editor.selectedParcelLonLat.set([0, 0]);
-					}
-
-					if (!$isMobile) return;
-
-					handleMapTap(ev);
-				});
-
-				map.addListener('mouseup', (ev: google.maps.MapMouseEvent) => {
-					const { latLng } = ev;
-
-					editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
-
-					let vec = referenceOverlay?.latLngAltitudeToVector3({
-						lat: latLng?.lat() ?? 0,
-						lng: latLng?.lng() ?? 0,
-						altitude: 0
-					});
-
-					let deg = -$heading;
-					let rad = (deg / 180) * Math.PI;
-
-					editor.currentMousePositionRelative.set(
-						broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
-					);
-
-					let e = ev.domEvent as MouseEvent;
-					if (e.button === 0) {
-						if (editor.currentToolHandlers) {
-							editor.currentToolHandlers.onUp(e, editor, broker);
-						}
-					}
-				});
-
-				// calculate constant scaling factor for in-map elements to stay the same size on screen
-				function computeScaling() {
-					if (!map) return;
-
-					let bounds = map.getBounds();
-
-					if (!bounds) {
-						return;
-					}
-
-					let ne = bounds.getNorthEast();
-					let sw = bounds.getSouthWest();
-
-					let scale = Math.abs(ne.lat() - sw.lat()) * 800;
-
-					if (isNaN(scale)) {
-						return;
-					}
-					editor.screenScale.set(scale);
-				}
-
-				map.addListener('zoom_changed', () => {
-					if (!map) return;
-					// computeScaling();
-					editor.zoom.set(map.getZoom() ?? 0);
-
-					zoomLevel.set(map.getZoom() ?? 0);
-				});
-
-				let updateTimer = 0;
-				let lastFrame = Date.now();
-				let frameEvent = () => {
-					requestAnimationFrame(frameEvent);
-					if (!map) return;
-					let now = Date.now();
-					let delta = now - lastFrame;
-					lastFrame = now;
-					if (updateTimer > 0) {
-						updateTimer -= delta;
-						if ($isMobile) {
-							if (!map) return;
-							let center = map.getCenter();
-							if (!center) return;
-							let latLng = map.getCenter();
-
-							let deg = -$heading;
-							let rad = (deg / 180) * Math.PI;
-
-							editor.currentMousePosition.set([latLng?.lat() ?? 0, latLng?.lng() ?? 0]);
-
-							let vec = referenceOverlay?.latLngAltitudeToVector3({
-								lat: latLng?.lat() ?? 0,
-								lng: latLng?.lng() ?? 0,
-								altitude: 0
-							});
-
-							editor.currentMousePositionRelative.set(
-								broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
-							);
-
-							if (editor.currentToolHandlers) {
-								editor.currentToolHandlers.onMove(new MouseEvent('move'), editor, broker);
-							}
-
-							editor.desiredPosition = broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0]);
-						}
-						return;
-					}
-				};
-				requestAnimationFrame(frameEvent);
-				let firstTile = true;
-				let robustParcels = {} as any;
-
-				map.addListener('bounds_changed', () => {
-					if (!map) return;
-					let center = map.getCenter();
-					if (!center) return;
-					editor.longitude.set(center.lng());
-					editor.latitude.set(center.lat());
-
-					updateTimer = 5000;
-
-					computeScaling();
-
-					if (parcelOverlay) {
-						parcelOverlay.loadViewport();
-					}
-
-					let floatingDlon = center.lng() - $geo[0];
-					let floatingDlat = center.lat() - $geo[1];
-					let closeLng = center.lng();
-					let closeLat = center.lat();
-					let floatingDist = Math.sqrt(floatingDlon * floatingDlon + floatingDlat * floatingDlat);
-					if (floatingDist > 0.05 && broker.project.objects.length <= 1) {
-						(async () => {
-							await broker.getOrCreateCornerstone();
-							$geo = [closeLng, closeLat];
-						})();
-					}
-
-					let topLeft = map.getBounds()?.getNorthEast();
-					let bottomRight = map.getBounds()?.getSouthWest();
-					let bounds = {
-						minX: Infinity,
-						minY: Infinity,
-						maxX: -Infinity,
-						maxY: -Infinity
-					};
-
-					let relativeTopLeft = referenceOverlay?.latLngAltitudeToVector3({
-						lat: topLeft?.lat() ?? 0,
-						lng: topLeft?.lng() ?? 0,
-						altitude: 0
-					});
-
-					let relativeBottomRight = referenceOverlay?.latLngAltitudeToVector3({
-						lat: bottomRight?.lat() ?? 0,
-						lng: bottomRight?.lng() ?? 0,
-						altitude: 0
-					});
-
-					if (relativeTopLeft && relativeBottomRight) {
-						bounds.minX = Math.min(relativeTopLeft.x, relativeBottomRight.x);
-						bounds.minY = Math.min(relativeTopLeft.z, relativeBottomRight.z);
-						bounds.maxX = Math.max(relativeTopLeft.x, relativeBottomRight.x);
-						bounds.maxY = Math.max(relativeTopLeft.z, relativeBottomRight.z);
-					}
-
-					if (isNaN(bounds.minX) || isNaN(bounds.minY) || isNaN(bounds.maxX) || isNaN(bounds.maxY))
-						return;
-					editor.viewBounds.set(bounds);
-
-					if (map.getTilt() != 0) {
-						mapRotationNonZero.set(true);
-					} else {
-						if (map.getHeading() != $heading) {
-							mapRotationNonZero.set(true);
-						} else {
-							mapRotationNonZero.set(false);
-						}
-					}
-
-					mapRotation.set(map.getHeading() ?? 0);
-				});
-
-				setTimeout(() => {
-					computeScaling();
-				}, 1000);
-
-				computeScaling();
-
-				rebuildOverlays(map);
-			});
-		}
-	});
-
 	editor.longitude.subscribe((val) => {
 		if (map) {
 			let center = map.getCenter();
 			if (!center) return;
-			if (center.lng() != val) {
-				map.setCenter({ lat: center.lat(), lng: val });
+			if (center[0] != val) {
+				map.setCenter(val, center[1]);
 				map.setZoom(18);
 			}
 		}
@@ -761,8 +579,8 @@
 		if (map) {
 			let center = map.getCenter();
 			if (!center) return;
-			if (center.lat() != val) {
-				map.setCenter({ lat: val, lng: center.lng() });
+			if (center[1] != val) {
+				map.setCenter(center[0], val);
 				map.setZoom(18);
 			}
 		}
@@ -770,17 +588,15 @@
 
 	geo.subscribe(() => {
 		if (map) {
+			const referenceOverlay = map.getOverlayProxy();
 			if (referenceOverlay) {
-				referenceOverlay.setAnchor({
-					lat: $geo[1],
-					lng: $geo[0]
-				});
+				map.setAnchor($geo[0], $geo[1], $heading);
 			}
 
 			let center = map.getCenter();
 			if (!center) return;
-			if (center.lng() == 0 && center.lat() == 0) {
-				map.setCenter({ lat: $geo[1], lng: $geo[0] });
+			if (center[0] == 0 && center[1] == 0) {
+				map.setCenter($geo[0], $geo[1]);
 				map.setZoom(18);
 			}
 		}
@@ -800,9 +616,8 @@
 	});
 
 	onDestroy(() => {
-		for (const overlay of overlays) {
-			overlay.destroy();
-		}
+		map?.destroy();
+		unsubs.forEach((u) => u());
 	});
 
 	function handleMouseDown(e: MouseEvent) {
@@ -842,8 +657,8 @@
 			}
 			if (!map) return;
 			let center = map.getCenter();
-			let bounds = map.getBounds() ?? new google.maps.LatLngBounds();
-			let degrees = bounds.getNorthEast().lng() - bounds.getSouthWest().lng();
+			let bounds = map.getBounds();
+			let degrees = bounds.east - bounds.west;
 			let out = normalizeWheel(e);
 
 			let angle = -(map.getHeading() ?? 0) * (Math.PI / 180);
@@ -856,24 +671,14 @@
 				rightVector[1] * out.spinX + upVector[1] * out.spinY
 			];
 
-			map?.setCenter({
-				lat: (center?.lat() ?? 0) + real[0] * (degrees / 30) * -1,
-				lng: (center?.lng() ?? 0) + real[1] * (degrees / 30)
-			});
+			map.setCenter(
+				center[0] + real[1] * (degrees / 30),
+				center[1] + real[0] * (degrees / 30) * -1
+			);
 		}
 	}
 
 	let currentCursor: string = Cursors.default;
-
-	// $: {
-	// 	if (typeof window !== 'undefined') {
-	// 		if (!canDrag) {
-	// 			window.addEventListener('mousemove', handleMouseMove, { capture: true });
-	// 		} else {
-	// 			window.removeEventListener('mousemove', handleMouseMove, { capture: true });
-	// 		}
-	// 	}
-	// }
 
 	$: {
 		currentCursor = Cursors.default;
@@ -907,8 +712,8 @@
 			old.disconnect();
 		}
 
-		if (!svelteOverlaysEl || !overlayView) return;
-		let proj = overlayView.getProjection();
+		if (!svelteOverlaysEl || !map) return;
+		let overlayProxy = map.getOverlayProxy();
 
 		for (let child of svelteOverlaysEl.children) {
 			let childEl = child as HTMLElement;
@@ -916,11 +721,7 @@
 				let longitude = parseFloat(childEl.dataset.longitude ?? '0');
 				let latitude = parseFloat(childEl.dataset.latitude ?? '0');
 
-				let vec = referenceOverlay?.latLngAltitudeToVector3({
-					lat: latitude,
-					lng: longitude,
-					altitude: 0
-				});
+				let vec = overlayProxy.lonLatToVector3(latitude, longitude);
 
 				let deg = -$heading;
 				let rad = (deg / 180) * Math.PI;
@@ -934,10 +735,10 @@
 				let x2 = x * cos - y * sin;
 				let y2 = x * sin + y * cos;
 
-				let pos = proj.fromLatLngToContainerPixel(new google.maps.LatLng(latitude, longitude));
+				let pos = overlayProxy.lonLatToContainerPixel(longitude, latitude);
 				if (pos) {
-					childEl.style.left = `${pos.x}px`;
-					childEl.style.top = `${pos.y}px`;
+					childEl.style.left = `${pos[0]}px`;
+					childEl.style.top = `${pos[1]}px`;
 					childEl.style.position = `absolute`;
 				}
 			}
@@ -948,10 +749,10 @@
 					let relativeY = parseFloat(childEl.dataset.relativeY ?? '0');
 					let p = editor.positionToLonLat(relativeX, relativeY);
 
-					let pos = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
+					let pos = overlayProxy.lonLatToContainerPixel(p[0], p[1]);
 					if (pos) {
-						childEl.style.left = `${pos.x}px`;
-						childEl.style.top = `${pos.y}px`;
+						childEl.style.left = `${pos[0]}px`;
+						childEl.style.top = `${pos[1]}px`;
 						childEl.style.position = `absolute`;
 					}
 				};
@@ -984,20 +785,10 @@
 	});
 
 	onDestroy(() => {
-		console.log('Map destroy');
-		for (let overlay of overlays) {
-			overlay.destroy();
-		}
 		if (observer) {
 			observer.disconnect();
 			observer = null;
 		}
-		overlayView?.setMap(null);
-		overlayView?.unbindAll();
-		overlayView = null;
-		map?.getDiv().remove();
-		map?.unbindAll();
-		map = null;
 	});
 
 	let insideMap = false;
@@ -1095,7 +886,7 @@
 			class="flex flex-row items-center justify-center py-2 px-2 select-none rounded-xl"
 			class:bg-white={styleSelectorOpen}
 		>
-			{#each mapStyles as style}
+			{#each MAP_STYLES as style}
 				{#if styleSelectorOpen || $mapStyle == style.key}
 					<button
 						class="flex flex-col items-center first:ml-0 ml-2 relative"
@@ -1113,21 +904,21 @@
 							alt={style.name}
 							class="rounded-xl hover:shadow-md hover:brightness-105 border-white [&.active]:border-blue-500"
 							class:active={styleSelectorOpen && $mapStyle == style.key}
-							class:w-16={!styleSelectorOpen}
+							class:w-20={!styleSelectorOpen}
 							class:border-2={!styleSelectorOpen}
 							class:border-4={styleSelectorOpen}
 						/>
 						{#if styleSelectorOpen}
-							<b class="mt-2">{style.name}</b>
+							<b class="mt-2 text-sm">{style.name}</b>
 						{/if}
 						{#if !styleSelectorOpen}
 							<span
-								class="absolute bottom-2 text-sm font-bold"
+								class="absolute bottom-2 text-sm font-bold top-1 mt-1"
 								style="line-height: 1"
-								class:text-black={$mapStyle == 'google-simple'}
-								class:text-white={$mapStyle == 'google-satellite' || $mapStyle == 'google-dark'}
+								class:text-black={$mapStyle.endsWith('simple')}
+								class:text-white={$mapStyle.endsWith('satellite') || $mapStyle.endsWith('dark')}
 							>
-								Map<br />Type
+								Map Type
 							</span>
 						{/if}
 					</button>

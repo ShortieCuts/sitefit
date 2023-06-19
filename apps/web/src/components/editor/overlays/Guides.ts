@@ -30,7 +30,7 @@ class GuideElement {
 			})
 		);
 
-		overlay.overlay.scene.add(this.line);
+		overlay.overlay.getScene().add(this.line);
 	}
 
 	setVisible(visible: boolean): void {

@@ -3,7 +3,7 @@ import { Overlay } from './Overlay';
 import * as THREE from 'three';
 import { get } from 'svelte/store';
 import type { Object2D } from 'core';
-import { createRenderObject, type RenderObject2D } from './Renderer';
+import { createRenderObject, RendererOverlay, type RenderObject2D } from './Renderer';
 import { Vector3 } from 'three';
 import Flatten from '@flatten-js/core';
 import { IGNORED_OBJECTS } from '../tools/select';
@@ -47,8 +47,9 @@ class OutlinedBox {
 			})
 		);
 
-		overlay.overlay.scene.add(this.box);
-		overlay.overlay.scene.add(this.line);
+		const scene = overlay.overlay.getScene();
+		scene.add(this.box);
+		scene.add(this.line);
 	}
 
 	setVisible(visible: boolean): void {
@@ -194,7 +195,7 @@ class SelectionBox {
 class OutlinedGeometry {
 	obj: RenderObject2D;
 
-	constructor(overlay: Overlay, source: Object2D) {
+	constructor(overlay: RendererOverlay, source: Object2D) {
 		this.obj = createRenderObject(overlay, source);
 		this.obj.setMaterial(
 			new THREE.LineBasicMaterial({
@@ -211,7 +212,7 @@ class OutlinedGeometry {
 		overlay.overlay.requestRedraw();
 	}
 
-	destroy(overlay: Overlay): void {
+	destroy(overlay: RendererOverlay): void {
 		this.obj?.destroy(overlay);
 		overlay.overlay.requestRedraw();
 	}
@@ -227,6 +228,7 @@ export class SelectionOverlay extends Overlay {
 
 		this.addUnsub(
 			this.editor.selectionDown.subscribe((down) => {
+				console.log('Sub down', this.map);
 				this.isDown = down;
 				this.refresh();
 			})
@@ -272,9 +274,9 @@ export class SelectionOverlay extends Overlay {
 			})
 		);
 
-		let remove = this.map.addListener('zoom_changed', () => {
+		let remove = this.map.onZoom((a) => {
 			this.selectionBox?.updateSize();
-		}).remove;
+		});
 		this.addUnsub(remove);
 
 		this.box = new OutlinedBox(this);
@@ -291,19 +293,13 @@ export class SelectionOverlay extends Overlay {
 			const start = get(this.editor.selectionStart);
 			const end = get(this.editor.currentMousePosition);
 
-			let startVec = this.broker.normalizeVector(
-				this.overlay.latLngAltitudeToVector3({ lat: start[0], lng: start[1] })
-			);
-			let endVec = this.broker.normalizeVector(
-				this.overlay.latLngAltitudeToVector3({ lat: end[0], lng: end[1] })
-			);
+			let startVec = this.broker.normalizeVector(this.overlay.lonLatToVector3(start[1], start[0]));
+			let endVec = this.broker.normalizeVector(this.overlay.lonLatToVector3(end[1], end[0]));
 
 			let center = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
 
 			this.box.setPosition(
-				this.broker.normalizeVector(
-					this.overlay.latLngAltitudeToVector3({ lat: center[0], lng: center[1] })
-				)
+				this.broker.normalizeVector(this.overlay.lonLatToVector3(center[1], center[0]))
 			);
 
 			this.box.setScale(

@@ -370,21 +370,16 @@ class RenderPath implements RenderObject2D {
 		let angle = 0;
 		let lineSize = 16;
 		if (overlay instanceof RendererOverlay) {
-			const map = overlay.overlay.getMap();
-			if (!map) return;
 			center[0] += 2;
 			let p = overlay.editor.positionToLonLat(objBounds.minX, objBounds.minY);
 			let p2 = overlay.editor.positionToLonLat(objBounds.maxX, objBounds.maxY);
 
-			let proj = overlay.overlayView.getProjection();
-
-			if (!proj) return;
-			let pos1 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
-			let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
+			let pos1 = overlay.overlay.lonLatToContainerPixel(p[0], p[1]);
+			let pos2 = overlay.overlay.lonLatToContainerPixel(p2[0], p2[1]);
 			if (!pos1 || !pos2) return;
-			lineSize = Math.sqrt(Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2));
-			pos.x = (pos1.x + pos2.x) / 2;
-			pos.y = (pos1.y + pos2.y) / 2;
+			lineSize = Math.sqrt(Math.pow(pos2[0] - pos1[0], 2) + Math.pow(pos2[0] - pos1[1], 2));
+			pos.x = (pos1[0] + pos2[0]) / 2;
+			pos.y = (pos1[1] + pos2[1]) / 2;
 		}
 
 		if (obj.segments.length == 2) {
@@ -710,10 +705,7 @@ class RenderText implements RenderObject2D {
 		let heading = 0;
 		let anchorHeading = 0;
 		if (overlay instanceof RendererOverlay) {
-			const map = overlay.overlay.getMap();
-			if (!map) return;
-
-			heading = map.getHeading() ?? 0;
+			heading = overlay.map.getHeading();
 			anchorHeading = overlay.heading;
 
 			let p = overlay.editor.positionToLonLat(obj.transform.position[0], obj.transform.position[1]);
@@ -722,15 +714,13 @@ class RenderText implements RenderObject2D {
 				obj.transform.position[1]
 			);
 
-			let proj = overlay.overlayView.getProjection();
-			if (!proj) return;
-			let pos1 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
-			let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
+			let pos1 = overlay.overlay.lonLatToContainerPixel(p[0], p[1]);
+			let pos2 = overlay.overlay.lonLatToContainerPixel(p2[0], p2[1]);
 			if (!pos1 || !pos2) return;
-			pos.x = pos1.x;
-			pos.y = pos1.y;
+			pos.x = pos1[0];
+			pos.y = pos1[1];
 
-			screenSize = Math.sqrt(Math.pow(pos2.x - pos.x, 2) + Math.pow(pos2.y - pos.y, 2));
+			screenSize = Math.sqrt(Math.pow(pos2[0] - pos.x, 2) + Math.pow(pos2[1] - pos.y, 2));
 		} else {
 			let vec = new THREE.Vector3(obj.transform.position[0], obj.transform.position[1], 0);
 			vec.project(overlay.scene.getObjectByName('camera') as THREE.Camera);
@@ -839,10 +829,7 @@ class RenderSVG implements RenderObject2D {
 		let heading = 0;
 		let anchorHeading = 0;
 		if (overlay instanceof RendererOverlay) {
-			const map = overlay.overlay.getMap();
-			if (!map) return;
-
-			heading = map.getHeading() ?? 0;
+			heading = overlay.map.getHeading();
 			anchorHeading = overlay.heading;
 
 			let p = overlay.editor.positionToLonLat(obj.transform.position[0], obj.transform.position[1]);
@@ -851,10 +838,8 @@ class RenderSVG implements RenderObject2D {
 				obj.transform.position[1]
 			);
 
-			let proj = overlay.overlayView.getProjection();
-			if (!proj) return;
-			let pos1 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p[1], p[0]));
-			let pos2 = proj.fromLatLngToContainerPixel(new google.maps.LatLng(p2[1], p2[0]));
+			let pos1 = overlay.overlay.lonLatToVector3(p[0], p[1]);
+			let pos2 = overlay.overlay.lonLatToVector3(p2[0], p2[0]);
 			if (!pos1 || !pos2) return;
 			pos.x = pos1.x;
 			pos.y = pos1.y;
@@ -929,7 +914,7 @@ export class RendererOverlay extends Overlay {
 	heading: number = 0;
 	stagedObject: RenderObject2D | null = null;
 	previewObjects: RenderObject2D[] = [];
-	scene: THREE.Scene = new THREE.Scene();
+	scene: THREE.Scene;
 
 	globalOpacity: number = 1;
 	cadOverrideColor: string = '';
@@ -939,7 +924,8 @@ export class RendererOverlay extends Overlay {
 	init(): void {
 		super.init();
 
-		this.scene = this.overlay.scene;
+		this.scene = this.overlay.getScene();
+		console.log('Using scene', this.scene, this.scene.id);
 
 		const isChildOf = (parent: ObjectID, child: ObjectID): boolean => {
 			while (true) {
@@ -1157,6 +1143,19 @@ export class RendererOverlay extends Overlay {
 		}
 	}
 
+	destroy(): void {
+		super.destroy();
+
+		for (let obj of this.renderedObjects.values()) {
+			obj.destroy(this);
+		}
+
+		this.renderedObjects.clear();
+		this.previewObjects = [];
+		this.stagedObject?.destroy(this);
+		this.stagedObject = null;
+	}
+
 	destroyObject(id: ObjectID) {
 		let obj = this.renderedObjects.get(id);
 		if (obj) {
@@ -1165,7 +1164,10 @@ export class RendererOverlay extends Overlay {
 		}
 	}
 
-	refresh(): void {}
+	refresh(): void {
+		this.broker.needsRender.set(true);
+		this.broker.markAllDirty();
+	}
 }
 
 export class HeadlessRenderer {

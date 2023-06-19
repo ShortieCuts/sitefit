@@ -51,6 +51,8 @@ import { isMobile } from './responsive';
 import type { ProjectComment, ProjectCommentReply } from '$lib/types/comment';
 import { cookieName } from './name';
 import type { ParcelProvider } from './parcels';
+import type { MapProvider } from 'src/components/editor/maps/generic';
+import type { MapProviderOverlay } from 'src/components/editor/overlays/Overlay';
 
 export const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
@@ -1056,8 +1058,8 @@ export class EditorContext {
 	selection: Writable<ObjectID[]> = writable([]);
 	/** Includes the children of selected groups */
 	effectiveSelection: Writable<ObjectID[]> = writable([]);
-	overlay: Writable<ThreeJSOverlayView | null> = writable(null);
-	map: Writable<google.maps.Map | null> = writable(null);
+	overlay: Writable<MapProviderOverlay | null> = writable(null);
+	map: Writable<MapProvider | null> = writable(null);
 
 	broker: ProjectBroker;
 
@@ -1204,7 +1206,7 @@ export class EditorContext {
 		}
 
 		let overlay = get(this.overlay);
-		let vec3 = overlay?.latLngAltitudeToVector3({ lat: lat, lng: lon, altitude: 0 });
+		let vec3 = overlay?.lonLatToVector3(lon, lat);
 		if (!vec3) {
 			return [0, 0];
 		}
@@ -1235,7 +1237,7 @@ export class EditorContext {
 
 		let lonLat: [number, number] = [newLongitude, newLatitude];
 
-		let v3New = overlay.latLngAltitudeToVector3({ lat: lonLat[1], lng: lonLat[0], altitude: 0 });
+		// let v3New = overlay.lonLatToVector3(lonLat[0], lonLat[1]);
 
 		return lonLat;
 	}
@@ -1256,9 +1258,9 @@ export class EditorContext {
 
 		if (zoom) {
 			map.setZoom(20);
-			map.panTo({ lat: lat, lng: lon });
+			map.setCenter(lon, lat);
 		} else {
-			map.setCenter({ lat: lat, lng: lon });
+			map.setCenter(lon, lat);
 		}
 	}
 
@@ -1289,9 +1291,9 @@ export class EditorContext {
 
 		if (zoom) {
 			map.setZoom(20);
-			map.panTo({ lat: lat, lng: lon });
+			map.setCenter(lon, lat);
 		} else {
-			map.setCenter({ lat: lat, lng: lon });
+			map.setCenter(lon, lat);
 		}
 	}
 
@@ -1303,9 +1305,9 @@ export class EditorContext {
 
 		if (zoom) {
 			map.setZoom(20);
-			map.panTo({ lat: lat, lng: lon });
+			map.setCenter(lon, lat);
 		} else {
-			map.setCenter({ lat: lat, lng: lon });
+			map.setCenter(lon, lat);
 		}
 	}
 

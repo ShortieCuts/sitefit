@@ -564,92 +564,92 @@
 					fileDragging = false;
 				}}
 			>
-				{#key `${$heading}.${$mapStyle}`}
-					<EditorMap>
-						{#if $stagingComment}
-							{#key $stagingComment.longitude + ' ' + $stagingComment.latitude}
+				<!-- {#key `${$heading}.${$mapStyle}`} -->
+				<EditorMap>
+					{#if $stagingComment}
+						{#key $stagingComment.longitude + ' ' + $stagingComment.latitude}
+							<div
+								data-longitude={$stagingComment.longitude}
+								data-latitude={$stagingComment.latitude}
+							>
 								<div
-									data-longitude={$stagingComment.longitude}
-									data-latitude={$stagingComment.latitude}
+									class="relative rounded-full rounded-tl-none rotate-45 bg-white w-8 h-8 flex items-center justify-center hover:bg-blue-500 transition-colors pointer-events-auto"
+									style="left: -15px; top: 8px;"
 								>
+									<div class="origin-center -rotate-45 scale-[0.65]">
+										{#if $auth.user}
+											<UserChip userId={$auth.user.id} />
+										{/if}
+									</div>
+								</div>
+								{#if !submittingComment}
+									<div class="flex flex-row items-center pointer-events-auto -mt-16 -ml-2">
+										<input
+											id="comment-input"
+											class="input-text"
+											style="padding-left: 0.5rem; padding-right: 0.5rem;"
+											on:keydown={(e) => {
+												if (e.code === 'Enter') {
+													submitComment();
+												}
+											}}
+											bind:value={$stagingComment.text}
+										/>
+										<button
+											on:click={() => {
+												submitComment();
+											}}
+											class="bg-blue-500 rounded-md flex flex-row items-center justify-center p-2 w-8 ml-2 text-white hover:bg-blue-400"
+											><Fa icon={faArrowRight} /></button
+										>
+									</div>
+								{/if}
+							</div>
+						{/key}
+					{/if}
+					{#if $editingObject}
+						<ObjectEditor />
+					{/if}
+					{#each $rootComments as comment}
+						{#if comment.long !== 0 || comment.lat !== 0}
+							{#key comment.long + ' ' + comment.lat}
+								<button
+									on:scroll|preventDefault|stopPropagation
+									on:mousewheel|preventDefault|stopPropagation
+									data-longitude={comment.long}
+									data-latitude={comment.lat}
+									class="comment-wrap"
+									class:active={$focusComment == comment.id}
+									on:click={() => {
+										if ($activeDialog !== 'comments') editorContext.activateDialog('comments');
+										setTimeout(() => {
+											let el = document.querySelector(`[data-comment-id="${comment.id}"]`);
+											if (el) {
+												el.scrollIntoView();
+												el.focus();
+											}
+										}, 100);
+									}}
+								>
+									<div class="comment-hover-side" />
 									<div
-										class="relative rounded-full rounded-tl-none rotate-45 bg-white w-8 h-8 flex items-center justify-center hover:bg-blue-500 transition-colors pointer-events-auto"
-										style="left: -15px; top: 8px;"
+										class="comment-bulb absolute rotate-45 w-8 h-8 flex items-center justify-center hover:bg-blue-500 transition-colors pointer-events-auto origin-top-left"
+										class:bg-blue-500={!comment.read}
+										class:bg-white={comment.read}
 									>
-										<div class="origin-center -rotate-45 scale-[0.65]">
-											{#if $auth.user}
-												<UserChip userId={$auth.user.id} />
-											{/if}
+										<div class="comment-chip origin-center -rotate-45 scale-[0.65]">
+											<UserChip userId={comment.authorId} />
+										</div>
+										<div class="absolute comment-text">
+											{comment.text}
 										</div>
 									</div>
-									{#if !submittingComment}
-										<div class="flex flex-row items-center pointer-events-auto -mt-16 -ml-2">
-											<input
-												id="comment-input"
-												class="input-text"
-												style="padding-left: 0.5rem; padding-right: 0.5rem;"
-												on:keydown={(e) => {
-													if (e.code === 'Enter') {
-														submitComment();
-													}
-												}}
-												bind:value={$stagingComment.text}
-											/>
-											<button
-												on:click={() => {
-													submitComment();
-												}}
-												class="bg-blue-500 rounded-md flex flex-row items-center justify-center p-2 w-8 ml-2 text-white hover:bg-blue-400"
-												><Fa icon={faArrowRight} /></button
-											>
-										</div>
-									{/if}
-								</div>
+								</button>
 							{/key}
 						{/if}
-						{#if $editingObject}
-							<ObjectEditor />
-						{/if}
-						{#each $rootComments as comment}
-							{#if comment.long !== 0 || comment.lat !== 0}
-								{#key comment.long + ' ' + comment.lat}
-									<button
-										on:scroll|preventDefault|stopPropagation
-										on:mousewheel|preventDefault|stopPropagation
-										data-longitude={comment.long}
-										data-latitude={comment.lat}
-										class="comment-wrap"
-										class:active={$focusComment == comment.id}
-										on:click={() => {
-											if ($activeDialog !== 'comments') editorContext.activateDialog('comments');
-											setTimeout(() => {
-												let el = document.querySelector(`[data-comment-id="${comment.id}"]`);
-												if (el) {
-													el.scrollIntoView();
-													el.focus();
-												}
-											}, 100);
-										}}
-									>
-										<div class="comment-hover-side" />
-										<div
-											class="comment-bulb absolute rotate-45 w-8 h-8 flex items-center justify-center hover:bg-blue-500 transition-colors pointer-events-auto origin-top-left"
-											class:bg-blue-500={!comment.read}
-											class:bg-white={comment.read}
-										>
-											<div class="comment-chip origin-center -rotate-45 scale-[0.65]">
-												<UserChip userId={comment.authorId} />
-											</div>
-											<div class="absolute comment-text">
-												{comment.text}
-											</div>
-										</div>
-									</button>
-								{/key}
-							{/if}
-						{/each}
-					</EditorMap>
-				{/key}
+					{/each}
+				</EditorMap>
+				<!-- {/key} -->
 				{#if !$isMobile}
 					<ContextMenu
 						on:activate={() => {

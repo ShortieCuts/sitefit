@@ -1,19 +1,26 @@
 import type { ThreeJSOverlayView } from '@googlemaps/three';
 import type { EditorContext, ProjectBroker } from 'src/store/editor';
+import type { MapProvider } from '../maps/generic';
+
+export interface MapProviderOverlay {
+	requestRedraw: () => void;
+	lonLatToVector3: (lon: number, lat: number) => THREE.Vector3;
+	lonLatToContainerPixel: (lon: number, lat: number) => [number, number];
+	getScene: () => THREE.Scene;
+}
 
 export class Overlay {
-	map: google.maps.Map;
+	map: MapProvider;
 	unsubs: (() => void)[] = [];
 	editor: EditorContext;
 	broker: ProjectBroker;
-	overlay: ThreeJSOverlayView;
-	overlayView: google.maps.OverlayView;
+	overlay: MapProviderOverlay;
+	// overlayView: google.maps.OverlayView;
 	draws: (() => void)[] = [];
 
 	constructor(
-		map: google.maps.Map,
-		overlay: ThreeJSOverlayView,
-		overlayView: google.maps.OverlayView,
+		map: MapProvider,
+		overlay: MapProviderOverlay,
 		editor: EditorContext,
 		broker: ProjectBroker
 	) {
@@ -21,7 +28,6 @@ export class Overlay {
 		this.editor = editor;
 		this.broker = broker;
 		this.overlay = overlay;
-		this.overlayView = overlayView;
 
 		this.unsubs = [];
 	}

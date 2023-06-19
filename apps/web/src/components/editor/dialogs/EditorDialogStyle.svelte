@@ -8,6 +8,7 @@
 	import ColorInput from '../common/ColorInput.svelte';
 	import { debouncify } from '$lib/util/debounce';
 	import { isMobile } from 'src/store/responsive';
+	import { MAP_STYLES } from '../maps/mapStyles';
 
 	const { broker } = getSvelteContext();
 	const mapStyle = broker.writableGlobalProperty<ProjectMapStyle>('mapStyle', 'google-satellite');
@@ -49,48 +50,23 @@
 			slot="group-0"
 			class="flex flex-row items-center justify-center space-x-4 py-8 select-none"
 		>
-			<button
-				class="flex flex-col items-center"
-				on:click={() => {
-					$mapStyle = 'google-satellite';
-				}}
-			>
-				<img
-					src="/img/google-sat.png"
-					alt="sat"
-					class="rounded-xl hover:shadow-md hover:brightness-105 border-4 border-white [&.active]:border-blue-500"
-					class:active={$mapStyle == 'google-satellite'}
-				/>
-				<b class="mt-2">Satellite</b>
-			</button>
-			<button
-				class="flex flex-col items-center"
-				on:click={() => {
-					$mapStyle = 'google-simple';
-				}}
-			>
-				<img
-					src="/img/google-street.png"
-					alt="street"
-					class="rounded-xl hover:shadow-md hover:brightness-105 border-4 border-white [&.active]:border-blue-500"
-					class:active={$mapStyle == 'google-simple'}
-				/>
-				<b class="mt-2">Simple</b>
-			</button>
-			<button
-				class="flex flex-col items-center"
-				on:click={() => {
-					$mapStyle = 'google-dark';
-				}}
-			>
-				<img
-					src="/img/google-dark.png"
-					alt="dark"
-					class="rounded-xl hover:shadow-md hover:brightness-105 border-4 border-white [&.active]:border-blue-500"
-					class:active={$mapStyle == 'google-dark'}
-				/>
-				<b class="mt-2">Dark</b>
-			</button>
+			{#each MAP_STYLES as style}
+				<button
+					class="flex flex-col items-center first:ml-0 ml-2 relative"
+					on:click={() => {
+						$mapStyle = style.key;
+					}}
+				>
+					<img
+						src={style.image}
+						alt={style.name}
+						class="rounded-xl hover:shadow-md hover:brightness-105 border-white [&.active]:border-blue-500"
+						class:active={$mapStyle == style.key}
+					/>
+
+					<b class="mt-2 text-sm">{style.name}</b>
+				</button>
+			{/each}
 		</div>
 
 		<div slot="group-1">

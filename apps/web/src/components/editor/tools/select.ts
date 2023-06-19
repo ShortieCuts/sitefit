@@ -20,6 +20,7 @@ import { computeBounds } from '../overlays/Selection';
 import { Cursors } from '../cursors';
 import { isMobile } from 'src/store/responsive';
 import { Quadtree } from 'core/lib/quadtree/Quadtree';
+import type { MapProviderOverlay } from '../overlays/Overlay';
 
 export const IGNORED_OBJECTS = ['cornerstone', 'group'];
 let needsRootReset = false;
@@ -1152,16 +1153,16 @@ function boxToPoly(box: Flatten.Box): Flatten.Polygon {
 function computeSelectionBox(
 	editor: EditorContext,
 	broker: ProjectBroker,
-	overlay: ThreeJSOverlayView
+	overlay: MapProviderOverlay
 ): void {
 	const start = get(editor.selectionStart);
 	const end = get(editor.currentMousePosition);
 
 	let startVec = broker.normalizeVector(
-		overlay.latLngAltitudeToVector3({ lat: start[0], lng: start[1] })
+		overlay.lonLatToVector3(start[1], start[0])
 	);
 	let endVec = broker.normalizeVector(
-		overlay.latLngAltitudeToVector3({ lat: end[0], lng: end[1] })
+		overlay.lonLatToVector3(end[1], end[0])
 	);
 
 	let box = new Box(

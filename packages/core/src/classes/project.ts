@@ -8,7 +8,10 @@ import Flatten from "@flatten-js/core";
 export type ProjectMapStyle =
   | "google-simple"
   | "google-satellite"
-  | "google-dark";
+  | "google-dark"
+  | "mapbox-simple"
+  | "mapbox-satellite"
+  | "mapbox-dark";
 
 export type GlobalProjectProperties = {
   mapStyle?: ProjectMapStyle;

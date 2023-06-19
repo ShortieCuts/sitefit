@@ -39,10 +39,7 @@
 				rootCoords = mainPoly.coordinates[0][0];
 			}
 			for (let coord of rootCoords) {
-				let vec3 = overlay.latLngAltitudeToVector3({
-					lat: coord[1],
-					lng: coord[0]
-				});
+				let vec3 = overlay.lonLatToVector3(coord[0], coord[1]);
 				let pos = [vec3.x, vec3.z];
 
 				p.segments.push([
