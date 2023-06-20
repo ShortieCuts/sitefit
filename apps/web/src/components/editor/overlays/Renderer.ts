@@ -21,8 +21,9 @@ import Flatten from '@flatten-js/core';
 import { metersAreaToFootArea, metersToFeetPrettyPrint } from '$lib/util/distance';
 import createDOMPurify from 'dompurify';
 import { colorArrayToCss } from '$lib/util/color';
+import { detect } from 'detect-browser';
 
-const fontAspectRatio = 0.6109113885585942; // Roboto Mono
+const fontAspectRatio = 0.6709113885585942; // Roboto Mono
 const ACTIVE_COLOR = '#0c8ae5';
 
 export interface RenderObject2D {
@@ -593,6 +594,10 @@ class RenderText implements RenderObject2D {
 		this.el.style.overflow = 'hidden';
 		this.el.style.resize = 'none';
 		this.el.style.willChange = 'transform';
+		const browser = detect();
+		if (browser?.name == 'safari') {
+			this.el.style.letterSpacing = '-1.2px';
+		}
 		this.el.readOnly = true;
 
 		overlay.appendElement(this.el);
@@ -626,6 +631,11 @@ class RenderText implements RenderObject2D {
 
 			this.el.addEventListener('change', (e) => {
 				saveText();
+			});
+			this.el.addEventListener('blur', (e) => {
+				overlay.editor.editingObject.set(null);
+				saveText();
+				this.setEditing(false);
 			});
 
 			this.el.addEventListener('keydown', (e) => {
