@@ -378,7 +378,7 @@ class RenderPath implements RenderObject2D {
 			let pos1 = overlay.overlay.lonLatToContainerPixel(p[0], p[1]);
 			let pos2 = overlay.overlay.lonLatToContainerPixel(p2[0], p2[1]);
 			if (!pos1 || !pos2) return;
-			lineSize = Math.sqrt(Math.pow(pos2[0] - pos1[0], 2) + Math.pow(pos2[0] - pos1[1], 2));
+			lineSize = Math.sqrt(Math.pow(pos2[0] - pos1[0], 2) + Math.pow(pos2[1] - pos1[1], 2));
 			pos.x = (pos1[0] + pos2[0]) / 2;
 			pos.y = (pos1[1] + pos2[1]) / 2;
 		}
@@ -849,7 +849,7 @@ class RenderSVG implements RenderObject2D {
 			);
 
 			let pos1 = overlay.overlay.lonLatToVector3(p[0], p[1]);
-			let pos2 = overlay.overlay.lonLatToVector3(p2[0], p2[0]);
+			let pos2 = overlay.overlay.lonLatToVector3(p2[0], p2[1]);
 			if (!pos1 || !pos2) return;
 			pos.x = pos1.x;
 			pos.y = pos1.y;
