@@ -35,7 +35,7 @@ import {
 	updateComment,
 	writeProjectAccess
 } from '$lib/client/api';
-import { dev } from '$app/environment';
+import { browser, dev } from '$app/environment';
 import { auth, getSession } from './auth';
 import { nanoid } from 'nanoid';
 import type { ThreeJSOverlayView } from '@googlemaps/three';
@@ -54,7 +54,13 @@ import type { ParcelProvider } from './parcels';
 import type { MapProvider } from 'src/components/editor/maps/generic';
 import type { MapProviderOverlay } from 'src/components/editor/overlays/Overlay';
 
-export const WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
+export let WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
+
+if (browser) {
+	if (window.location.hostname === '192.168.1.105') {
+		WEBSOCKET_URL = '192.168.1.105:8787';
+	}
+}
 
 export type ProjectAccessLevel = 'READ' | 'WRITE' | 'COMMENT';
 
@@ -512,6 +518,10 @@ export class ProjectBroker {
 			this.redo.set([]);
 		}
 		let applied = this.project.applyTransaction(transaction);
+
+		if (applied.length === 0) {
+			this.undo.update((u) => u.slice(0, u.length - 1));
+		}
 
 		let didChangeTree = false;
 		let changedObjects = new Set<string>();
