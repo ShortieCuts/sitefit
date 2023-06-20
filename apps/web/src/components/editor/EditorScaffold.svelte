@@ -19,6 +19,7 @@
 		faHome,
 		faInfoCircle,
 		faLayerGroup,
+		faLink,
 		faLocationArrow,
 		faPaste,
 		faPlus,
@@ -159,7 +160,7 @@
 			}
 		}
 
-		if (e.code == 'Delete') {
+		if (e.code == 'Delete' || e.code == 'Backspace') {
 			e.preventDefault();
 			e.stopPropagation();
 			editorContext.deleteSelection(broker);
@@ -261,6 +262,16 @@
 				editorContext.editingObject.set(id);
 			}, 100);
 		}
+	}
+
+	function copyLinkToHere() {
+		let latLon = rightClickLonLat;
+		let url = new URL(window.location.href);
+		url.searchParams.set('lat', latLon[0].toString());
+		url.searchParams.set('lon', latLon[1].toString());
+		url.searchParams.set('zoom', get(editorContext.zoom).toString());
+		navigator.clipboard.writeText(url.toString());
+		editorContext.info('Link copied to clipboard.');
 	}
 
 	let submittingComment = false;
@@ -680,6 +691,10 @@
 						<button on:click={insertComment}><Fa icon={faComment} /> Insert Comment </button>
 						<button on:click={insertText}><Fa icon={faFont} /> Insert Text </button>
 
+						<div class="my-2 w-full border-b border-gray-200" />
+						<button on:click={copyLinkToHere}
+							><Fa icon={faLink} /> Copy link to this location
+						</button>
 						<div class="my-2 w-full border-b border-gray-200" />
 						{#if $effectiveSelection.length > 0}
 							<button on:click={doCopy}><Fa icon={faCopy} /> Copy <KeyBind to="copy" /></button>

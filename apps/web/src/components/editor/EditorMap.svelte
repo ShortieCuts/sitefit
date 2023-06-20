@@ -603,7 +603,17 @@
 	});
 
 	function flyToLatestCad() {
-		editor.flyHome();
+		let url = new URL(window.location.href);
+		let lon = url.searchParams.get('lon');
+		let lat = url.searchParams.get('lat');
+		let zoom = url.searchParams.get('zoom');
+		if (lon && lat && zoom) {
+			console.log('Flying to', lon, lat, zoom);
+			map?.setZoom(parseFloat(zoom));
+			map?.setCenter(parseFloat(lon), parseFloat(lat));
+		} else {
+			editor.flyHome();
+		}
 	}
 
 	broker.synced.subscribe((newVal) => {
