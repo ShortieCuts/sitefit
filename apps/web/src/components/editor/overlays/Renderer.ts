@@ -639,7 +639,7 @@ class RenderText implements RenderObject2D {
 			});
 
 			this.el.addEventListener('keydown', (e) => {
-				if (e.key == 'Enter' && !e.shiftKey) {
+				if ((e.key == 'Enter' && !e.shiftKey) || e.key == 'Escape') {
 					e.preventDefault();
 					overlay.editor.editingObject.set(null);
 					saveText();
