@@ -298,7 +298,7 @@
 		>
 	</ContextMenu>
 </div>
-{#if selected}
+{#if selected && !(!$isMobile && node.type == 'folder')}
 	<div
 		transition:fly={{ y: 400, duration: 200 }}
 		use:portal={$isMobile ? 'root' : 'drawer'}
