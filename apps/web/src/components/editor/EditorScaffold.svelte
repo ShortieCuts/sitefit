@@ -45,7 +45,7 @@
 	import EditorSessions from './EditorSessions.svelte';
 	import EditorMap from './EditorMap.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import { processCadUploads, updateMe } from '$lib/client/api';
+	import { createProject, processCadUploads, updateMe } from '$lib/client/api';
 	import { refreshData } from 'src/store/cads';
 	import LocationInput from './common/LocationInput.svelte';
 	import LocationMap from './common/LocationMap.svelte';
@@ -67,7 +67,7 @@
 	import ObjectContextButtons from './common/ObjectContextButtons.svelte';
 	import KeyBind from './common/KeyBind.svelte';
 	import { cookieName } from 'src/store/name';
-	import { WrapLoader } from 'ui';
+	import { InfoPopover, WrapLoader } from 'ui';
 	import { cubicOut } from '$lib/util/easing';
 
 	// export let auth: AuthState;
@@ -141,10 +141,6 @@
 	let location: [number, number, number] = [0, 0, 0];
 	let locationMap: google.maps.Map | null = null;
 
-	geo.subscribe((geo) => {
-		location = [geo[0], geo[1], $heading];
-	});
-
 	function handleKeyboardShortcut(e: KeyboardEvent) {
 		if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
 			return;
@@ -183,10 +179,39 @@
 		}
 	}
 
+	function refreshLocation() {
+		location[0] = $geo[0];
+		location[1] = $geo[1];
+		location[2] = $heading;
+	}
+
+	$: {
+		$activeDialog;
+		needsCornerstone;
+		refreshLocation();
+	}
+
 	function createCornerstone() {
 		editorContext.activateDialog('');
 		if (broker.project.objectsMap.has('_cornerstone')) {
 			let transaction = broker.project.createTransaction();
+			// Keep all objects in their spots, but move the cornerstone
+			let vectorDiffCornerstone = editorContext.lonLatToPosition(location[0], location[1]);
+			for (let obj of broker.project.objects) {
+				if (obj.id == '_cornerstone') {
+					continue;
+				}
+				let vector = obj.transform.position;
+
+				let newVector: [number, number] = [
+					vector[0] - vectorDiffCornerstone[0],
+					vector[1] - vectorDiffCornerstone[1]
+				];
+
+				let newTransform = structuredClone(obj.transform);
+				newTransform.position = newVector;
+				transaction.update(obj.id, 'transform', newTransform);
+			}
 			transaction.update('_cornerstone', 'geo', [location[0], location[1]]);
 			transaction.update('_cornerstone', 'heading', location[2]);
 			broker.commitTransaction(transaction);
@@ -849,7 +874,7 @@
 			out:fly={{
 				y: -100
 			}}
-			class="rounded-md bg-white border border-gray-200 flex flex-row shadow-md cursor-pointer"
+			class="rounded-md bg-white border border-gray-200 flex flex-row shadow-md cursor-pointer absolute left-auto right-0 bottom-0 w-[400px]"
 			on:click={() => {
 				let first = get(editorContext.farObjects)[0];
 				if (first) {
@@ -865,7 +890,52 @@
 				<Fa icon={faExclamationCircle} />
 			</div>
 			<div class="p-2" style="line-height: 1em">
-				One or more objects are far away from the cornerstone. This may cause rendering artifacts
+				You're too far from your original <button
+					class="text-blue-500 cursor-pointer"
+					on:click|stopPropagation={() => {
+						editorContext.flyTo($geo[0], $geo[1]);
+					}}>Site Location</button
+				>. If you're trying to start a new Site, then create a new one in the Site menu to the left.
+				Or you can relocate the current Site Location if the old one is no longer useful.
+				<div class="flex flex-row mt-2 space-x-2">
+					<button
+						on:click|stopPropagation={async () => {
+							let res = await createProject({
+								name: 'New Site',
+								description: 'New Site'
+							});
+
+							if (res.data) {
+								let url = `/project/${res.data.projectId}?lon=${get(
+									editorContext.longitude
+								)}&lat=${get(editorContext.latitude)}&zoom=18`;
+
+								window.location.href = url;
+							} else {
+								editorContext.alert('Error creating new site');
+							}
+						}}
+						class="btn"
+						>Create a New Site
+						<InfoPopover
+							>This will save everything in this Site, and create a new one in the current location.
+						</InfoPopover></button
+					>
+
+					<button
+						on:click|stopPropagation={async () => {
+							editorContext.flyHome();
+							editorContext.activateDialog('relocate-warn');
+						}}
+						class="btn"
+						>Relocate this site
+						<InfoPopover
+							>Moving the Site Location for this Site means anything too far from the new location
+							will be degraded or lost. If you're trying to start something new, then create a new
+							Site in the Site menu.
+						</InfoPopover>
+					</button>
+				</div>
 			</div>
 		</div>
 	{/if}
@@ -1070,6 +1140,49 @@
 					<div class="h-[1000px] border-r-black border-r absolute" />
 				</div>
 				<LocationMap bind:map={locationMap} bind:location />
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if $activeDialog == 'relocate-warn'}
+	<div
+		transition:fade={{ duration: 100 }}
+		class="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center
+		"
+	>
+		<div
+			on:click|stopPropagation={() => {}}
+			on:keydown={() => {}}
+			transition:fly={{
+				y: 20
+			}}
+			class="dialog-slide bg-white fixed z-30 rounded-lg flex flex-col lg:flex-row min-h-[100px] w-full h-full sm:w-auto sm:h-auto"
+		>
+			<div class="flex-1 flex flex-col px-4">
+				<h2 class="flex mx-auto p-6 text-lg">ARE YOU SURE?</h2>
+				<p>
+					Moving the Site Location for this Site means anything too far from the new location will<br
+					/>
+					be degraded or lost. If you're trying to start something new, then create a new Site in<br
+					/>
+					the Site menu.
+				</p>
+
+				<div class="flex flex-row justify-end space-x-2 py-2">
+					<button
+						class="btn"
+						on:click={() => {
+							editorContext.activateDialog('');
+						}}>Cancel</button
+					>
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							editorContext.activateDialog('relocate');
+						}}>Continue</button
+					>
+				</div>
 			</div>
 		</div>
 	</div>
