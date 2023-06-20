@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { cubicOut } from '$lib/util/easing';
 	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 	import { getSvelteContext } from 'src/store/editor';
 	import { isMobile } from 'src/store/responsive';
@@ -14,7 +15,7 @@
 
 {#if $isMobile}
 	<div
-		transition:fly={{ x: 300, opacity: 0, duration: 200 }}
+		transition:fly={{ x: window.innerWidth, opacity: 1, duration: 300, easing: cubicOut }}
 		class="bg-white overflow-auto fixed bottom-0 left-0 right-0 h-full p-4 pt-0 pointer-events-auto z-[42]"
 	>
 		<div class="p-6 flex items-center flex-row">

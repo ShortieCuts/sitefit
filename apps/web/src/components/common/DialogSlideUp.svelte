@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { cubicOut } from '$lib/util/easing';
 	import { getSvelteContext } from 'src/store/editor';
 	import { isMobile } from 'src/store/responsive';
+	import { onDestroy, onMount } from 'svelte';
 	import Fa from 'svelte-fa';
 	import { fly } from 'svelte/transition';
 
@@ -9,7 +11,7 @@
 
 {#if $isMobile}
 	<div
-		transition:fly={{ y: 300, opacity: 1, duration: 200 }}
+		transition:fly={{ y: 300, opacity: 1, duration: 300, easing: cubicOut }}
 		class="bg-white fixed bottom-0 left-0 right-0 h-[300px] p-4 pt-0 pointer-events-auto z-[42]"
 	>
 		<button

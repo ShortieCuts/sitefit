@@ -46,13 +46,10 @@
 
 <DialogSlideUp>
 	<ResponsiveGroup hide={$isMobile ? [] : ['group-0']} groups={['Map', 'Transparency', 'Colors']}>
-		<div
-			slot="group-0"
-			class="flex flex-row items-center justify-center space-x-4 py-8 select-none"
-		>
+		<div slot="group-0" class="flex flex-row items-center space-x-2 py-8 select-none overflow-auto">
 			{#each MAP_STYLES as style}
 				<button
-					class="flex flex-col items-center first:ml-0 ml-2 relative"
+					class="flex flex-col items-center first:ml-auto last:mr-auto ml-2 relative"
 					on:click={() => {
 						$mapStyle = style.key;
 					}}
@@ -71,7 +68,7 @@
 
 		<div slot="group-1">
 			<div class="flex flex-col items-center pt-4">
-				<div class="flex flex-col w-[337px]">
+				<div class="flex flex-col w-[337px] max-w-full">
 					<TransparencySvg />
 					<div class="grid mt-4 text-gray-500" style="grid-template-columns: 1.5fr 4fr 50px;">
 						<span>Boundaries</span>

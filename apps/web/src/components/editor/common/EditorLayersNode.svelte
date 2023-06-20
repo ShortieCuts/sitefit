@@ -15,6 +15,7 @@
 		faPenToSquare,
 		faQuestion,
 		faTrash,
+		faUpDownLeftRight,
 		faVectorSquare
 	} from '@fortawesome/free-solid-svg-icons';
 	import { getContext } from 'svelte';
@@ -206,6 +207,14 @@
 	</Draggable>
 
 	<ContextMenu el={nodeElement}>
+		{#if node.id == '_cornerstone'}
+			<button
+				on:click={(e) => {
+					editor.activateDialog('relocate');
+				}}><Fa icon={faUpDownLeftRight} /> Relocate</button
+			>
+			<div class="my-2 w-full border-b border-gray-200" />
+		{/if}
 		<button
 			on:click={(e) => {
 				editor.flyToSelection(true);

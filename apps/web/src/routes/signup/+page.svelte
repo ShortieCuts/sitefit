@@ -5,7 +5,7 @@
 </script>
 
 <div
-	class="flex flex-col items-center justify-center h-full bg-gradient-to-b to-gray-300 from-white"
+	class="flex flex-col items-center justify-start pt-8 min-h-full h-auto bg-gradient-to-b to-gray-300 from-white"
 >
 	<SignUp />
 </div>

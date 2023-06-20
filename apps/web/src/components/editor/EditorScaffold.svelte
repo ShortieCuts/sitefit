@@ -67,6 +67,7 @@
 	import KeyBind from './common/KeyBind.svelte';
 	import { cookieName } from 'src/store/name';
 	import { WrapLoader } from 'ui';
+	import { cubicOut } from '$lib/util/easing';
 
 	// export let auth: AuthState;
 	export let projectId: string;
@@ -139,6 +140,10 @@
 	let location: [number, number, number] = [0, 0, 0];
 	let locationMap: google.maps.Map | null = null;
 
+	geo.subscribe((geo) => {
+		location = [geo[0], geo[1], $heading];
+	});
+
 	function handleKeyboardShortcut(e: KeyboardEvent) {
 		if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
 			return;
@@ -178,6 +183,15 @@
 	}
 
 	function createCornerstone() {
+		editorContext.activateDialog('');
+		if (broker.project.objectsMap.has('_cornerstone')) {
+			let transaction = broker.project.createTransaction();
+			transaction.update('_cornerstone', 'geo', [location[0], location[1]]);
+			transaction.update('_cornerstone', 'heading', location[2]);
+			broker.commitTransaction(transaction);
+			return;
+		}
+
 		let transaction = broker.project.createTransaction();
 		let obj = new Cornerstone();
 		obj.id = '_cornerstone';
@@ -196,7 +210,6 @@
 		try {
 			let items = await navigator.clipboard.read();
 			for (let item of items) {
-				console.log(item);
 				for (let type of item.types) {
 					if (type == 'cad-mapper/objects') {
 						item.getType(type).then((blob) => {
@@ -375,7 +388,12 @@
 	<title>{$name}</title>
 </svelte:head>
 
-<div class="editor-scaffold h-full flex flex-col select-none overflow-hidden">
+<div
+	class="editor-scaffold h-full flex flex-col select-none overflow-hidden"
+	class:bottom-slide-up={$isMobile &&
+		($activeDialog == 'tools' || $activeDialog == 'style' || $activeDialog == 'measure')}
+	class:bottom-slide-right={$isMobile && ($activeDialog == 'share' || $activeDialog == 'comments')}
+>
 	{#if !$isMobile}
 		<div
 			class="editor-bar z-20 h-16 min-h-[4rem] bg-white flex flex-row border-b-[1px] border-gray-200"
@@ -453,7 +471,7 @@
 			<div class="editor-sidebar bg-white w-16 border-r-[1px] border-gray-200 z-20">
 				<EditorNavbar />
 			</div>
-			{#if !$isMobile && $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'left'}
+			{#if !$isMobile && $activeDialog && dialogs[$activeDialog] && (dialogs[$activeDialog]?.dock ?? 'left') === 'left'}
 				<div
 					transition:fly={{ duration: 200, x: -400, opacity: 0 }}
 					class="dialog-slide bg-white w-[400px] fixed left-16 top-16 bottom-0 z-10 border-gray-200 border-t-[1px]"
@@ -475,7 +493,7 @@
 							$activeTool = 'select';
 						}}
 					>
-						Edit Mode
+						Enter Edit Mode
 					</button>
 				</div>
 			{:else if !$isMobile && $activeTool == 'select'}
@@ -868,7 +886,7 @@
 {#if $isMobile && $activeDialog && dialogs[$activeDialog].component}
 	{#if (dialogs[$activeDialog]?.dock ?? 'left') === 'center'}
 		<div
-			transition:fly={{ x: 300, duration: 200 }}
+			transition:fly={{ x: window.innerWidth, duration: 300, opacity: 1, easing: cubicOut }}
 			class="dialog-slide bg-white fixed top-0 bottom-0 left-0 right-0 z-[41]"
 		>
 			<div class="pl-6 pt-6">
@@ -1003,7 +1021,7 @@
 	</div>
 {/if}
 
-{#if needsCornerstone && ENABLE_CORNERSTONE_PICKER}
+{#if (needsCornerstone && ENABLE_CORNERSTONE_PICKER) || $activeDialog == 'relocate'}
 	<div
 		transition:fade={{ duration: 100 }}
 		class="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black bg-opacity-75 flex justify-center items-center
@@ -1238,5 +1256,19 @@
 		100% {
 			transform: translate(0, 0px);
 		}
+	}
+
+	:global(.editor-main) {
+		transition: all 0.4s cubic-bezier(0, 0.2, 0, 0.99);
+	}
+
+	:global(.bottom-slide-up .editor-main) {
+		transform: scale(1.001) translateY(-30px);
+		filter: blur(1px) brightness(0.8);
+	}
+
+	:global(.bottom-slide-right .editor-main) {
+		transform: scale(1) translateX(-60px);
+		filter: blur(0px) brightness(0.4);
 	}
 </style>
