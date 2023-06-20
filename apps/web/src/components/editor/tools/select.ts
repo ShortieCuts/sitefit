@@ -156,7 +156,7 @@ export function calculateGuides(
 	let selectionSet = new Set(selection);
 	let viewBounds = get(editor.viewBounds);
 	for (let obj of broker.project.objects) {
-		if (IGNORED_OBJECTS.includes(obj.id)) continue;
+		if (IGNORED_OBJECTS.includes(obj.id) || get(editor.editingObject) === obj.id) continue;
 		let guides = obj.getGuides();
 		if (selectionSet.has(obj.id) && !candidateOverride) {
 			candidatePoints.push(...guides.points);
@@ -1158,12 +1158,8 @@ function computeSelectionBox(
 	const start = get(editor.selectionStart);
 	const end = get(editor.currentMousePosition);
 
-	let startVec = broker.normalizeVector(
-		overlay.lonLatToVector3(start[1], start[0])
-	);
-	let endVec = broker.normalizeVector(
-		overlay.lonLatToVector3(end[1], end[0])
-	);
+	let startVec = broker.normalizeVector(overlay.lonLatToVector3(start[1], start[0]));
+	let endVec = broker.normalizeVector(overlay.lonLatToVector3(end[1], end[0]));
 
 	let box = new Box(
 		Math.min(startVec.x, endVec.x),
