@@ -13,7 +13,9 @@ import {
 	type Object2DShape,
 	type ObjectID,
 	Text,
-	SVG
+	SVG,
+	makeRotationMatrix,
+	multiplyMatrix
 } from 'core';
 import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { computeBounds } from '../overlays/Selection';
@@ -80,6 +82,28 @@ function computeStartBox(editor: EditorContext, broker: ProjectBroker) {
 	}
 
 	transformStartBox = computeBounds(objs);
+
+	if (objs.length == 1) {
+		let angle = objs[0].transform.rotation;
+		let ox = objs[0].transform.position[0];
+		let oy = objs[0].transform.position[1];
+
+		let mat = makeRotationMatrix(-angle);
+
+		objs[0].transform.position = multiplyMatrix(
+			[ox - transformStartBox.center.x, oy - transformStartBox.center.y],
+			mat
+		);
+		objs[0].transform.position[0] += transformStartBox.center.x;
+		objs[0].transform.position[1] += transformStartBox.center.y;
+		objs[0].transform.rotation = 0;
+		objs[0].computeShape();
+		transformStartBox = computeBounds(objs);
+		objs[0].transform.rotation = angle;
+		objs[0].transform.position = [ox, oy];
+
+		objs[0].computeShape();
+	}
 }
 
 function transformPoint(
@@ -586,9 +610,28 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 		// Transforming
 		let currentMousePosition = get(editor.currentMousePositionRelative);
 
+		let sels = get(editor.effectiveSelection);
+		if (isScaling) {
+			if (sels.length == 1) {
+				let obj = broker.project.objectsMap.get(sels[0]);
+				if (obj && transformStartBox) {
+					let matrix = makeRotationMatrix(-obj.transform.rotation);
+					currentMousePosition = multiplyMatrix(
+						[
+							currentMousePosition[0] - transformStartBox.center.x,
+							currentMousePosition[1] - transformStartBox.center.y
+						],
+						matrix
+					);
+
+					currentMousePosition[0] += transformStartBox.center.x;
+					currentMousePosition[1] += transformStartBox.center.y;
+				}
+			}
+		}
+
 		let rootDeltaX = currentMousePosition[0] - lastPosition[0];
 		let rootDeltaY = currentMousePosition[1] - lastPosition[1];
-		let sels = get(editor.effectiveSelection);
 
 		if (isTranslating) {
 			if (ev.shiftKey) {
@@ -669,7 +712,7 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 				if (obj) {
 					objs.push(obj);
 
-					if (obj.transform.rotation != 0) {
+					if (sels.length != 1 && obj.transform.rotation != 0) {
 						// Apply transform
 						let rotation = obj.transform.rotation;
 						let translation = point(obj.transform.position[0], obj.transform.position[1]);
@@ -679,6 +722,7 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 							.rotate(rotation);
 						if (obj.type == ObjectType.Path) {
 							let path = obj as Path;
+
 							for (let seg of path.segments) {
 								let p = point(seg[0], seg[1]);
 								p = p.transform(mat);
@@ -687,6 +731,7 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 							}
 							obj.transform.position[0] = 0;
 							obj.transform.position[1] = 0;
+
 							obj.transform.rotation = 0;
 						} else if (obj.type == ObjectType.Arc) {
 							let arc = obj as Arc;
@@ -765,19 +810,44 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 				let obj = broker.project.objectsMap.get(id);
 				let originalObj = transformStartObjects.get(id);
 				if (obj && originalObj) {
+					let width = transformStartBox.width;
+					let height = transformStartBox.height;
+					let rotMatrix = makeRotationMatrix(0);
+					if (sels.length == 1) {
+						rotMatrix = makeRotationMatrix(-originalObj.transform.rotation);
+					}
+					let unrotated = multiplyMatrix(
+						[
+							originalObj.transform.position[0] - transformStartBox.center.x,
+							originalObj.transform.position[1] - transformStartBox.center.y
+						],
+						rotMatrix
+					);
+					unrotated[0] += transformStartBox.center.x;
+					unrotated[1] += transformStartBox.center.y;
+
+					let unrotatedObjPos = multiplyMatrix(
+						[
+							obj.transform.position[0] - transformStartBox.center.x,
+							obj.transform.position[1] - transformStartBox.center.y
+						],
+						rotMatrix
+					);
+					unrotatedObjPos[0] += transformStartBox.center.x;
+					unrotatedObjPos[1] += transformStartBox.center.y;
+
 					function normalizeX(x: number) {
 						if (!obj) return 0;
-						return x - obj.transform.position[0];
+						return x - unrotatedObjPos[0];
 					}
 
 					function normalizeY(y: number) {
 						if (!obj) return 0;
-						return y - obj.transform.position[1];
+						return y - unrotatedObjPos[1];
 					}
-					let width = transformStartBox.width;
-					let height = transformStartBox.height;
-					let relativeX = (originalObj.transform.position[0] - transformStartBox.low.x) / width;
-					let relativeY = (originalObj.transform.position[1] - transformStartBox.low.y) / height;
+
+					let relativeX = (unrotated[0] - transformStartBox.low.x) / width;
+					let relativeY = (unrotated[1] - transformStartBox.low.y) / height;
 
 					let newBoxWidth = width + currentMousePosition[0] - transformStartBox.high.x;
 					let newBoxHeight = height + currentMousePosition[1] - transformStartBox.high.y;
@@ -803,11 +873,12 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 					if (obj.type == ObjectType.Path) {
 						let path = obj as Path;
 						let originalPath = originalObj as Path;
+
 						for (let i = 0; i < path.segments.length; i++) {
 							let relativeX =
-								originalPath.segments[i][0] + obj.transform.position[0] - transformStartBox.low.x;
+								originalPath.segments[i][0] + unrotatedObjPos[0] - transformStartBox.low.x;
 							let relativeY =
-								originalPath.segments[i][1] + obj.transform.position[1] - transformStartBox.low.y;
+								originalPath.segments[i][1] + unrotatedObjPos[1] - transformStartBox.low.y;
 
 							if (direction[0] == 0) {
 								// No op
@@ -973,6 +1044,27 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 			needsRootReset = false;
 			let cursorPoint = point(cursor[0], cursor[1]);
 
+			if (objs.length == 1) {
+				let angle = objs[0].transform.rotation;
+				let ox = objs[0].transform.position[0];
+				let oy = objs[0].transform.position[1];
+
+				let mat = makeRotationMatrix(-angle);
+
+				objs[0].transform.position = multiplyMatrix([ox - box.center.x, oy - box.center.y], mat);
+				objs[0].transform.position[0] += box.center.x;
+				objs[0].transform.position[1] += box.center.y;
+				objs[0].transform.rotation = 0;
+				objs[0].computeShape();
+				let newBox = computeBounds(objs);
+				objs[0].transform.rotation = angle;
+				objs[0].transform.position = [ox, oy];
+
+				objs[0].computeShape();
+
+				box = newBox;
+			}
+
 			let setCursor = false;
 			let canScale = false;
 			let canRotate = false;
@@ -993,6 +1085,23 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 			let topRightRotate = point(box.high.x + rotateDistance, box.low.y - rotateDistance);
 			let bottomRightRotate = point(box.high.x + rotateDistance, box.high.y + rotateDistance);
 			let bottomLeftRotate = point(box.low.x - rotateDistance, box.high.y + rotateDistance);
+
+			if (objs.length == 1) {
+				let matr = makeRotationMatrix(-objs[0].transform.rotation);
+				cursor = multiplyMatrix([cursor[0] - box.center.x, cursor[1] - box.center.y], matr);
+
+				cursor[0] += box.center.x;
+				cursor[1] += box.center.y;
+				cursorPoint = point(cursor[0], cursor[1]);
+				// topLeft = topLeft.transform(matrix);
+				// topRight = topRight.transform(matrix);
+				// bottomLeft = bottomLeft.transform(matrix);
+				// bottomRight = bottomRight.transform(matrix);
+				// topLeftRotate = topLeftRotate.transform(matrix);
+				// topRightRotate = topRightRotate.transform(matrix);
+				// bottomLeftRotate = bottomLeftRotate.transform(matrix);
+				// bottomRightRotate = bottomRightRotate.transform(matrix);
+			}
 
 			if (
 				(Math.abs(box.low.x - cursor[0]) < dist || Math.abs(box.high.x - cursor[0]) < dist) &&
@@ -1083,6 +1192,18 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 
 			if (!setCursor) {
 				editor.selectToolCursor.set(Cursors.default);
+			} else {
+				if (objs.length == 1) {
+					let cursorVal = get(editor.selectToolCursor);
+					if (cursorVal != Cursors.grab) {
+						cursorVal = cursorVal.replace(
+							'%rot%',
+							(objs[0].transform.rotation * (180 / Math.PI)).toString()
+						);
+
+						editor.selectToolCursor.set(cursorVal);
+					}
+				}
 			}
 
 			if (canRotate) {

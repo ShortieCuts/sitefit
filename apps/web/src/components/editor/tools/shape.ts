@@ -1,87 +1,107 @@
-import {
-	faCompass,
-	faCompassDrafting,
-	faPen,
-	faTriangleCircleSquare
-} from '@fortawesome/free-solid-svg-icons';
+import { faCompass, faCompassDrafting, faPen } from '@fortawesome/free-solid-svg-icons';
 import type { EditorContext, ProjectBroker } from 'src/store/editor';
-import { get } from 'svelte/store';
-import { Material, Path, SVG } from 'core';
-import createDOMPurify from 'dompurify';
 
-let stagingObject: SVG | null = null;
+import { Material, Path } from 'core';
+import { get } from 'svelte/store';
+
+let isDown = false;
+let downPos: [number, number] = [0, 0];
+let active = false;
+
+function makeShapeObject(
+	start: [number, number],
+	end: [number, number],
+	type: 'triangle' | 'rectangle' | 'circle'
+) {
+	let smartPath = new Path();
+	smartPath.name = 'Shape';
+	smartPath.style = new Material();
+	smartPath.style.color = [0 / 255, 200 / 255, 255 / 255, 1];
+	smartPath.style.filled = false;
+	smartPath.closed = true;
+	smartPath.smartObject = 'path';
+
+	if (type == 'rectangle') {
+		smartPath.segments.push(start);
+		smartPath.segments.push([end[0], start[1]]);
+		smartPath.segments.push(end);
+		smartPath.segments.push([start[0], end[1]]);
+	} else if (type == 'triangle') {
+		smartPath.segments.push(start);
+		smartPath.segments.push(end);
+		smartPath.segments.push([start[0], end[1]]);
+	} else if (type == 'circle') {
+		let radius = Math.sqrt(Math.pow(end[0] - start[0], 2) + Math.pow(end[1] - start[1], 2));
+		let center = [...start];
+		let segments = 64;
+		for (let i = 0; i <= segments; i++) {
+			let angle = (i / segments) * Math.PI * 2;
+			smartPath.segments.push([
+				center[0] + Math.cos(angle) * radius,
+				center[1] + Math.sin(angle) * radius
+			]);
+		}
+	}
+
+	return smartPath;
+}
+
 export const ShapeTool = {
-	icon: faTriangleCircleSquare,
+	icon: faCompassDrafting,
 	key: 'shape',
 	access: 'WRITE',
 	shortcut: '',
 	hidden: true,
 	onDown(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
-		if (stagingObject) {
-			stagingObject.style.color = [0, 0, 0, 1];
-			let newId = broker.commitStagedObject();
-			stagingObject = null;
-			if (newId) editor.select(newId);
-		}
+		downPos = [...editor.getDesiredPosition()];
+		isDown = true;
+		active = true;
 	},
 	cancel(editor: EditorContext, broker: ProjectBroker) {
-		if (stagingObject) {
+		if (active) {
+			isDown = false;
 			broker.stagingObject.set(null);
-			stagingObject = null;
+			active = false;
 		}
 	},
 	commit(editor: EditorContext, broker: ProjectBroker) {
-		if (stagingObject) {
+		if (active) {
+			let id = broker.commitStagedObject();
+			if (id) editor.select(id);
 			broker.stagingObject.set(null);
-			stagingObject = null;
+			isDown = false;
+			active = false;
 		}
 	},
-	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {},
-	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
-		if (!stagingObject) {
-			let svg = new SVG();
-			svg.svg = get(editor.activeSVG);
-			svg.style = new Material();
-			svg.style.color = [0, 0, 0, 0.75];
-			const DOMPurify = createDOMPurify(window);
+	onUp(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
+		let dx = downPos[0] - editor.getDesiredPosition()[0];
+		let dy = downPos[1] - editor.getDesiredPosition()[1];
 
-			let clean = DOMPurify.sanitize(svg.svg) as string;
-			let wrapper = document.createElement('div');
-			wrapper.innerHTML = clean;
-			let svgElement = wrapper.querySelector('svg') as SVGElement;
-			let width = svgElement.getAttribute('width');
-			let height = svgElement.getAttribute('height');
-			svg.sourceWidth = parseInt(width || '0');
-			svg.sourceHeight = parseInt(height || '0');
-
-			let viewBounds = get(editor.viewBounds);
-			let location = [
-				(viewBounds.minX + viewBounds.maxX) / 2,
-				(viewBounds.minY + viewBounds.maxY) / 2
-			];
-			let viewWidth = viewBounds.maxX - viewBounds.minX;
-			let viewHeight = viewBounds.maxY - viewBounds.minY;
-			let scaleFactor = Math.min(viewWidth / svg.sourceWidth, viewHeight / svg.sourceHeight) / 18;
-			svg.transform.size[0] = scaleFactor;
-			svg.transform.size[1] = scaleFactor;
-			svg.transform.position[0] = location[0] - (svg.sourceWidth / 2) * scaleFactor;
-			svg.transform.position[1] = location[1] - (svg.sourceHeight / 2) * scaleFactor;
-
-			broker.stagingObject.set(svg);
-			stagingObject = svg;
+		if (Math.sqrt(dx * dx + dy * dy) < 0.1) {
+			let newObj = makeShapeObject(
+				downPos,
+				[downPos[0] + 10, downPos[1] + 10],
+				get(editor.activeToolSmartObject) as any
+			);
+			broker.stagingObject.set(newObj);
 		}
 
-		broker.stagingObject.update((obj) => {
-			if (obj && obj instanceof SVG) {
-				let targetPos = editor.getDesiredPosition();
-				obj.transform.position[0] = targetPos[0] - (obj.sourceWidth / 2) * obj.transform.size[0];
-				obj.transform.position[1] = targetPos[1] - (obj.sourceHeight / 2) * obj.transform.size[1];
-				return obj;
-			} else {
-				return null;
+		this.commit(editor, broker);
+	},
+	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+		if (isDown && active) {
+			let pos = editor.getDesiredPosition();
+			if (ev.shiftKey) {
+				let dx = pos[0] - downPos[0];
+				let dy = pos[1] - downPos[1];
+				let angle = Math.atan2(dy, dx);
+				let length = Math.sqrt(dx * dx + dy * dy);
+				let snap = Math.PI / 8;
+				angle = Math.round(angle / snap) * snap;
+				pos = [downPos[0] + Math.cos(angle) * length, downPos[1] + Math.sin(angle) * length];
 			}
-		});
-
-		broker.needsRender.set(true);
+			let newObj = makeShapeObject(downPos, pos, get(editor.activeToolSmartObject) as any);
+			broker.stagingObject.set(newObj);
+		}
 	}
 };

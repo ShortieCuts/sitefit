@@ -14,7 +14,10 @@ import {
 	ObjectType,
 	SVG,
 	getSmartObject,
-	smartObjectRender
+	smartObjectRender,
+	makeRotationMatrix,
+	multiplyMatrix,
+	addPoints
 } from 'core';
 import type { Vector3 } from 'three';
 import Flatten from '@flatten-js/core';
@@ -203,7 +206,7 @@ class RenderPath implements RenderObject2D {
 				mat2.color.set(overlay.cadOverrideColor as any);
 			}
 
-			if (obj.smartObject && !this.active) {
+			if (obj.smartObject) {
 				mat.transparent = true;
 				mat.opacity = 0;
 			}
@@ -384,8 +387,10 @@ class RenderPath implements RenderObject2D {
 		}
 
 		if (obj.segments.length == 2) {
-			let p1 = obj.segments[0];
-			let p2 = obj.segments[1];
+			let rotationMatrix = makeRotationMatrix(obj.transform.rotation);
+
+			let p1 = addPoints(multiplyMatrix(obj.segments[0], rotationMatrix), obj.transform.position);
+			let p2 = addPoints(multiplyMatrix(obj.segments[1], rotationMatrix), obj.transform.position);
 			angle = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
 			if (angle > Math.PI / 2) angle -= Math.PI;
 			if (angle < -Math.PI / 2) angle += Math.PI;

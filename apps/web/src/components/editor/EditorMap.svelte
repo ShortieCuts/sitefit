@@ -67,7 +67,6 @@
 
 		buildingMap = true;
 		try {
-			console.log('Building map');
 			let cachedLonLat = {
 				lng: 0,
 				lat: 0,
@@ -134,7 +133,6 @@
 					map.cacheViewState = { ...cachedLonLat };
 				}
 			}
-			console.log('Map', map);
 
 			map.onDraw(() => {
 				updateSvelteOverlays();
@@ -169,6 +167,7 @@
 						get(editor.activeTool) == 'measurement' ||
 						get(editor.activeTool) == 'area' ||
 						get(editor.activeTool) == 'smart' ||
+						get(editor.activeTool) == 'shape' ||
 						get(editor.editingObject)
 					) {
 						if (!(ev.domEvent as MouseEvent).ctrlKey) {
@@ -408,7 +407,7 @@
 				let closeLng = center[0];
 				let closeLat = center[1];
 				let floatingDist = Math.sqrt(floatingDlon * floatingDlon + floatingDlat * floatingDlat);
-				if (floatingDist > 0.05 && broker.project.objects.length <= 1) {
+				if (floatingDist > 0.005 && broker.project.objects.length <= 1) {
 					(async () => {
 						await broker.getOrCreateCornerstone();
 						$geo = [closeLng, closeLat];
@@ -468,9 +467,7 @@
 	$: hoverSelected = $hoveringObject && $selection.includes($hoveringObject);
 	$: transformHover = $selectToolCursor != Cursors.default;
 	$: transforming = $translating || $scaling || $rotating;
-	$: {
-		console.log($activeTool, transforming, transformHover, hoverSelected);
-	}
+
 	$: canDrag =
 		$isMobile ||
 		($activeTool == 'pan' && !hoverSelected && !transformHover && !transforming) ||
@@ -608,7 +605,6 @@
 		let lat = url.searchParams.get('lat');
 		let zoom = url.searchParams.get('zoom');
 		if (lon && lat && zoom) {
-			console.log('Flying to', lon, lat, zoom);
 			map?.setZoom(parseFloat(zoom));
 			map?.setCenter(parseFloat(lon), parseFloat(lat));
 		} else {
@@ -664,7 +660,7 @@
 			}
 		}
 
-		if (e.ctrlKey || e.metaKey || (get(activeTool) == 'select' && !ENABLE_TRACKPAD_PAN)) {
+		if (e.ctrlKey || e.metaKey || !ENABLE_TRACKPAD_PAN) {
 			e.preventDefault();
 			if (map && !canDrag) {
 				$isScrolling = true;
@@ -702,6 +698,12 @@
 
 	let currentCursor: string = Cursors.default;
 
+	// Takes in a raw svg string and returns a css data base64 encoded string
+	function dataEncodeCursor(svg: string) {
+		svg = svg.replace('%rot%', '0');
+		return `data:image/svg+xml;base64,${btoa(svg)}`;
+	}
+
 	$: {
 		currentCursor = Cursors.default;
 
@@ -715,8 +717,10 @@
 				if (currentCursor == Cursors.default) {
 					currentCursor = $leftMouseDown ? Cursors.grabbing : Cursors.grab;
 				}
-			} else if ($activeTool == 'pen' || $activeTool == 'smart') {
+			} else if ($activeTool == 'pen') {
 				currentCursor = Cursors.pen;
+			} else if ($activeTool == 'smart' || $activeTool == 'shape') {
+				currentCursor = Cursors.crosshair;
 			} else if ($activeTool == 'comment') {
 				currentCursor = Cursors.comment;
 			} else if ($activeTool == 'text') {
@@ -873,7 +877,7 @@
 
 <div
 	class="map-container h-full z-0"
-	style="--cursor: url('{currentCursor}') {topLeftCursors.includes(currentCursor)
+	style="--cursor: url('{dataEncodeCursor(currentCursor)}') {topLeftCursors.includes(currentCursor)
 		? '0'
 		: '12'} {topLeftCursors.includes(currentCursor) ? '0' : '12'}, auto"
 	bind:this={containerEl}

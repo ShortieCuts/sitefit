@@ -25,7 +25,7 @@ export const SmartTool = {
 			obj.style.color = [0 / 255, 200 / 255, 255 / 255, 1];
 			obj.style.filled = false;
 			obj.style.type = 'color';
-			obj.name = 'Smart Object';
+			obj.name = 'Object';
 
 			obj.smartObject = get(editor.activeToolSmartObject);
 			obj.smartProperties = structuredClone(get(editor.activeToolSmartObjectProperties));
@@ -60,36 +60,41 @@ export const SmartTool = {
 	},
 	commit(editor: EditorContext, broker: ProjectBroker) {
 		let isEmpty = false;
-		if (clickMoving) {
-			broker.stagingObject.update((obj) => {
-				if (obj) {
-					let path = obj as Path;
-					path.segments.pop();
-					if (path.segments.length <= 1) isEmpty = true;
-				}
-				return obj;
-			});
 
-			active = false;
-			clickMoving = false;
-			isDown = false;
-			if (!isEmpty) {
-				let id = broker.commitStagedObject();
-				if (id) editor.select(id);
+		broker.stagingObject.update((obj) => {
+			if (obj) {
+				let path = obj as Path;
+				path.segments.pop();
+				if (path.segments.length <= 1) isEmpty = true;
 			}
+			return obj;
+		});
+
+		active = false;
+		clickMoving = false;
+		isDown = false;
+		if (!isEmpty) {
+			let id = broker.commitStagedObject();
+			if (id) editor.select(id);
 		}
 
 		broker.stagingObject.set(null);
 
 		committed = true;
 	},
-	onUp: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+	onUp(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
 		if (clickMoving) {
 		} else if (!committed) {
 			let dx = downPos[0] - editor.getDesiredPosition()[0];
 			let dy = downPos[1] - editor.getDesiredPosition()[1];
+			if (Math.sqrt(dx * dx + dy * dy) < 0.01) {
+				clickMoving = true;
+			} else {
+				isDown = false;
 
-			clickMoving = true;
+				let id = broker.commitStagedObject();
+				if (id) editor.select(id);
+			}
 		}
 	},
 	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {

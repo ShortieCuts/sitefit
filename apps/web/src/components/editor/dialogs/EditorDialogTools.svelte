@@ -25,7 +25,8 @@
 
 	type Shape = {
 		name: string;
-		svg: string;
+		type: string;
+		image: string;
 	};
 	type Stamp = {
 		name: string;
@@ -44,66 +45,36 @@
 
 	let shapes: Shape[] = [
 		{
-			name: 'Right Turn',
-			svg: ShapeRightTurn
+			name: 'Box',
+			type: 'rectangle',
+			image: '/img/box.svg'
 		},
 		{
-			name: 'Left Turn',
-			svg: ShapeLeftTurn
+			name: 'Circle',
+			type: 'circle',
+			image: '/img/circle.svg'
 		},
 		{
-			name: 'Arrow',
-			svg: ShapeArrow
+			name: 'Triangle',
+			type: 'triangle',
+			image: '/img/triangle.svg'
 		},
 		{
-			name: 'Roundabout',
-			svg: ShapeRoundabout
+			name: 'Line',
+			type: 'line',
+			image: '/img/line.svg'
 		}
 	];
 
 	function activateShape(shape: Shape) {
-		editor.activeTool.set('shape');
-		editor.activateDialog('');
-		editor.activeSVG.set(shape.svg);
-	}
-
-	function insertShape(shape: Shape) {
-		let transaction = broker.project.createTransaction();
-
-		let id = broker.allocateId();
-		let svg = new SVG();
-		svg.id = id;
-		svg.name = shape.name;
-
-		svg.svg = shape.svg;
-		svg.style = new Material();
-		svg.style.color = [0, 0, 0, 1];
-		const DOMPurify = createDOMPurify(window);
-
-		let clean = DOMPurify.sanitize(svg.svg) as string;
-		let wrapper = document.createElement('div');
-		wrapper.innerHTML = clean;
-		let svgElement = wrapper.querySelector('svg') as SVGElement;
-		let width = svgElement.getAttribute('width');
-		let height = svgElement.getAttribute('height');
-		svg.sourceWidth = parseInt(width || '0');
-		svg.sourceHeight = parseInt(height || '0');
-
-		let viewBounds = get(editor.viewBounds);
-		let location = [
-			(viewBounds.minX + viewBounds.maxX) / 2,
-			(viewBounds.minY + viewBounds.maxY) / 2
-		];
-		let viewWidth = viewBounds.maxX - viewBounds.minX;
-		let viewHeight = viewBounds.maxY - viewBounds.minY;
-		let scaleFactor = Math.min(viewWidth / svg.sourceWidth, viewHeight / svg.sourceHeight) / 64;
-		svg.transform.size[0] = scaleFactor;
-		svg.transform.size[1] = scaleFactor;
-		svg.transform.position[0] = location[0] - (svg.sourceWidth / 2) * scaleFactor;
-		svg.transform.position[1] = location[1] - (svg.sourceHeight / 2) * scaleFactor;
-		transaction.create(svg);
-
-		broker.commitTransaction(transaction);
+		if (shape.type == 'line') {
+			editor.activeTool.set('pen');
+			editor.activateDialog('');
+		} else {
+			editor.activeTool.set('shape');
+			editor.activateDialog('');
+			editor.activeToolSmartObject.set(shape.type);
+		}
 	}
 
 	function insertStamp(stamp: Stamp) {
@@ -314,7 +285,7 @@
 					on:click={() => activateShape(shape)}
 				>
 					<div class="w-12 h-12 max-svg">
-						{@html shape.svg}
+						<img src={shape.image} class="max-w-full max-h-full" />
 					</div>
 				</button>
 			{/each}

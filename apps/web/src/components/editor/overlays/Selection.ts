@@ -2,7 +2,7 @@ import { getSvelteContext } from 'src/store/editor';
 import { Overlay } from './Overlay';
 import * as THREE from 'three';
 import { get } from 'svelte/store';
-import type { Object2D } from 'core';
+import { makeRotationMatrix, multiplyMatrix, ObjectType, type Object2D, Path } from 'core';
 import { createRenderObject, RendererOverlay, type RenderObject2D } from './Renderer';
 import { Vector3 } from 'three';
 import Flatten from '@flatten-js/core';
@@ -68,6 +68,11 @@ class OutlinedBox {
 	setScale(max: THREE.Vector3): void {
 		this.box.scale.copy(max);
 		this.line.scale.copy(max);
+	}
+
+	setRotation(rot: number): void {
+		this.box.rotation.y = rot;
+		this.line.rotation.y = rot;
 	}
 }
 
@@ -170,25 +175,42 @@ class SelectionBox {
 		this.main.setPosition(pos);
 		this.main.setScale(scale);
 
-		this.topMid.setPosition(new THREE.Vector3(pos.x, pos.y + 0.1, pos.z - scale.z / 2));
+		let rotation = this.main.box.rotation.y;
+
+		let matrix = makeRotationMatrix(-rotation);
+		let topMidPos = multiplyMatrix([0, -scale.z / 2], matrix);
+		let topLeftPos = multiplyMatrix([-scale.x / 2, scale.z / 2], matrix);
+		let topRightPos = multiplyMatrix([scale.x / 2, scale.z / 2], matrix);
+		let bottomLeftPos = multiplyMatrix([-scale.x / 2, -scale.z / 2], matrix);
+		let bottomRightPos = multiplyMatrix([scale.x / 2, -scale.z / 2], matrix);
+
+		this.topMid.setPosition(
+			new THREE.Vector3(pos.x + topMidPos[0], pos.y + 0.1, pos.z + topMidPos[1])
+		);
 
 		this.topLeft.setPosition(
-			new THREE.Vector3(pos.x - scale.x / 2, pos.y + 0.1, pos.z + scale.z / 2)
+			new THREE.Vector3(pos.x + topLeftPos[0], pos.y + 0.1, pos.z + topLeftPos[1])
 		);
-
 		this.topRight.setPosition(
-			new THREE.Vector3(pos.x + scale.x / 2, pos.y + 0.1, pos.z + scale.z / 2)
+			new THREE.Vector3(pos.x + topRightPos[0], pos.y + 0.1, pos.z + topRightPos[1])
 		);
-
 		this.bottomLeft.setPosition(
-			new THREE.Vector3(pos.x - scale.x / 2, pos.y + 0.1, pos.z - scale.z / 2)
+			new THREE.Vector3(pos.x + bottomLeftPos[0], pos.y + 0.1, pos.z + bottomLeftPos[1])
 		);
-
 		this.bottomRight.setPosition(
-			new THREE.Vector3(pos.x + scale.x / 2, pos.y + 0.1, pos.z - scale.z / 2)
+			new THREE.Vector3(pos.x + bottomRightPos[0], pos.y + 0.1, pos.z + bottomRightPos[1])
 		);
 
 		this.updateSize();
+	}
+
+	setRotation(rotation: number): void {
+		this.main.setRotation(rotation);
+		this.topLeft.setRotation(rotation);
+		this.topRight.setRotation(rotation);
+		this.bottomLeft.setRotation(rotation);
+		this.bottomRight.setRotation(rotation);
+		this.topMid.setRotation(rotation);
 	}
 }
 
@@ -334,16 +356,48 @@ export class SelectionOverlay extends Overlay {
 				let startVec = [box.low.x, box.low.y];
 				let endVec = [box.high.x, box.high.y];
 
-				let center = [(startVec[0] + endVec[0]) / 2, (startVec[1] + endVec[1]) / 2];
+				if (objs.length == 1) {
+					let angle = objs[0].transform.rotation;
+					let ox = objs[0].transform.position[0];
+					let oy = objs[0].transform.position[1];
 
-				this.selectionBox.setPositionAndScale(
-					new Vector3(center[0], 0, center[1]),
-					new THREE.Vector3(
-						Math.abs(startVec[0] - endVec[0]),
-						Math.abs(1),
-						Math.abs(startVec[1] - endVec[1])
-					)
-				);
+					this.selectionBox.setRotation(-angle);
+
+					let mat = makeRotationMatrix(-angle);
+
+					objs[0].transform.position = multiplyMatrix([ox - box.center.x, oy - box.center.y], mat);
+					objs[0].transform.position[0] += box.center.x;
+					objs[0].transform.position[1] += box.center.y;
+					objs[0].transform.rotation = 0;
+					objs[0].computeShape();
+					let newBox = computeBounds(objs);
+					objs[0].transform.rotation = angle;
+					objs[0].transform.position = [ox, oy];
+
+					objs[0].computeShape();
+
+					let width = newBox.width;
+					let height = newBox.height;
+					let center = [newBox.low.x + width / 2, newBox.low.y + height / 2];
+
+					this.selectionBox.setPositionAndScale(
+						new Vector3(center[0], 0, center[1]),
+						new THREE.Vector3(Math.abs(width), Math.abs(1), Math.abs(height))
+					);
+				} else {
+					this.selectionBox.setRotation(0);
+
+					let center = [(startVec[0] + endVec[0]) / 2, (startVec[1] + endVec[1]) / 2];
+
+					this.selectionBox.setPositionAndScale(
+						new Vector3(center[0], 0, center[1]),
+						new THREE.Vector3(
+							Math.abs(startVec[0] - endVec[0]),
+							Math.abs(1),
+							Math.abs(startVec[1] - endVec[1])
+						)
+					);
+				}
 
 				this.selectionBox.setVisible(true, globalShouldHandlesBeVisible);
 			} else {

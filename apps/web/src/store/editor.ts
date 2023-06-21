@@ -19,7 +19,8 @@ import {
 	type PropertyMutation,
 	Group,
 	isSetAccessLevel,
-	isRefresh
+	isRefresh,
+	smartObjectRender
 } from 'core';
 import { getContext, setContext } from 'svelte';
 import {
@@ -377,11 +378,48 @@ export class ProjectBroker {
 		this.socket?.close();
 	}
 
+	decomposeSmartObject(id: string) {
+		let obj = this.project.objectsMap.get(id);
+		if (obj) {
+			if (obj.type == ObjectType.Path) {
+				let path = obj as Path;
+				if (path.smartObject) {
+					let transaction = this.project.createTransaction();
+
+					let children = smartObjectRender(path, path.smartObject, path.smartProperties);
+					let group = new Group();
+					group.name = path.name;
+					group.id = path.id + '-g';
+					transaction.delete(path.id);
+					transaction.create(group);
+
+					for (let child of children) {
+						child.parent = group.id;
+						transaction.create(child);
+					}
+
+					this.commitTransaction(transaction);
+				}
+			}
+		}
+	}
+
 	commitStagedObject() {
 		let staging = get(this.stagingObject);
 		if (staging) {
 			let id = this.createObject(staging);
 			this.stagingObject.set(null);
+
+			if (id) {
+				let obj = this.project.objectsMap.get(id);
+				if (obj && obj.type == ObjectType.Path) {
+					let path = obj as Path;
+					if (path.smartObject === 'triangle') {
+						this.decomposeSmartObject(id);
+						return id + '-g';
+					}
+				}
+			}
 
 			return id;
 		} else {

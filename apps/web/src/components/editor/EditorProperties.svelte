@@ -52,6 +52,7 @@
 
 	let propertyMixedMap = new Map<string, boolean>();
 	let propertyValueMap = new Map<string, any>();
+	let showStyle = false;
 
 	const LIKENESS_MARGIN = 0.01;
 	function trackProperty(key: string, value: any) {
@@ -85,10 +86,12 @@
 	function recalculateProperties() {
 		propertyMixedMap = new Map<string, boolean>();
 		propertyValueMap = new Map<string, any>();
+		showStyle = true;
 
 		let propertiesMap = new Map<string, ObjectProperty>();
 		let propertiesMapCounter = new Map<string, number>();
 		let hasSetInitialProperties = false;
+
 		for (const id of $effectiveSelection) {
 			const object = broker.project.objectsMap.get(id);
 			if (object) {
@@ -103,6 +106,9 @@
 				if (object.type == ObjectType.Path) {
 					let pathObject = object as Path;
 					if (pathObject.smartObject) {
+						if ($effectiveSelection.length == 1) {
+							if (pathObject.smartObject == 'path') showStyle = false;
+						}
 						let smartObject = getSmartObject(pathObject.smartObject);
 						if (smartObject) {
 							let props = smartObjectProps(
@@ -189,6 +195,9 @@
 
 	function doPropChange(prop: ObjectProperty): any {
 		return (e: InputEvent) => {
+			console.log('doPropChange', prop, e);
+			let existingVal = propertyValueMap.get(prop.name);
+
 			let setTo: any = null;
 			if (prop.type == 'number') {
 				let num = parseFloat((e.target as HTMLInputElement).value);
@@ -218,6 +227,18 @@
 				setTo = (e.target as HTMLInputElement).checked;
 			} else if (prop.type == 'string') {
 				setTo = (e.target as HTMLInputElement).value;
+			} else if ((prop.type = 'color-toggle')) {
+				if (e.target && e.target instanceof HTMLInputElement) {
+					setTo = {
+						active: e.target.checked,
+						value: existingVal.value
+					};
+				} else {
+					setTo = {
+						active: existingVal.active,
+						value: e.detail
+					};
+				}
 			}
 
 			if (setTo !== null) {
@@ -427,32 +448,34 @@
 				<div class="flex-1 flex flex-row" />
 			</div>
 		</div>
-		<div class="border-b border-gray-200" />
-		<div class="properties-style flex flex-col space-y-2 p-2">
-			<div class="flex flex-row space-x-2 border-gray-200 rounded-md border p-1">
-				<div>
-					<ColorInput
-						bind:value={propertiesDisplay.style.color}
-						on:change={doStyleChange('color')}
-					/>
-				</div>
-				<div class="flex-1 w-auto">
-					<select
-						class="border-gray-200 rounded-md border w-full"
-						value={propertiesDisplay.style.filled?.toString() ?? 'false'}
-						on:change={(e) => {
-							console.log('Custom event', e);
-							doStyleChange('filled')(
-								new CustomEvent('change', { detail: e.target.value == 'true' })
-							);
-						}}
-					>
-						<option value="false"> Line </option>
-						<option value="true"> Filled </option>
-					</select>
+		{#if showStyle}
+			<div class="border-b border-gray-200" />
+			<div class="properties-style flex flex-col space-y-2 p-2">
+				<div class="flex flex-row space-x-2 border-gray-200 rounded-md border p-1">
+					<div>
+						<ColorInput
+							bind:value={propertiesDisplay.style.color}
+							on:change={doStyleChange('color')}
+						/>
+					</div>
+					<div class="flex-1 w-auto">
+						<select
+							class="border-gray-200 rounded-md border w-full"
+							value={propertiesDisplay.style.filled?.toString() ?? 'false'}
+							on:change={(e) => {
+								console.log('Custom event', e);
+								doStyleChange('filled')(
+									new CustomEvent('change', { detail: e.target.value == 'true' })
+								);
+							}}
+						>
+							<option value="false"> Line </option>
+							<option value="true"> Filled </option>
+						</select>
+					</div>
 				</div>
 			</div>
-		</div>
+		{/if}
 		{#if properties.length > 0}
 			<div class="border-b border-gray-200" />
 			<div class="space-y-2 mt-2">
@@ -511,6 +534,25 @@
 								type="number"
 								value={propertiesDisplay.props[prop.name][1]}
 							/>
+						{:else if prop.type == 'color-toggle'}
+							<div class="flex flex-row">
+								<input
+									class="ml-2 px-1 mr-2"
+									type="checkbox"
+									checked={propertiesDisplay.props[prop.name]?.active ?? false}
+									on:change={doPropChange(prop)}
+								/>
+								<div
+									class={propertiesDisplay.props[prop.name]?.active ?? false
+										? ''
+										: 'opacity-50 pointer-events-none line-through'}
+								>
+									<ColorInput
+										value={propertiesDisplay.props[prop.name]?.value ?? [0, 0, 0, 1]}
+										on:change={doPropChange(prop)}
+									/>
+								</div>
+							</div>
 						{/if}
 					</div>
 				{/each}

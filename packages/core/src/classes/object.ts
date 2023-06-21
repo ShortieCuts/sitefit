@@ -727,7 +727,8 @@ export type ObjectProperty = {
     | "text"
     | "geo"
     | "transform"
-    | "meters";
+    | "meters"
+    | "color-toggle";
   options?: string[];
 };
 
@@ -1070,13 +1071,423 @@ const Parking = makeSmartObject({
   },
 });
 
-export const smartObjects: SmartObject[] = [Parking];
+type Matrix = [[number, number], [number, number]];
+
+export function makeRotationMatrix(angle: number): Matrix {
+  let c = Math.cos(angle);
+  let s = Math.sin(angle);
+  return [
+    [c, -s],
+    [s, c],
+  ];
+}
+
+export function multiplyMatrix(
+  point: [number, number],
+  matrix: Matrix
+): [number, number] {
+  return [
+    matrix[0][0] * point[0] + matrix[0][1] * point[1],
+    matrix[1][0] * point[0] + matrix[1][1] * point[1],
+  ];
+}
+
+export function addPoints(
+  a: [number, number],
+  b: [number, number]
+): [number, number] {
+  return [a[0] + b[0], a[1] + b[1]];
+}
+
+const SmartRectangle = makeSmartObject({
+  id: "rectangle",
+  properties: {},
+  render: (path, props) => {
+    let objs: Path[] = [];
+
+    let x1 = path.segments[0][0];
+    let y1 = path.segments[0][1];
+
+    let x2 = path.segments[path.segments.length - 1][0];
+    let y2 = path.segments[path.segments.length - 1][1];
+
+    let minX = Math.min(x1, x2);
+    let minY = Math.min(y1, y2);
+    let maxX = Math.max(x1, x2);
+    let maxY = Math.max(y1, y2);
+
+    let translate = path.transform.position;
+    let angle = path.transform.rotation;
+
+    let matrix = makeRotationMatrix(angle);
+
+    let obj = new Path();
+    obj.id = `${path.id}-rectangle`;
+    obj.name = `${path.name} (Rectangle)`;
+    obj.segments = [
+      addPoints(translate, multiplyMatrix([minX, minY], matrix)),
+      addPoints(translate, multiplyMatrix([maxX, minY], matrix)),
+      addPoints(translate, multiplyMatrix([maxX, maxY], matrix)),
+      addPoints(translate, multiplyMatrix([minX, maxY], matrix)),
+    ];
+    obj.style = new Material();
+    obj.style.color = [...path.style.color];
+    obj.closed = true;
+
+    objs.push(obj);
+
+    return objs;
+  },
+});
+
+const SmartCircle = makeSmartObject({
+  id: "circle",
+  properties: {},
+  render: (path, props) => {
+    let objs: Circle[] = [];
+
+    let x1 = path.segments[0][0];
+    let y1 = path.segments[0][1];
+
+    let x2 = path.segments[path.segments.length - 1][0];
+    let y2 = path.segments[path.segments.length - 1][1];
+
+    let translate = path.transform.position;
+    let angle = path.transform.rotation;
+
+    let matrix = makeRotationMatrix(angle);
+
+    let realStart = addPoints(translate, multiplyMatrix([x1, y1], matrix));
+    let realEnd = addPoints(translate, multiplyMatrix([x2, y2], matrix));
+
+    let obj = new Circle();
+    obj.id = `${path.id}-circle`;
+    obj.name = `${path.name} (Circle)`;
+    let dx = realStart[0] - realEnd[0];
+    let dy = realStart[1] - realEnd[1];
+    obj.transform.position = [...realStart];
+    let radius = Math.sqrt(dx * dx + dy * dy);
+    obj.radius = radius;
+    obj.style = new Material();
+    obj.style.color = [...path.style.color];
+
+    objs.push(obj);
+
+    return objs;
+  },
+});
+
+const SmartTriangle = makeSmartObject({
+  id: "triangle",
+  properties: {},
+  render: (path, props) => {
+    let objs: Path[] = [];
+
+    let x1 = path.segments[0][0];
+    let y1 = path.segments[0][1];
+
+    let x2 = path.segments[path.segments.length - 1][0];
+    let y2 = path.segments[path.segments.length - 1][1];
+
+    let translate = path.transform.position;
+    let angle = path.transform.rotation;
+
+    let matrix = makeRotationMatrix(angle);
+
+    let realStart = addPoints(translate, multiplyMatrix([x1, y1], matrix));
+    let realEnd = addPoints(translate, multiplyMatrix([x2, y2], matrix));
+
+    let dx = realStart[0] - realEnd[0];
+    let dy = realStart[1] - realEnd[1];
+
+    let normal: [number, number] = [dy, -dx];
+    let tangent: [number, number] = [dx, dy];
+
+    let scaleMatrix = [
+      [1, 0],
+      [0, 1],
+    ] as Matrix;
+
+    let obj = new Path();
+    obj.id = `${path.id}-triangle`;
+    obj.name = `${path.name} (Triangle)`;
+    obj.segments = [
+      addPoints(realStart, multiplyMatrix(tangent, scaleMatrix)),
+      addPoints(realStart, multiplyMatrix(normal, scaleMatrix)),
+      addPoints(
+        realStart,
+        multiplyMatrix([-tangent[0], -tangent[1]], scaleMatrix)
+      ),
+    ];
+
+    obj.closed = true;
+    obj.style = new Material();
+    obj.style.color = [...path.style.color];
+
+    objs.push(obj);
+
+    return objs;
+  },
+});
+
+const SmartPath = makeSmartObject({
+  id: "path",
+  properties: {
+    measureEdges: {
+      default: false,
+      type: {
+        name: "measureEdges",
+        type: "boolean",
+      },
+    },
+    measureArea: {
+      default: false,
+      type: {
+        name: "measureArea",
+        type: "boolean",
+      },
+    },
+    stroke: {
+      type: {
+        name: "stroke",
+        type: "color-toggle",
+      },
+      default: {
+        value: [0, 0, 0, 1],
+        active: true,
+      },
+    },
+    fill: {
+      type: {
+        name: "fill",
+        type: "color-toggle",
+      },
+      default: {
+        value: [0, 0, 0, 1],
+        active: false,
+      },
+    },
+  },
+  render: (path, props) => {
+    let objs: Path[] = [];
+
+    if (props.fill.active) {
+      let obj = new Path();
+      obj.id = `${path.id}-path-fill`;
+      obj.name = `${path.name} (obj)`;
+      obj.segments = structuredClone(path.segments);
+      obj.transform = structuredClone(path.transform);
+
+      obj.closed = true;
+      obj.style = new Material();
+      obj.style.filled = true;
+      obj.style.color = [...props.fill.value] as [
+        number,
+        number,
+        number,
+        number
+      ];
+
+      objs.push(obj);
+    }
+
+    if (props.stroke.active) {
+      let obj = new Path();
+      obj.id = `${path.id}-path-stroke`;
+      obj.name = `${path.name} (obj)`;
+      obj.segments = structuredClone(path.segments);
+      obj.transform = structuredClone(path.transform);
+
+      obj.closed = true;
+      obj.style = new Material();
+      obj.style.color = [...props.stroke.value] as [
+        number,
+        number,
+        number,
+        number
+      ];
+
+      objs.push(obj);
+    }
+
+    if (props.measureArea) {
+      let obj = new Path();
+      obj.id = `${path.id}-path-area`;
+      obj.name = `Area`;
+      obj.segments = structuredClone(path.segments);
+      obj.transform = structuredClone(path.transform);
+
+      obj.style = new Material();
+      obj.style.color = [...path.style.color];
+      obj.measurement = true;
+      obj.style.filled = true;
+      obj.closed = true;
+
+      obj.computeShape();
+
+      objs.push(obj);
+    }
+
+    if (props.measureEdges) {
+      let isCircle = false;
+      let isEllipse = false;
+      let isRectangle = false;
+      let isSquare = false;
+      let isTriangle = false;
+
+      let center: [number, number] = [0, 0];
+      let lowestRadiusPoint: [number, number] = [0, 0];
+      let highestRadiusPoint: [number, number] = [0, 0];
+
+      let radius = 0;
+      let width = 0;
+      let height = 0;
+
+      for (let i = 0; i < path.segments.length; i++) {
+        center[0] += path.segments[i][0];
+        center[1] += path.segments[i][1];
+      }
+
+      center[0] /= path.segments.length;
+      center[1] /= path.segments.length;
+
+      if (path.segments.length >= 60) {
+        // Ellipse or circle
+
+        let lowestRadius = Infinity;
+        let highestRadius = -Infinity;
+
+        let totalRadius = 0;
+        for (let i = 0; i < path.segments.length; i++) {
+          let p1 = path.segments[i];
+          let dx = p1[0] - center[0];
+          let dy = p1[1] - center[1];
+          let iRad = Math.sqrt(dx * dx + dy * dy);
+          totalRadius += iRad;
+
+          if (iRad < lowestRadius) {
+            lowestRadius = iRad;
+            lowestRadiusPoint = p1;
+          }
+
+          if (iRad > highestRadius) {
+            highestRadius = iRad;
+            highestRadiusPoint = p1;
+          }
+        }
+        totalRadius /= path.segments.length;
+        radius = totalRadius;
+
+        if (Math.abs(lowestRadius - highestRadius) < 1) {
+          isCircle = true;
+        } else {
+          isEllipse = true;
+        }
+      } else if (path.segments.length === 4) {
+        // Rectangle or square or other quadrilateral
+
+        let p1 = path.segments[0];
+        let p2 = path.segments[1];
+        let p3 = path.segments[2];
+        let p4 = path.segments[3];
+
+        let topDist = Math.sqrt(
+          Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2)
+        );
+
+        let bottomDist = Math.sqrt(
+          Math.pow(p3[0] - p4[0], 2) + Math.pow(p3[1] - p4[1], 2)
+        );
+
+        let leftDist = Math.sqrt(
+          Math.pow(p1[0] - p4[0], 2) + Math.pow(p1[1] - p4[1], 2)
+        );
+
+        let rightDist = Math.sqrt(
+          Math.pow(p2[0] - p3[0], 2) + Math.pow(p2[1] - p3[1], 2)
+        );
+
+        if (
+          topDist === bottomDist &&
+          leftDist === rightDist &&
+          topDist === leftDist
+        ) {
+          isSquare = true;
+        } else if (topDist === bottomDist && leftDist === rightDist) {
+          isRectangle = true;
+        }
+      } else if (path.segments.length === 3) {
+        // Triangle
+        isTriangle = true;
+      }
+
+      let counter = 0;
+      let makeRuler = (from: [number, number], to: [number, number]) => {
+        let obj = new Path();
+        obj.id = `${path.id}-path-edges-${counter++}`;
+        obj.name = `Edges`;
+        obj.segments = [from, to];
+
+        obj.style = new Material();
+        obj.style.type = "color";
+        obj.style.color = [...path.style.color];
+        obj.style.filled = false;
+        obj.closed = false;
+        obj.measurement = true;
+        obj.transform = structuredClone(path.transform);
+
+        obj.computeShape();
+
+        objs.push(obj);
+      };
+
+      let transform = (p: number[]): [number, number] => {
+        return p as [number, number];
+      };
+
+      if (isCircle) {
+        makeRuler(center, [center[0] + radius, center[1]]);
+      } else if (isEllipse) {
+        makeRuler(center, lowestRadiusPoint);
+        makeRuler(center, highestRadiusPoint);
+      } else if (isRectangle) {
+        makeRuler(transform(path.segments[0]), transform(path.segments[1]));
+        makeRuler(transform(path.segments[1]), transform(path.segments[2]));
+      } else if (isSquare) {
+        makeRuler(transform(path.segments[0]), transform(path.segments[1]));
+      } else if (isTriangle) {
+        makeRuler(transform(path.segments[0]), transform(path.segments[1]));
+        makeRuler(transform(path.segments[1]), transform(path.segments[2]));
+        makeRuler(transform(path.segments[2]), transform(path.segments[0]));
+      } else {
+        if (path.segments.length < 10) {
+          for (let i = 0; i < path.segments.length; i++) {
+            let p1 = path.segments[i];
+            let p2 = path.segments[(i + 1) % path.segments.length];
+            makeRuler(transform(p1), transform(p2));
+          }
+        }
+      }
+    }
+
+    return objs;
+  },
+});
+
+export const smartObjects: SmartObject[] = [
+  Parking,
+  SmartRectangle,
+  SmartCircle,
+  SmartTriangle,
+  SmartPath,
+];
 export function getSmartObject(id: string) {
   return smartObjects.find((x) => x.id === id);
 }
 export function smartObjectRender(path: Path, id: string, props: any) {
   let obj = getSmartObject(id);
   if (!obj) return [];
+  props = props || {};
   props = structuredClone(props);
   for (let key in obj.properties) {
     if (typeof props[key] === "undefined")
