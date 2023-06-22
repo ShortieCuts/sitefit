@@ -8,6 +8,7 @@ import EditorDialogStyle from './EditorDialogStyle.svelte';
 import EditorDialogTools from './EditorDialogTools.svelte';
 import EditorDialogSearch from './EditorDialogSearch.svelte';
 import EditorDialogMeasure from './EditorDialogMeasure.svelte';
+import EditorDialogFeedback from './EditorDialogFeedback.svelte';
 
 export const dialogs: {
 	[key: string]: {
@@ -53,5 +54,9 @@ export const dialogs: {
 	measure: {
 		dock: 'left',
 		component: EditorDialogMeasure
+	},
+	feedback: {
+		dock: 'center',
+		component: EditorDialogFeedback
 	}
 };

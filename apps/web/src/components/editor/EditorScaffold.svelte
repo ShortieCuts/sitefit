@@ -12,6 +12,7 @@
 		faCopy,
 		faDirections,
 		faEarth,
+		faEnvelope,
 		faExclamationCircle,
 		faExclamationTriangle,
 		faFileImport,
@@ -487,6 +488,14 @@
 			<div
 				class="editor-bar-center flex-1 justify-end flex flex-row items-center my-auto space-x-4 h-8 pr-4"
 			>
+				<button
+					class="btn btn-fat shadow-style"
+					style="background: #cdeaff"
+					on:click={() => editorContext.activateDialog('feedback')}
+					class:active={$activeDialog == 'feedback'}
+				>
+					<Fa icon={faEnvelope} /> Feedback / Request a Feature</button
+				>
 				<button
 					class="btn btn-fat shadow-style"
 					on:click={() => editorContext.activateDialog('comments')}
