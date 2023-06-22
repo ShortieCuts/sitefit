@@ -89,6 +89,7 @@ export type ProjectSession = {
 	uid: string;
 	userId: string;
 	color: string;
+	ghost?: boolean;
 };
 
 function rotateAboutOrigin(p: [number, number], angle: number): [number, number] {

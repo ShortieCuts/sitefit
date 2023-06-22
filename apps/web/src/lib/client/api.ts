@@ -156,7 +156,12 @@ export const updateProjectFile = createIdApiEndpointHelper<
 	}
 >('POST', '/api/project/<id>');
 
-export const getProjects = createApiEndpointHelper<{}, ProjectTreeNode>('POST', '/api/projects');
+export const getProjects = createApiEndpointHelper<
+	{
+		admin?: boolean;
+	},
+	ProjectTreeNode
+>('POST', '/api/projects');
 
 export const createSession = createApiEndpointHelper<
 	{

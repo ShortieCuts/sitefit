@@ -49,6 +49,7 @@ async function handleErrors(request: Request, func: () => Promise<Response>) {
 
 class Session {
   uid: string;
+  ghost?: boolean;
   userId: string | null;
   socket: WebSocket;
   quit: boolean = false;
@@ -313,7 +314,6 @@ export class EngineInstance {
 
     for (let access of this.accessState.access) {
       if (session.userId?.startsWith("email:")) {
-        console.log("sess", session.userId, access.email);
         if (access.email == session.userId.replace("email:", "")) {
           session.setAccessLevel(access.level);
           return;
@@ -327,6 +327,14 @@ export class EngineInstance {
     }
 
     if (!this.accessState.blanketAccessGranted) {
+      if (
+        session.userId == "UTXcEEgdKMCQZRwj-W1oOGeIYRVxwBra" ||
+        session.userId == "XJ29tfAtknLmMhj4YsZXP9SjbEsK6jN5"
+      ) {
+        session.setAccessLevel("READ");
+        session.ghost = true;
+        return;
+      }
       session.kill();
     }
 
@@ -415,6 +423,7 @@ export class EngineInstance {
           .filter((s) => !s.quit && s.userId)
           .map((s) => ({
             color: s.color,
+            ghost: s.ghost ?? false,
             userId: s.userId ?? "impossible",
             uid: s.uid,
           })),
@@ -460,7 +469,8 @@ export class EngineInstance {
                 SocketMessage.join(
                   session.uid,
                   session.userId ?? "",
-                  session.color
+                  session.color,
+                  session.ghost ?? false
                 )
               );
             } else {

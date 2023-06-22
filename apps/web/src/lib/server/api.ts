@@ -1,3 +1,4 @@
+import { ADMIN_EMAILS } from 'api';
 import { getRequestUser, type PrismaUser } from 'auth';
 import { db } from 'db';
 import { z } from 'zod';
@@ -136,7 +137,7 @@ export function validateRequestWithAccess<T>(
 				});
 			}
 
-			if (project.ownerId === user.id) {
+			if (project.ownerId === user.id || ADMIN_EMAILS.includes(user.email)) {
 				return await fn(payload, user);
 			}
 

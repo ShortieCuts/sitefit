@@ -43,6 +43,7 @@
 	import TabWrap from '../editor/common/TabWrap.svelte';
 	import TabWrapTab from '../editor/common/TabWrapTab.svelte';
 	import EllipsisButton from '../editor/common/EllipsisButton.svelte';
+	import UserChip from '../auth/UserChip.svelte';
 
 	const icons: {
 		[key: string]: any;
@@ -55,7 +56,7 @@
 
 	let isActive = false;
 
-	export let node: ProjectTreeNode;
+	export let node: ProjectTreeNode & { owner?: string };
 
 	$: {
 		if (node && node.type == 'project' && editor && editor.broker.projectId == node.id) {
@@ -274,6 +275,11 @@
 					{/if}
 				</span>
 				<EllipsisButton />
+				<div class="flex flex-row mr-12 w-40">
+					{#if node.owner}
+						<UserChip showName small horizontal userId={node.owner} />
+					{/if}
+				</div>
 			</button>
 		</Draggable>
 

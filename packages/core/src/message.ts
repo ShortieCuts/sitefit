@@ -19,6 +19,7 @@ type SessionShape = {
   uid: string;
   userId: string;
   color: string;
+  ghost?: boolean;
 };
 
 type Sync = {
@@ -113,12 +114,18 @@ export function isRefresh(message: SocketMessage): message is Refresh {
 }
 
 export namespace SocketMessage {
-  export function join(uid: string, userId: string, color: string): Join {
+  export function join(
+    uid: string,
+    userId: string,
+    color: string,
+    ghost = false
+  ): Join {
     return {
       type: "join",
       uid,
       userId,
       color,
+      ghost,
     };
   }
 

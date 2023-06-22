@@ -14,6 +14,7 @@
 	export let showName: boolean = false;
 	export let showPicture: boolean = true;
 	export let small: boolean = false;
+	export let horizontal = false;
 
 	$: userStore =
 		userId == '' || userId == 'anon' || userId.startsWith('email:')
@@ -23,7 +24,13 @@
 </script>
 
 {#if userStore && $userStore}
-	<div title="{$userStore.firstName} {$userStore.lastName}">
+	<div
+		title="{$userStore.firstName} {$userStore.lastName}"
+		class:flex={horizontal}
+		class:flex-row={horizontal}
+		class:items-center={horizontal}
+		class:space-x-2={horizontal}
+	>
 		{#if showPicture}
 			<UserProfilePicture {small} user={$userStore} {ringColor} />
 		{/if}
@@ -36,6 +43,10 @@
 	</div>
 {:else if userId.startsWith('email:')}
 	<div
+		class:flex={horizontal}
+		class:flex-row={horizontal}
+		class:items-center={horizontal}
+		class:space-x-2={horizontal}
 		title={userId.replace('email:', '')}
 		class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase flex items-center flex-row justify-center text-gray-400"
 		style="background: #eee; border-color: {ringColor};"
@@ -44,6 +55,10 @@
 	</div>
 {:else}
 	<div
+		class:flex={horizontal}
+		class:flex-row={horizontal}
+		class:items-center={horizontal}
+		class:space-x-2={horizontal}
 		title="Anonymous user"
 		class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase flex items-center flex-row justify-center text-gray-400"
 		style="background: #eee; border-color: {ringColor};"
