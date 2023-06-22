@@ -69,6 +69,8 @@
 	import { cookieName } from 'src/store/name';
 	import { InfoPopover, WrapLoader } from 'ui';
 	import { cubicOut } from '$lib/util/easing';
+	import ColorInput from './common/ColorInput.svelte';
+	import { colorArrayToHex, hexColorToArray } from '$lib/util/color';
 
 	// export let auth: AuthState;
 	export let projectId: string;
@@ -100,7 +102,9 @@
 		focusComment,
 		activeTool,
 		uploadInProgress,
-		uploads
+		uploads,
+		colorPalette,
+		toolPrimaryColor
 	} = editorContext;
 
 	let needsCornerstone = false;
@@ -787,6 +791,35 @@
 		class="dialog-slide bg-white w-[300px] fixed right-10 bottom-10 z-20 h-auto border-gray-200 border shadow-lg rounded-lg"
 	>
 		<EditorProperties />
+	</div>
+{/if}
+
+{#if !$isMobile && $activeTool == 'draw'}
+	<div
+		transition:fly={{ duration: 200, y: 40, opacity: 0 }}
+		class="dialog-slide bg-white w-auto fixed right-10 bottom-10 z-20 h-auto border-gray-200 border shadow-lg rounded-lg p-2 flex flex-row"
+		class:right-96={$selection.length > 0}
+	>
+		{#each $colorPalette as color}
+			<button
+				class="w-8 h-8 rounded-md m-1 border border-gray-200"
+				class:bg-gray-200={$toolPrimaryColor != color}
+				class:bg-gray-400={$toolPrimaryColor == color}
+				style="background-color: {color}"
+				on:click={() => {
+					$toolPrimaryColor = color;
+				}}
+			/>
+		{/each}
+
+		<div class="p-2">
+			<ColorInput
+				value={hexColorToArray($toolPrimaryColor)}
+				on:input={(e) => {
+					$toolPrimaryColor = colorArrayToHex(e.detail);
+				}}
+			/>
+		</div>
 	</div>
 {/if}
 

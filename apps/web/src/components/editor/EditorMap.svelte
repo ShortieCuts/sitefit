@@ -717,7 +717,7 @@
 				if (currentCursor == Cursors.default) {
 					currentCursor = $leftMouseDown ? Cursors.grabbing : Cursors.grab;
 				}
-			} else if ($activeTool == 'pen') {
+			} else if ($activeTool == 'pen' || $activeTool == 'draw') {
 				currentCursor = Cursors.pen;
 			} else if ($activeTool == 'smart' || $activeTool == 'shape') {
 				currentCursor = Cursors.crosshair;
@@ -747,7 +747,7 @@
 				let longitude = parseFloat(childEl.dataset.longitude ?? '0');
 				let latitude = parseFloat(childEl.dataset.latitude ?? '0');
 
-				let vec = overlayProxy.lonLatToVector3(latitude, longitude);
+				let vec = overlayProxy.lonLatToVector3(longitude, latitude);
 
 				let deg = -$heading;
 				let rad = (deg / 180) * Math.PI;

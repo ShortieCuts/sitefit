@@ -1035,6 +1035,21 @@ export class EditorContext {
 	activeToolSmartObject: Writable<string> = writable('');
 	activeToolSmartObjectProperties: Writable<any> = writable({});
 
+	toolPrimaryColor: Writable<string> = writable('#000000');
+	colorPalette: Writable<string[]> = writable([
+		'#000000',
+		'#FFFFFF',
+		'#FF0000',
+		'#00FF00',
+		'#0000FF',
+		'#FFFF00',
+		'#00FFFF',
+		'#FF00FF',
+		'#FF8000',
+		'#FF0080',
+		'#80FF00'
+	]);
+
 	activeSVG: Writable<string> = writable('');
 
 	activeDialog: Writable<string> = writable('');

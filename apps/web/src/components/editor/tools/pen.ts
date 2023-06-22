@@ -10,7 +10,7 @@ export const PenTool = {
 	icon: faPen,
 	key: 'pen',
 	access: 'WRITE',
-	shortcut: 'v',
+	shortcut: '',
 	hidden: true,
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		if (!clickMoving) {

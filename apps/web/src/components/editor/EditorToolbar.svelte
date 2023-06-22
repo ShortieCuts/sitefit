@@ -23,6 +23,7 @@
 	import { ShapeTool } from './tools/shape';
 	import { InfoPopover } from 'ui';
 	import { get } from 'svelte/store';
+	import { DrawTool } from './tools/draw';
 
 	const toolbarItems: {
 		icon: any;
@@ -44,7 +45,8 @@
 		MeasurementTool,
 		AreaTool,
 		SmartTool,
-		ShapeTool
+		ShapeTool,
+		DrawTool
 	];
 
 	const { editor, broker } = getSvelteContext();

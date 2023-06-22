@@ -262,7 +262,7 @@
 </script>
 
 <DialogSlideUp>
-	<div class="px-4 py-2">
+	<div class="px-4 py-2 flex flex-row space-x-2">
 		<button
 			class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
 			on:click={() => {
@@ -272,6 +272,16 @@
 		>
 			<img src="/img/text.png" class="max-w-[32px]" alt="Distance ft" />
 			<div class="ml-4">Insert text box</div>
+		</button>
+		<button
+			class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+			on:click={() => {
+				editor.activeTool.set('draw');
+				editor.activateDialog('');
+			}}
+		>
+			<img src="/img/drawing.svg" class="max-w-[32px]" alt="Distance ft" />
+			<div class="ml-4">Insert Drawing</div>
 		</button>
 	</div>
 	<ResponsiveGroup groups={['Shapes', 'Pre-Made Objects', 'Smart Objects']}>

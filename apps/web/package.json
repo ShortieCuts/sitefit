@@ -51,6 +51,7 @@
 		"nanoid": "^4.0.2",
 		"npm": "^9.7.1",
 		"pbf": "^3.2.1",
+		"perfect-freehand": "^1.2.0",
 		"polygon-clipping": "^0.15.3",
 		"sass": "^1.60.0",
 		"svelte-fa": "^3.0.3",

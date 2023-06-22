@@ -17,3 +17,14 @@ export function hexColorToArray(color: string): [number, number, number, number]
 		1
 	];
 }
+
+export function colorArrayToHex(color: number[]): string {
+	if (color.length === 4) color = color.slice(0, 3);
+	return (
+		'#' +
+		color
+			.map((x) => Math.round(x * 255))
+			.map((x) => x.toString(16).padStart(2, '0'))
+			.join('')
+	);
+}
