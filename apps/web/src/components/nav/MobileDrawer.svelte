@@ -5,7 +5,7 @@
 
 <div
 	transition:fly={{ y: 240, duration: 300, opacity: 1, easing: cubicOut }}
-	class="editor-mobile-drawer fixed bottom-4 left-0 right-0 pointer-events-none flex flex-col items-center justify-center z-40 space-y-4 px-4"
+	class="editor-mobile-drawer max-w-[400px] mx-auto fixed bottom-4 left-0 right-0 pointer-events-none flex flex-col items-center justify-center z-40 space-y-4 px-4"
 >
 	<slot />
 </div>

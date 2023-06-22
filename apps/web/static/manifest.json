@@ -1,21 +1,26 @@
 {
-	"name": "CAD Fitter",
+	"name": "Site Fit",
 	"id": "/",
 	"start_url": "/",
 	"lang": "en-US",
 	"theme_color": "#1e90ff",
 	"display": "standalone",
+	"display_override": ["window-controls-overlay", "standalone", "browser"],
 	"background_color": "#1e90ff",
 	"orientation": "any",
-	"short_name": "cadfitter",
+	"short_name": "sitefit",
 	"dir": "ltr",
-	"description": "cad fitter app",
+	"description": "site fit app",
 	"categories": ["utilities"],
 	"screenshots": [],
 	"icons": [
 		{
 			"src": "/favicon.png",
 			"sizes": "114x114"
+		},
+		{
+			"src": "/logo-512.png",
+			"sizes": "512x512"
 		}
 	]
 }

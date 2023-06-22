@@ -22,5 +22,10 @@
 			href="https://fonts.googleapis.com/css2?family=Lato:wght@400&family=Montserrat:wght@300&family=Roboto+Mono&display=swap"
 			rel="stylesheet"
 		/>
+		<script>
+			if (typeof navigator.serviceWorker !== 'undefined') {
+				navigator.serviceWorker.register('/pwasw.js');
+			}
+		</script>
 	</body>
 </html>

@@ -74,7 +74,7 @@
 				class="btn btn-fat shadow-style"
 				class:btn-primary={$activeTool === 'comment'}
 				on:click={() => {
-					activeTool.set('select');
+					activeTool.set('pan');
 					dialogOpen = true;
 				}}
 			>

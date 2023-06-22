@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.sitefit.twa",
+        "sha256_cert_fingerprints": ["41:0E:2F:7E:55:2F:28:41:25:C9:21:C0:7C:D6:D3:99:8C:24:A8:14:E8:AF:A3:E6:B8:5A:77:20:02:F7:C0:13"]
+      }
+    }]

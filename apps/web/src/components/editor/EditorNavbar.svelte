@@ -146,7 +146,7 @@
 
 {#if $isMobile}
 	<div
-		class="editor-toolbar flex md:flex-col w-full rounded-lg justify-center space-x-1 md:space-y-2 md:space-x-4 px-4"
+		class="editor-toolbar inset-top flex md:flex-col w-full rounded-lg justify-center space-x-1 md:space-y-2 md:space-x-0 px-4 md:w-16"
 	>
 		<button
 			class="btn btn-icon-only shadow-md text-black w-10 h-10 flex items-center justify-center active:bg-blue-400 cursor-default"
@@ -222,3 +222,9 @@
 		{/each}
 	</div>
 {/if}
+
+<style lang="scss">
+	.inset-top {
+		margin-top: calc(env(safe-area-inset-top, 0.5rem) - 0.5rem);
+	}
+</style>

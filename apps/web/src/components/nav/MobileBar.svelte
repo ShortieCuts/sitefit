@@ -189,3 +189,11 @@
 		</MobileDrawer>
 	{/if}
 {/if}
+
+<style lang="scss">
+	@media (orientation: landscape) {
+		.editor-mobile-bottom-bar-container {
+			bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+		}
+	}
+</style>

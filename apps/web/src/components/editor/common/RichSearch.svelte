@@ -7,6 +7,7 @@
 	import { Loader } from '@googlemaps/js-api-loader';
 	import Icon from 'src/components/icon/Icon.svelte';
 	import { getSvelteContext } from 'src/store/editor';
+	import { isMobile } from 'src/store/responsive';
 
 	const dispatch = createEventDispatcher();
 
@@ -82,6 +83,7 @@
 
 <div
 	class="search-bar relative h-10 w-60 lg:w-96 shadow-style rounded-lg border-[1px] border-gray-300 flex flex-row items-center"
+	class:inset-top={$isMobile}
 >
 	<input
 		bind:this={searchEl}
@@ -99,5 +101,14 @@
 	}
 	:global(.pac-item) {
 		@apply rounded-md border-0 hover:bg-gray-100 my-2 first:mt-0 cursor-pointer;
+	}
+
+	@media (min-width: 768px) {
+		:global(.pac-container) {
+			@apply w-[400px];
+		}
+	}
+	.inset-top {
+		margin-top: calc(env(safe-area-inset-top, 0.5rem) - 0.5rem);
 	}
 </style>
