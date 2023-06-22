@@ -308,7 +308,7 @@
 	>
 		{#if node.type == 'folder'}
 			{#if $isMobile}
-				<TabWrap names={['Actions', 'Details']}>
+				<TabWrap names={['Actions']}>
 					<TabWrapTab class="flex flex-col space-y-2" tab={0}>
 						<button
 							class="flex flex-row items-center justify-start py-2 px-4"
@@ -323,11 +323,16 @@
 							}}><Fa class="pr-4" icon={faPenToSquare} /> Rename</button
 						>
 					</TabWrapTab>
-					<TabWrapTab class="bg-green-500" tab={1}>Details</TabWrapTab>
 				</TabWrap>
 			{/if}
 		{:else}
-			<TabWrap names={$isMobile ? ['Actions', 'Preview', 'Details'] : ['Preview', 'Details']}>
+			<TabWrap
+				names={$isMobile
+					? node.type == 'cad'
+						? ['Actions', 'Preview', 'Details']
+						: ['Actions']
+					: ['Preview']}
+			>
 				{#if $isMobile}
 					<TabWrapTab class="flex flex-col space-y-2" tab={0}>
 						{#if compareAccess('WRITE', $sessionAccess)}
@@ -364,9 +369,7 @@
 				{/if}
 				<TabWrapTab class="bg-white" tab={$isMobile ? 1 : 0}>
 					<ModelViewer fileId={node.id} />
-				</TabWrapTab>
-				<TabWrapTab class="" tab={$isMobile ? 2 : 1}>
-					{#if node.file}
+					{#if node.file && !$isMobile}
 						<p class="px-4 pb-2">
 							<b>Date Uploaded</b>:
 							{new Date(node.file.createdAt).toLocaleDateString()}
@@ -375,10 +378,24 @@
 							<b>Original Filename</b>:
 							{node.file.filename}
 						</p>
-					{:else}
-						N/A
 					{/if}
 				</TabWrapTab>
+				{#if $isMobile && node.type == 'cad'}
+					<TabWrapTab class="" tab={$isMobile ? 2 : 1}>
+						{#if node.file}
+							<p class="px-4 pb-2">
+								<b>Date Uploaded</b>:
+								{new Date(node.file.createdAt).toLocaleDateString()}
+							</p>
+							<p class="px-4">
+								<b>Original Filename</b>:
+								{node.file.filename}
+							</p>
+						{:else}
+							N/A
+						{/if}
+					</TabWrapTab>
+				{/if}
 			</TabWrap>
 		{/if}
 	</div>

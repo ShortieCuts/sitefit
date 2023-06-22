@@ -41,16 +41,18 @@
 
 <div class="tab-wrap overflow-hidden">
 	<div class="tab-header">
-		<div class="tab-dots flex flex-row space-x-1 items-center justify-center mb-2">
-			{#each names as _, i}
-				<button
-					class="tab-dot opacity-20 bg-black rounded-full w-2 h-2 transition-opacity border-0"
-					class:opacity-80={$activeTab === i}
-					on:click={() => activeTab.set(i)}
-				/>
-			{/each}
-			<span />
-		</div>
+		{#if names.length > 1}
+			<div class="tab-dots flex flex-row space-x-1 items-center justify-center mb-2">
+				{#each names as _, i}
+					<button
+						class="tab-dot opacity-20 bg-black rounded-full w-2 h-2 transition-opacity border-0"
+						class:opacity-80={$activeTab === i}
+						on:click={() => activeTab.set(i)}
+					/>
+				{/each}
+				<span />
+			</div>
+		{/if}
 		<div class="tab-header-row flex flex-row space-x-2">
 			{#each names as name, i}
 				<button
