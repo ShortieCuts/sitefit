@@ -10,12 +10,13 @@ import { ThreeJSOverlayView } from '@googlemaps/three';
 import * as THREE from 'three';
 import type { MapProviderOverlay, Overlay } from '../overlays/Overlay';
 
-type GoogleMapStyle = 'google-satellite' | 'google-simple' | 'google-dark';
+type GoogleMapStyle = 'google-satellite' | 'google-simple' | 'google-dark' | 'google-plain';
 
 function getMapId(style: GoogleMapStyle) {
 	if (style == 'google-satellite') return 'c0f380f46a9601c5';
 	if (style == 'google-simple') return '44130cd24e816b48';
 	if (style == 'google-dark') return '3a922666b5448450';
+	if (style == 'google-plain') return '5e7100627553c789';
 	return 'c0f380f46a9601c5';
 }
 
@@ -23,6 +24,7 @@ function getMapTypeId(style: GoogleMapStyle) {
 	if (style == 'google-satellite') return google.maps.MapTypeId.HYBRID;
 	if (style == 'google-simple') return google.maps.MapTypeId.ROADMAP;
 	if (style == 'google-dark') return google.maps.MapTypeId.ROADMAP;
+	if (style == 'google-plain') return google.maps.MapTypeId.ROADMAP;
 	return google.maps.MapTypeId.HYBRID;
 }
 

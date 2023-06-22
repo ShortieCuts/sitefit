@@ -92,6 +92,29 @@
 							bind:value={$cadOpacity}
 						/>
 						<span class="text-left pl-1">{Math.floor($cadOpacity * 100)}%</span>
+
+						<span>Base Map</span>
+						<input
+							class="w-full"
+							type="range"
+							min={0}
+							max={1}
+							step={1}
+							value={$mapStyle.endsWith('-plain') ? 0 : 1}
+							on:change={(e) => {
+								console.log(e.target.value);
+								if (e.target.value == 1) {
+									$mapStyle = $mapStyle.replace('-plain', '-satellite');
+								} else {
+									if ($mapStyle.startsWith('google')) {
+										$mapStyle = 'google-plain';
+									} else {
+										$mapStyle = 'mapbox-plain';
+									}
+								}
+							}}
+						/>
+						<span class="text-left pl-1">{($mapStyle.endsWith('-plain') ? 0 : 1) * 100}%</span>
 					</div>
 				</div>
 			</div>

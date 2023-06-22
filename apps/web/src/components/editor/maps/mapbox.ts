@@ -21,6 +21,7 @@ function getMapId(style: MapboxMapStyle) {
 		return 'mapbox://styles/askingquestions/clj2y4n3r033001pd1qbkc8u8';
 	if (style == 'mapbox-simple') return 'mapbox://styles/askingquestions/clj2y84me030601qg3hjvhgdd';
 	if (style == 'mapbox-dark') return 'mapbox://styles/askingquestions/clj2y8yn700tk01qq1alm00mq';
+	if (style == 'mapbox-plain') return 'mapbox://styles/askingquestions/clj7qexix00g601qneuc5514s';
 	return 'mapbox://styles/askingquestions/clj2y4n3r033001pd1qbkc8u8';
 }
 let existingPromise: Promise<typeof google.maps.Map> | null = null;

@@ -9,9 +9,11 @@ export type ProjectMapStyle =
   | "google-simple"
   | "google-satellite"
   | "google-dark"
+  | "google-plain"
   | "mapbox-simple"
   | "mapbox-satellite"
-  | "mapbox-dark";
+  | "mapbox-dark"
+  | "mapbox-plain";
 
 export type GlobalProjectProperties = {
   mapStyle?: ProjectMapStyle;

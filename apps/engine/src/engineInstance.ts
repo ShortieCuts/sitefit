@@ -514,9 +514,11 @@ export class EngineInstance {
               "google-satellite",
               "google-simple",
               "google-dark",
+              "google-plain",
               "mapbox-satellite",
               "mapbox-simple",
               "mapbox-dark",
+              "mapbox-plain",
             ].includes(data.value)
           ) {
             this.project.globalProperties.mapStyle = data.value;
