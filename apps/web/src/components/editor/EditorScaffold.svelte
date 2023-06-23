@@ -489,8 +489,8 @@
 				class="editor-bar-center flex-1 justify-end flex flex-row items-center my-auto space-x-4 h-8 pr-4"
 			>
 				<button
-					class="btn btn-fat shadow-style"
-					style="background: #cdeaff"
+					class="btn btn-fat shadow-style overflow-hidden text-ellipsis whitespace-nowrap"
+					style="background: #cdeaff; text-wrap: nowrap;"
 					on:click={() => editorContext.activateDialog('feedback')}
 					class:active={$activeDialog == 'feedback'}
 				>

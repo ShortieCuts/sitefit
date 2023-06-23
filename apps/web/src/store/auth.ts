@@ -52,14 +52,14 @@ export const auth = writable(
 						set({
 							isAnonymous: false,
 							isLoading: false,
-							firebaseUser: null,
+							firebaseUser: firebaseAuth.currentUser ?? null,
 							user: user.data
 						});
 					} else {
 						set({
 							isAnonymous: true,
 							isLoading: false,
-							firebaseUser: null,
+							firebaseUser: firebaseAuth.currentUser ?? null,
 							user: null
 						});
 					}

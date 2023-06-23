@@ -86,12 +86,12 @@
 				>
 					<Fa icon={faEarth} />
 				</button>
-				<button
+				<a
 					class="flex flex-1 justify-center items-center w-16 text-xl landscape:min-h-[64px]"
-					on:click={() => {}}
+					href="/user/settings"
 				>
 					<Fa icon={faCog} />
-				</button>
+				</a>
 			{/if}
 			<button
 				class="flex flex-1 justify-center items-center w-16 text-xl landscape:min-h-[64px]"
