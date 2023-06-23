@@ -351,6 +351,7 @@ export class SelectionOverlay extends Overlay {
 				let obj = this.broker.project.objectsMap.get(id);
 				if (obj) objs.push(obj);
 			}
+
 			let box = computeBounds(objs);
 			if (box.height > 0 || box.width > 0) {
 				let startVec = [box.low.x, box.low.y];
@@ -400,6 +401,52 @@ export class SelectionOverlay extends Overlay {
 				}
 
 				this.selectionBox.setVisible(true, globalShouldHandlesBeVisible);
+
+				if (objs.length == 1 && objs[0].type == ObjectType.Path) {
+					let path = objs[0] as Path;
+					if (path.segments.length == 2 && !path.smartObject) {
+						this.selectionBox.main.line.visible = false;
+						// This is a line, let's just show 2 handles
+						if (path.flatShape && path.flatShape.length == 1) {
+							this.selectionBox.topRight.setVisible(false);
+							this.selectionBox.bottomLeft.setVisible(false);
+							this.selectionBox.topLeft.setVisible(false);
+							this.selectionBox.bottomRight.setVisible(false);
+							let rawPath = path.flatShape[0] as Flatten.Segment;
+							let closeMatch = (a: Flatten.Point, b: THREE.Vector3) => {
+								let threshold = 0.1;
+								return Math.abs(a.x - b.x) < threshold && Math.abs(a.y - b.z) < threshold;
+							};
+							if (
+								closeMatch(rawPath.start, this.selectionBox.bottomLeft.box.position) ||
+								closeMatch(rawPath.end, this.selectionBox.bottomLeft.box.position)
+							) {
+								this.selectionBox.bottomLeft.setVisible(true);
+							}
+
+							if (
+								closeMatch(rawPath.start, this.selectionBox.bottomRight.box.position) ||
+								closeMatch(rawPath.end, this.selectionBox.bottomRight.box.position)
+							) {
+								this.selectionBox.bottomRight.setVisible(true);
+							}
+
+							if (
+								closeMatch(rawPath.start, this.selectionBox.topLeft.box.position) ||
+								closeMatch(rawPath.end, this.selectionBox.topLeft.box.position)
+							) {
+								this.selectionBox.topLeft.setVisible(true);
+							}
+
+							if (
+								closeMatch(rawPath.start, this.selectionBox.topRight.box.position) ||
+								closeMatch(rawPath.end, this.selectionBox.topRight.box.position)
+							) {
+								this.selectionBox.topRight.setVisible(true);
+							}
+						}
+					}
+				}
 			} else {
 				this.selectionBox?.setVisible(false, globalShouldHandlesBeVisible);
 			}

@@ -456,9 +456,19 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 
 	if (canChangeSelection) {
 		editor.editingObject.set(null);
+		editor.editingObjectDown.set(false);
 		if (!ev.shiftKey) {
 			if (hover) {
 				editor.select(hover);
+				let hoverObj = broker.project.objectsMap.get(hover);
+				if (hoverObj) {
+					if (hoverObj.type == ObjectType.Path) {
+						let hoverPath = hoverObj as Path;
+						if (hoverPath.segments.length == 2) {
+							editor.editingObject.set(hover);
+						}
+					}
+				}
 			} else {
 				// We don't reset the root until mouse up
 				let cacheRoot = get(editor.rootGroup);
@@ -604,7 +614,7 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 	let isTranslating = get(editor.translating);
 	let isRotating = get(editor.rotating);
 	let isScaling = get(editor.scaling);
-	let canTransform = !get(editor.editingObject);
+	let canTransform = !get(editor.editingObjectDown);
 
 	if (access === 'WRITE' && (isTranslating || isScaling || isRotating) && canTransform) {
 		// Transforming
@@ -1086,6 +1096,8 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 			let bottomRightRotate = point(box.high.x + rotateDistance, box.high.y + rotateDistance);
 			let bottomLeftRotate = point(box.low.x - rotateDistance, box.high.y + rotateDistance);
 
+			let useMoveCursor = false;
+
 			if (objs.length == 1) {
 				let matr = makeRotationMatrix(-objs[0].transform.rotation);
 				cursor = multiplyMatrix([cursor[0] - box.center.x, cursor[1] - box.center.y], matr);
@@ -1093,6 +1105,37 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 				cursor[0] += box.center.x;
 				cursor[1] += box.center.y;
 				cursorPoint = point(cursor[0], cursor[1]);
+
+				if (objs[0].type == ObjectType.Path) {
+					let path = objs[0] as Path;
+					if (path.flatShape && path.flatShape.length == 1 && !path.smartObject) {
+						useMoveCursor = true;
+
+						let closeMatch = (a: Flatten.Point, b: Flatten.Point) => {
+							let threshold = 0.1;
+							return Math.abs(a.x - b.x) < threshold && Math.abs(a.y - b.y) < threshold;
+						};
+
+						let shape = path.flatShape[0];
+						if (shape instanceof Flatten.Segment) {
+							if (!closeMatch(topLeft, shape.start) && !closeMatch(topLeft, shape.end)) {
+								topLeft = point(10000000, 1000000);
+							}
+
+							if (!closeMatch(topRight, shape.start) && !closeMatch(topRight, shape.end)) {
+								topRight = point(10000000, 1000000);
+							}
+
+							if (!closeMatch(bottomLeft, shape.start) && !closeMatch(bottomLeft, shape.end)) {
+								bottomLeft = point(10000000, 1000000);
+							}
+
+							if (!closeMatch(bottomRight, shape.start) && !closeMatch(bottomRight, shape.end)) {
+								bottomRight = point(10000000, 1000000);
+							}
+						}
+					}
+				}
 				// topLeft = topLeft.transform(matrix);
 				// topRight = topRight.transform(matrix);
 				// bottomLeft = bottomLeft.transform(matrix);
@@ -1126,28 +1169,28 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 			}
 
 			if (topLeft.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.nwse);
+				editor.selectToolCursor.set(useMoveCursor ? Cursors.crosshair : Cursors.nwse);
 				canScale = true;
 				scaleDirection = [-1, -1];
 				setCursor = true;
 			}
 
 			if (topRight.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.nesw);
+				editor.selectToolCursor.set(useMoveCursor ? Cursors.crosshair : Cursors.nesw);
 				canScale = true;
 				scaleDirection = [1, -1];
 				setCursor = true;
 			}
 
 			if (bottomLeft.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.nesw);
+				editor.selectToolCursor.set(useMoveCursor ? Cursors.crosshair : Cursors.nesw);
 				canScale = true;
 				scaleDirection = [-1, 1];
 				setCursor = true;
 			}
 
 			if (bottomRight.distanceTo(cursorPoint)[0] < dist) {
-				editor.selectToolCursor.set(Cursors.nwse);
+				editor.selectToolCursor.set(useMoveCursor ? Cursors.crosshair : Cursors.nwse);
 				canScale = true;
 				scaleDirection = [1, 1];
 				setCursor = true;

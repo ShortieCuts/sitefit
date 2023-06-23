@@ -290,6 +290,7 @@
 			editorContext.select(id);
 			setTimeout(() => {
 				editorContext.editingObject.set(id);
+				editor.editingObjectDown.set(false);
 			}, 100);
 		}
 	}

@@ -639,6 +639,7 @@ class RenderText implements RenderObject2D {
 			});
 			this.el.addEventListener('blur', (e) => {
 				overlay.editor.editingObject.set(null);
+				overlay.editor.editingObjectDown.set(false);
 				saveText();
 				this.setEditing(false);
 			});
@@ -647,6 +648,7 @@ class RenderText implements RenderObject2D {
 				if ((e.key == 'Enter' && !e.shiftKey) || e.key == 'Escape') {
 					e.preventDefault();
 					overlay.editor.editingObject.set(null);
+					overlay.editor.editingObjectDown.set(false);
 					saveText();
 					this.setEditing(false);
 				}

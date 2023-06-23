@@ -1118,6 +1118,7 @@ export class EditorContext {
 
 	rootGroup: Writable<ObjectID | null> = writable(null);
 	editingObject: Writable<ObjectID | null> = writable(null);
+	editingObjectDown: Writable<boolean> = writable(false);
 
 	selection: Writable<ObjectID[]> = writable([]);
 	/** Includes the children of selected groups */

@@ -39,7 +39,19 @@
 	}
 
 	let unsub = () => {};
+	let unsub2 = () => {};
 	let markingDirty = false;
+
+	function pushToDom() {
+		if (realPathShape)
+			for (let [i, point] of realPathShape.entries()) {
+				let el = document.querySelector(`[data-point-index="${i}"]`);
+				if (el && el instanceof HTMLElement) {
+					el.dataset.relativeX = `${point[0]}`;
+					el.dataset.relativeY = `${point[1]}`;
+				}
+			}
+	}
 	$: {
 		isEditingPath = realEditingObject?.type == ObjectType.Path ?? false;
 		realPath = isEditingPath ? (realEditingObject as Path) : null;
@@ -48,18 +60,16 @@
 			let debounceFirst = true;
 			unsub = broker.writableObjectProperty(realPath.id, 'segments', []).subscribe((v) => {
 				refreshPoints();
-				if (realPathShape)
-					for (let [i, point] of realPathShape.entries()) {
-						let el = document.querySelector(`[data-point-index="${i}"]`);
-						if (el && el instanceof HTMLElement) {
-							el.dataset.relativeX = `${point[0]}`;
-							el.dataset.relativeY = `${point[1]}`;
-						}
-					}
+				pushToDom();
+			});
+			unsub2 = broker.writableObjectProperty(realPath.id, 'transform', {}).subscribe((v) => {
+				refreshPoints();
+				pushToDom();
 			});
 		} else {
 			realPathShape = null;
 			unsub();
+			unsub2();
 		}
 	}
 
@@ -82,6 +92,8 @@
 					}
 
 					cacheSegments = realPath?.segments.map((x) => [...x]) ?? null;
+
+					editor.editingObjectDown.set(true);
 				},
 				onEnd() {
 					let el = document.querySelector(`[data-point-index="${i}"]`);
@@ -98,6 +110,8 @@
 
 						cacheSegments = null;
 					}
+
+					editor.editingObjectDown.set(false);
 				},
 				onMove() {
 					let index = i;
