@@ -16,12 +16,15 @@
 	import AppLanding from 'src/components/nav/AppLanding.svelte';
 	import MobileBar from 'src/components/nav/MobileBar.svelte';
 	import Fa from 'svelte-fa';
-	import { auth, sendPasswordReset, signOut } from 'src/store/auth';
+	import { auth, refreshUserData, sendPasswordReset, signOut } from 'src/store/auth';
 	import { WrapLoader } from 'ui';
+	import { updateMe } from '$lib/client/api';
 	export let data: PageData;
 
 	let loading = false;
 	let sent = false;
+
+	let nameUpdating = false;
 </script>
 
 <AppLanding auth={data.user}>
@@ -33,20 +36,45 @@
 		</div>
 		<div class="flex flex-col pl-8">
 			<span class="mb-2 font-bold">Name:</span>
-			<div class="flex flex-row space-x-2">
-				<input
-					type="text"
-					class="border rounded p-1 w-1/2"
-					placeholder="First name"
-					value={$auth.user?.firstName}
-				/>
-				<input
-					type="text"
-					class="border rounded p-1 w-1/2"
-					placeholder="Last name"
-					value={$auth.user?.lastName}
-				/>
-			</div>
+
+			<form
+				class="flex flex-row"
+				on:submit|preventDefault={async (e) => {
+					if (e.target) {
+						let data = new FormData(e.target);
+						nameUpdating = true;
+						try {
+							await updateMe({
+								firstName: data.get('firstName')?.toString() ?? '',
+								lastName: data.get('lastName')?.toString() ?? ''
+							});
+							await refreshUserData();
+						} catch (e) {
+							console.error(e);
+						} finally {
+							nameUpdating = false;
+						}
+					}
+				}}
+			>
+				<WrapLoader class="flex flex-row space-x-2 w-full" loading={nameUpdating}>
+					<input
+						type="text"
+						class="border rounded h-8 p-1 w-1/2"
+						placeholder="First name"
+						name="firstName"
+						value={$auth.user?.firstName}
+					/>
+					<input
+						type="text"
+						class="border rounded h-8 p-1 w-1/2"
+						placeholder="Last name"
+						name="lastName"
+						value={$auth.user?.lastName}
+					/>
+					<button class="btn btn-primary mt-auto mb-4"> Save </button>
+				</WrapLoader>
+			</form>
 		</div>
 		<div class="flex flex-col pl-8 pt-4">
 			<span class="mb-2 font-bold">Email:</span>
