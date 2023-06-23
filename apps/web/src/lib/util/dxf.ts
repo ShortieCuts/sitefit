@@ -177,7 +177,6 @@ function translateJSON(json: any): Object2D[] {
 		let parentId = getProp(dbid, 'Layer');
 		if (parentId) {
 			dbid = parentId.displayValue ?? dbid;
-			console.log('parent', dbid);
 		}
 		if (groups.has(dbid)) return groups.get(dbid)!;
 
@@ -415,7 +414,7 @@ function translateJSON(json: any): Object2D[] {
 				let dist = Math.sqrt(dx * dx + dy * dy);
 				if (dist < 0.1) {
 					// Probably hatch texture
-					console.log('hatch');
+
 					if (Math.random() < 0.4) {
 						let angle = Math.random() * Math.PI * 2;
 						dx = Math.cos(angle) * dist;
@@ -547,7 +546,6 @@ function translateJSON(json: any): Object2D[] {
 					val *= unitScale[mapping];
 				}
 			}
-			console.log('Text height', val);
 
 			text.size = val;
 		}

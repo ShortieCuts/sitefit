@@ -38,8 +38,6 @@ async function createMapWithStyle(
 	div.style.height = '100%';
 	parent.appendChild(div);
 
-	console.log('creating mapbox map with style', style, div);
-
 	let map = new mapboxgl.Map({
 		container: div,
 		style: getMapId(style),
@@ -47,6 +45,7 @@ async function createMapWithStyle(
 			lat: 0,
 			lng: 0
 		},
+		maxZoom: 30,
 		zoom: 1,
 		bearing: 0
 	});
@@ -558,9 +557,7 @@ export class MapboxMapsProvider extends MapProvider {
 	}
 
 	destroy(): void {
-		console.log('destroying google map');
 		for (let overlay of this.overlays) {
-			console.log('destroying overlay', overlay);
 			overlay.destroy();
 		}
 		if (this.scene) {

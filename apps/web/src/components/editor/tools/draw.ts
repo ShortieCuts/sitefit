@@ -70,8 +70,6 @@ export const DrawTool = {
 						thresh *= 2;
 					}
 
-					console.log(path.segments.length);
-
 					return obj;
 				} else {
 					return null;

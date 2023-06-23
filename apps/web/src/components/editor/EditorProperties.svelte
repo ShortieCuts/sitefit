@@ -45,7 +45,8 @@
 		style: {
 			type: 'color',
 			color: [0, 0, 0, 1],
-			filled: false
+			filled: false,
+			strokeWidth: 1
 		},
 		props: {}
 	};
@@ -146,6 +147,7 @@
 					trackProperty('style.pattern', object.style.pattern);
 					trackProperty('style.accent', object.style.accent);
 					trackProperty('style.filled', object.style.filled);
+					trackProperty('style.strokeWidth', object.style.strokeWidth);
 				}
 			}
 		}
@@ -183,7 +185,8 @@
 			color: propertyValueMap.get('style.color'),
 			pattern: propertyValueMap.get('style.pattern'),
 			accent: propertyValueMap.get('style.accent'),
-			filled: propertyValueMap.get('style.filled')
+			filled: propertyValueMap.get('style.filled'),
+			strokeWidth: propertyValueMap.get('style.strokeWidth')
 		};
 	}
 
@@ -195,7 +198,6 @@
 
 	function doPropChange(prop: ObjectProperty): any {
 		return (e: InputEvent) => {
-			console.log('doPropChange', prop, e);
 			let existingVal = propertyValueMap.get(prop.name);
 
 			let setTo: any = null;
@@ -321,6 +323,7 @@
 	function doStyleChange(prop: keyof Material) {
 		return (e: CustomEvent | InputEvent) => {
 			let value: any;
+			console.log(e);
 			if (e.target) {
 				value = (e.target as HTMLInputElement).value;
 			} else {
@@ -367,6 +370,12 @@
 							transaction.update(object.id, 'style', {
 								...style,
 								filled: value || value === 'true'
+							});
+							break;
+						case 'strokeWidth':
+							transaction.update(object.id, 'style', {
+								...style,
+								strokeWidth: parseFloat(value)
 							});
 							break;
 					}
@@ -463,7 +472,6 @@
 							class="border-gray-200 rounded-md border w-full"
 							value={propertiesDisplay.style.filled?.toString() ?? 'false'}
 							on:change={(e) => {
-								console.log('Custom event', e);
 								doStyleChange('filled')(
 									new CustomEvent('change', { detail: e.target.value == 'true' })
 								);
@@ -473,6 +481,16 @@
 							<option value="true"> Filled </option>
 						</select>
 					</div>
+					{#if !propertiesDisplay.style.filled}
+						<input
+							class="w-10 px-1 border border-gray-200 rounded-md h-6"
+							type="text"
+							bind:value={propertiesDisplay.style.strokeWidth}
+							on:change={(e) => {
+								doStyleChange('strokeWidth')(new CustomEvent('change', { detail: e.target.value }));
+							}}
+						/>
+					{/if}
 				</div>
 			</div>
 		{/if}

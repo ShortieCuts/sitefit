@@ -217,7 +217,7 @@ export class Project implements Serializable {
 
   translateObject(id: ObjectID, dx: number, dy: number): ProjectTransaction {
     let objects = this.getObjectsWithDescendants(id);
-    console.log("objects", objects);
+
     let trans = new ProjectTransaction();
 
     for (let obj of objects) {

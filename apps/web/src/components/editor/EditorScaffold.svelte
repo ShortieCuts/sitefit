@@ -290,7 +290,7 @@
 			editorContext.select(id);
 			setTimeout(() => {
 				editorContext.editingObject.set(id);
-				editor.editingObjectDown.set(false);
+				editorContext.editingObjectDown.set(true);
 			}, 100);
 		}
 	}
@@ -409,7 +409,7 @@
 	});
 
 	onDestroy(() => {
-		console.log('disposing editor scaffold');
+		
 		if (browser) {
 			document.removeEventListener('copy', onCopy);
 			document.removeEventListener('paste', onPaste);

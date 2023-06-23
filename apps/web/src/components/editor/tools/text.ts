@@ -29,6 +29,7 @@ export const TextTool = {
 			editor.activeTool.set('pan');
 			setTimeout(() => {
 				editor.editingObject.set(id);
+				editor.editingObjectDown.set(true);
 			}, 100);
 		}
 	},

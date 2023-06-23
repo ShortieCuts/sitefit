@@ -6,4 +6,5 @@ export class Material {
   pattern?: "hatch" | "diamonds";
   accent?: Color;
   filled: boolean;
+  strokeWidth?: number;
 }

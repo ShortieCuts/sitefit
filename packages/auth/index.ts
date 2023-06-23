@@ -218,14 +218,12 @@ export async function getRequestUser(
   request: Request
 ): Promise<PrismaUser | null> {
   let auth = await checkRequestAuth(request);
-  console.log("Get", auth);
 
   if (auth) {
     let user = await getUserFromFirebaseId(auth.uid);
     if (user) {
       return user;
     } else {
-      console.log("Update");
       let newUser = await updateUserFromFirebase(auth);
       if (newUser) {
         return newUser;
@@ -316,7 +314,6 @@ export async function updateUserFromFirebase(
 
         .values([vals])
         .execute();
-      console.log("insert", data);
 
       if (data && data[0].insertId) {
         return {

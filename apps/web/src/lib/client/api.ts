@@ -339,9 +339,9 @@ async function convertAutodeskToObjects(viewer: AutodeskViewer): Promise<string>
 	const frags = viewer.model.getFragmentList();
 	function listFragmentPrimitives(fragId) {
 		const mesh = frags.getVizmesh(fragId);
-		console.log(mesh);
+
 		const vbr = new VertexBufferReader(mesh.geometry);
-		console.log(vbr);
+
 		let arcs: any[] = [];
 		let lines: any[] = [];
 		let ellipses: any[] = [];
@@ -435,7 +435,7 @@ async function convertAutodeskToObjects(viewer: AutodeskViewer): Promise<string>
 		lineSize *= 2;
 		purgeCount++;
 		// Still too big, remove small lines
-		console.log('removing small lines');
+
 		for (let fragI = objects.length - 1; fragI >= 0; fragI--) {
 			let frag = objects[fragI];
 			let type = frag[0];
@@ -567,8 +567,6 @@ async function convertDwgToDxf(uploadedDwgData: any): Promise<any> {
 								return;
 							}
 
-							console.log('Initialization complete, loading a model next...');
-
 							resolve(viewer);
 						});
 					};
@@ -609,7 +607,6 @@ async function convertDwgToDxf(uploadedDwgData: any): Promise<any> {
 			const createMyModule = (await import('src/lib/client/dwg2dxf/dwg2dxf_module.js')).default;
 			let arrBufIn = new Uint8Array(await dwg.arrayBuffer());
 			return new Promise((resolve, reject) => {
-				console.log('Using local WASM converter', arrBufIn);
 				var ModuleInit = {
 					arguments: ['/t.dwg'],
 					print: function (text) {

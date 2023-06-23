@@ -250,7 +250,6 @@ export class SelectionOverlay extends Overlay {
 
 		this.addUnsub(
 			this.editor.selectionDown.subscribe((down) => {
-				console.log('Sub down', this.map);
 				this.isDown = down;
 				this.refresh();
 			})

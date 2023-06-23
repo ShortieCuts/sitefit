@@ -63,7 +63,6 @@ async function createMapWithStyle(
 	div.style.width = '100%';
 	div.style.height = '100%';
 	parent.appendChild(div);
-	console.log('creating google map with style', style, div);
 
 	let map = new Map(div, {
 		center: {
@@ -129,7 +128,6 @@ export class GoogleMapsProvider extends MapProvider {
 
 		this.parent = parent;
 		this.map = map;
-		console.log('creating google map');
 
 		this.mapProviderOverlay = {
 			getScene: () => {
@@ -484,7 +482,7 @@ export class GoogleMapsProvider extends MapProvider {
 		this.mapRebuilding = true;
 		(async () => {
 			this.destroy();
-			console.log('Rebuilding map...');
+
 			this.map = await createMapWithStyle(this.parent, this.style);
 			this.setupMap();
 			this.mapRebuilding = false;
@@ -530,7 +528,6 @@ export class GoogleMapsProvider extends MapProvider {
 	}
 
 	destroy(): void {
-		console.log('destroying google map');
 		if (this.scene) {
 			this.scene.clear();
 			this.scene.removeFromParent();
@@ -548,7 +545,7 @@ export class GoogleMapsProvider extends MapProvider {
 		this.isSetup = false;
 
 		this.map.unbindAll();
-		console.log('Destroying element', this.getDiv());
+
 		this.getDiv().remove();
 	}
 }

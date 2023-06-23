@@ -24,7 +24,6 @@
 	let buttonEl: HTMLButtonElement;
 
 	function handleSelect(val: any) {
-		console.log(val);
 		dispatch('select', val);
 		isOpen = false;
 		value = val;

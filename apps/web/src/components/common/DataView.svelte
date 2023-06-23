@@ -25,7 +25,7 @@
 
 	async function loadPage(pageNum: number) {
 		loading = true;
-		console.log('loading page', pageNum);
+
 		const res = await fetch(`${view.endpoint}`, {
 			method: 'POSt',
 			headers: {

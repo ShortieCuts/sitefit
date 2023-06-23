@@ -15,7 +15,6 @@
 	});
 
 	function handleBackdropClick(event: MouseEvent) {
-		console.log(event.target);
 		if (
 			event.target &&
 			event.target instanceof HTMLElement &&

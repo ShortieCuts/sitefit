@@ -88,7 +88,7 @@ export async function copyProject(
 
   if (newP.length > 0 && (newP[0].numInsertedOrUpdatedRows ?? 0) > 0) {
     // Copy the project file
-    console.log(WEBSOCKET_URL + `/copy/${projectPublicId}/${newPublicId}`);
+
     let copyRes = await fetch(
       WEBSOCKET_URL + `/copy/${projectPublicId}/${newPublicId}`,
       {

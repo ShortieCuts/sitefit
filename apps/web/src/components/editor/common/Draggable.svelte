@@ -58,7 +58,6 @@
 
 			inst.stopDragging();
 			inst.signal.set(false);
-			console.log('Resetting signal');
 		}
 	}
 

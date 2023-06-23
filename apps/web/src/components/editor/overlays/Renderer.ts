@@ -59,7 +59,7 @@ if (typeof window !== 'undefined') {
 
 class RenderPath implements RenderObject2D {
 	active: boolean = false;
-	line: THREE.Line;
+	line: THREE.Line | THREE.Mesh;
 	filled: THREE.Mesh;
 
 	textEl?: HTMLDivElement;
@@ -67,6 +67,10 @@ class RenderPath implements RenderObject2D {
 	smartObjects: [Object2D, RenderObject2D][] = [];
 
 	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Path) {
+		this.init(overlay, obj);
+	}
+
+	init(overlay: RendererOverlay | HeadlessRenderer, obj: Path) {
 		let geo = new THREE.BufferGeometry();
 		let elements = 20;
 
@@ -135,16 +139,28 @@ class RenderPath implements RenderObject2D {
 
 			overlay.appendElement(this.textEl);
 		} else {
-			if (obj.disconnected) {
-				this.line = new THREE.LineSegments(
+			if ((obj?.style?.strokeWidth ?? 1) > 1) {
+				this.line = new THREE.Mesh(
 					geo,
-					new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+					new THREE.MeshBasicMaterial({
+						color: '#ff0000',
+						opacity: 1,
+						transparent: false,
+						side: THREE.DoubleSide
+					})
 				);
 			} else {
-				this.line = new THREE.Line(
-					geo,
-					new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
-				);
+				if (obj.disconnected) {
+					this.line = new THREE.LineSegments(
+						geo,
+						new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+					);
+				} else {
+					this.line = new THREE.Line(
+						geo,
+						new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+					);
+				}
 			}
 		}
 
@@ -227,24 +243,155 @@ class RenderPath implements RenderObject2D {
 			}
 		}
 
+		if ((obj?.style?.strokeWidth ?? 1) > 1) {
+			if (this.line instanceof THREE.Line || this.line instanceof THREE.LineSegments) {
+				this.destroy(overlay);
+				this.init(overlay, obj);
+			}
+		} else {
+			if (this.line instanceof THREE.Mesh) {
+				this.destroy(overlay);
+				this.init(overlay, obj);
+			}
+		}
+
 		let arr = (this.line.geometry.attributes.position as any).array as Float32Array;
 		mat.needsUpdate = true;
 		mat2.needsUpdate = true;
 
 		let i = 0;
-		for (let p of obj.segments) {
-			arr[i++] = p[0];
-			arr[i++] = 0;
-			arr[i++] = p[1];
-		}
+		if ((obj?.style?.strokeWidth ?? 1) > 1) {
+			let arrSizeNeeded = obj.segments.length * 2 * 3 * 3 * 2;
+			if (arr.length < arrSizeNeeded) {
+				arr = new Float32Array(arrSizeNeeded);
+			}
 
-		if (obj.closed) {
-			arr[i++] = obj.segments[0][0];
-			arr[i++] = 0;
-			arr[i++] = obj.segments[0][1];
-		}
+			// Generate quads per segment
+			let indices: number[] = [];
+			let lastPositionsTop = [NaN, NaN];
+			let lastPositionsBottom = [NaN, NaN];
+			for (let pi = 0; pi < obj.segments.length; pi++) {
+				let p = obj.segments[pi];
+				let p2 = obj.segments[pi + 1] ?? obj.segments[0];
+				if (pi === obj.segments.length - 1 && !obj.closed) {
+					continue;
+				}
+				let thickness = (obj.style.strokeWidth ?? 1) / 100;
+				let dx = p2[0] - p[0];
+				let dy = p2[1] - p[1];
 
-		this.line.geometry.setDrawRange(0, obj.segments.length + (obj.closed ? 1 : 0));
+				let len = Math.sqrt(dx * dx + dy * dy);
+				if (len === 0) {
+					len = 0.0001;
+				}
+				dx /= len;
+				dy /= len;
+
+				let nx = -dy;
+				let ny = dx;
+
+				let w = thickness / 2;
+
+				let startTop = [p[0] + nx * w, p[1] + ny * w];
+				let startBottom = [p[0] - nx * w, p[1] - ny * w];
+
+				let endTop = [p2[0] + nx * w, p2[1] + ny * w];
+				let endBottom = [p2[0] - nx * w, p2[1] - ny * w];
+
+				arr[i++] = startTop[0];
+				arr[i++] = 0;
+				arr[i++] = startTop[1];
+
+				arr[i++] = startBottom[0];
+				arr[i++] = 0;
+				arr[i++] = startBottom[1];
+
+				arr[i++] = endTop[0];
+				arr[i++] = 0;
+				arr[i++] = endTop[1];
+
+				arr[i++] = startBottom[0];
+				arr[i++] = 0;
+				arr[i++] = startBottom[1];
+
+				arr[i++] = endBottom[0];
+				arr[i++] = 0;
+				arr[i++] = endBottom[1];
+
+				arr[i++] = endTop[0];
+				arr[i++] = 0;
+				arr[i++] = endTop[1];
+
+				indices.push(i / 3 - 6, i / 3 - 5, i / 3 - 4);
+				indices.push(i / 3 - 3, i / 3 - 2, i / 3 - 1);
+
+				if (!obj.disconnected) {
+					if (
+						pi != 0 &&
+						!isNaN(lastPositionsTop[0]) &&
+						!isNaN(lastPositionsTop[1]) &&
+						!isNaN(lastPositionsBottom[0]) &&
+						!isNaN(lastPositionsBottom[1]) &&
+						!isNaN(startTop[0]) &&
+						!isNaN(startTop[1]) &&
+						!isNaN(startBottom[0]) &&
+						!isNaN(startBottom[1])
+					) {
+						// Fill gap with triangle
+
+						arr[i++] = lastPositionsTop[0];
+						arr[i++] = 0;
+						arr[i++] = lastPositionsTop[1];
+
+						arr[i++] = lastPositionsBottom[0];
+						arr[i++] = 0;
+						arr[i++] = lastPositionsBottom[1];
+
+						arr[i++] = startTop[0];
+						arr[i++] = 0;
+						arr[i++] = startTop[1];
+
+						arr[i++] = lastPositionsBottom[0];
+						arr[i++] = 0;
+						arr[i++] = lastPositionsBottom[1];
+
+						arr[i++] = startBottom[0];
+						arr[i++] = 0;
+						arr[i++] = startBottom[1];
+
+						arr[i++] = startTop[0];
+						arr[i++] = 0;
+						arr[i++] = startTop[1];
+
+						indices.push(i / 3 - 6, i / 3 - 5, i / 3 - 4);
+						indices.push(i / 3 - 3, i / 3 - 2, i / 3 - 1);
+					}
+				} else {
+					pi++;
+				}
+
+				lastPositionsTop = [...endTop];
+				lastPositionsBottom = [...endBottom];
+			}
+
+			this.line.geometry.setIndex(indices);
+			this.line.geometry.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+
+			this.line.geometry.setDrawRange(0, indices.length);
+		} else {
+			for (let p of obj.segments) {
+				arr[i++] = p[0];
+				arr[i++] = 0;
+				arr[i++] = p[1];
+			}
+
+			if (obj.closed) {
+				arr[i++] = obj.segments[0][0];
+				arr[i++] = 0;
+				arr[i++] = obj.segments[0][1];
+			}
+			this.line.geometry.setDrawRange(0, obj.segments.length + (obj.closed ? 1 : 0));
+		}
 
 		this.line.geometry.attributes.position.needsUpdate = true;
 
@@ -252,7 +399,8 @@ class RenderPath implements RenderObject2D {
 		this.line.geometry.computeBoundingBox();
 
 		if (obj.measurement) {
-			this.line.computeLineDistances();
+			if (this.line instanceof THREE.Line || this.line instanceof THREE.LineSegments)
+				this.line.computeLineDistances();
 		}
 
 		this.line.position.setX(obj.transform.position[0]);
@@ -457,7 +605,7 @@ class RenderPath implements RenderObject2D {
 
 class RenderArc implements RenderObject2D {
 	active: boolean = false;
-	line: THREE.Line;
+	line: THREE.Line | THREE.Mesh;
 
 	constructor(overlay: RendererOverlay | HeadlessRenderer, obj: Arc | Circle) {
 		this.line = new THREE.Line(
@@ -478,6 +626,41 @@ class RenderArc implements RenderObject2D {
 		if (obj instanceof Arc) {
 			startAngle = obj.startAngle;
 			endAngle = obj.endAngle;
+		}
+
+		if ((obj?.style?.strokeWidth ?? 1) > 1) {
+			if (this.line instanceof THREE.Line || this.line instanceof THREE.LineSegments) {
+				this.line.removeFromParent();
+
+				this.line.geometry = new THREE.BufferGeometry();
+				this.line.geometry.setAttribute(
+					'position',
+					new THREE.BufferAttribute(new Float32Array(50 * 3 * 3 * 3 * 2), 3)
+				);
+
+				this.line = new THREE.Mesh(
+					this.line.geometry,
+					new THREE.MeshBasicMaterial({
+						color: '#ff0000',
+						opacity: 1,
+						transparent: false,
+						side: THREE.DoubleSide
+					})
+				);
+
+				overlay.scene.add(this.line);
+			}
+		} else {
+			if (this.line instanceof THREE.Mesh) {
+				this.line.removeFromParent();
+
+				this.line = new THREE.Line(
+					this.line.geometry,
+					new THREE.MeshBasicMaterial({ color: '#ff0000', opacity: 1, transparent: false })
+				);
+
+				overlay.scene.add(this.line);
+			}
 		}
 
 		let mat = this.line.material as THREE.MeshBasicMaterial;
@@ -515,12 +698,135 @@ class RenderArc implements RenderObject2D {
 			0
 		);
 		const points = curve.getPoints(50);
-		const geometry = new THREE.BufferGeometry().setFromPoints(
-			points.map((p) => new THREE.Vector3(p.y, 0, p.x))
-		);
 
-		this.line.geometry.dispose();
-		this.line.geometry = geometry;
+		if ((obj?.style?.strokeWidth ?? 1) > 1) {
+			let i = 0;
+			let arr = (this.line.geometry.attributes.position as any).array as Float32Array;
+			mat.needsUpdate = true;
+			let arrSizeNeeded = points.length * 2 * 3 * 3 * 2;
+			if (arr.length < arrSizeNeeded) {
+				arr = new Float32Array(arrSizeNeeded);
+			}
+
+			// Generate quads per segment
+			let indices: number[] = [];
+			let lastPositionsTop = [NaN, NaN];
+			let lastPositionsBottom = [NaN, NaN];
+			for (let pi = 0; pi < points.length; pi++) {
+				let p3 = points[pi];
+				let p = { x: p3.y, y: p3.x };
+
+				let p23 = points[pi + 1] ?? points[0];
+				let p2 = { x: p23.y, y: p23.x };
+				if (pi === points.length - 1) {
+					continue;
+				}
+				let thickness = (obj.style.strokeWidth ?? 1) / 100;
+				let dx = p2.x - p.x;
+				let dy = p2.y - p.y;
+
+				let len = Math.sqrt(dx * dx + dy * dy);
+				if (len === 0) {
+					len = 0.0001;
+				}
+				dx /= len;
+				dy /= len;
+
+				let nx = -dy;
+				let ny = dx;
+
+				let w = thickness / 2;
+
+				let startTop = [p.x + nx * w, p.y + ny * w];
+				let startBottom = [p.x - nx * w, p.y - ny * w];
+
+				let endTop = [p2.x + nx * w, p2.y + ny * w];
+				let endBottom = [p2.x - nx * w, p2.y - ny * w];
+
+				arr[i++] = startTop[0];
+				arr[i++] = 0;
+				arr[i++] = startTop[1];
+
+				arr[i++] = startBottom[0];
+				arr[i++] = 0;
+				arr[i++] = startBottom[1];
+
+				arr[i++] = endTop[0];
+				arr[i++] = 0;
+				arr[i++] = endTop[1];
+
+				arr[i++] = startBottom[0];
+				arr[i++] = 0;
+				arr[i++] = startBottom[1];
+
+				arr[i++] = endBottom[0];
+				arr[i++] = 0;
+				arr[i++] = endBottom[1];
+
+				arr[i++] = endTop[0];
+				arr[i++] = 0;
+				arr[i++] = endTop[1];
+
+				indices.push(i / 3 - 6, i / 3 - 5, i / 3 - 4);
+				indices.push(i / 3 - 3, i / 3 - 2, i / 3 - 1);
+
+				if (
+					pi != 0 &&
+					!isNaN(lastPositionsTop[0]) &&
+					!isNaN(lastPositionsTop[1]) &&
+					!isNaN(lastPositionsBottom[0]) &&
+					!isNaN(lastPositionsBottom[1]) &&
+					!isNaN(startTop[0]) &&
+					!isNaN(startTop[1]) &&
+					!isNaN(startBottom[0]) &&
+					!isNaN(startBottom[1])
+				) {
+					// Fill gap with triangle
+
+					arr[i++] = lastPositionsTop[0];
+					arr[i++] = 0;
+					arr[i++] = lastPositionsTop[1];
+
+					arr[i++] = lastPositionsBottom[0];
+					arr[i++] = 0;
+					arr[i++] = lastPositionsBottom[1];
+
+					arr[i++] = startTop[0];
+					arr[i++] = 0;
+					arr[i++] = startTop[1];
+
+					arr[i++] = lastPositionsBottom[0];
+					arr[i++] = 0;
+					arr[i++] = lastPositionsBottom[1];
+
+					arr[i++] = startBottom[0];
+					arr[i++] = 0;
+					arr[i++] = startBottom[1];
+
+					arr[i++] = startTop[0];
+					arr[i++] = 0;
+					arr[i++] = startTop[1];
+
+					indices.push(i / 3 - 6, i / 3 - 5, i / 3 - 4);
+					indices.push(i / 3 - 3, i / 3 - 2, i / 3 - 1);
+				}
+
+				lastPositionsTop = [...endTop];
+				lastPositionsBottom = [...endBottom];
+			}
+
+			this.line.geometry.setIndex(indices);
+			this.line.geometry.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+
+			this.line.geometry.setDrawRange(0, indices.length);
+		} else {
+			const geometry = new THREE.BufferGeometry().setFromPoints(
+				points.map((p) => new THREE.Vector3(p.y, 0, p.x))
+			);
+
+			this.line.geometry.dispose();
+			this.line.geometry = geometry;
+		}
 
 		this.line.position.setX(obj.transform.position[0]);
 		this.line.position.setZ(obj.transform.position[1]);
@@ -942,7 +1248,6 @@ export class RendererOverlay extends Overlay {
 		super.init();
 
 		this.scene = this.overlay.getScene();
-		console.log('Using scene', this.scene, this.scene.id);
 
 		const isChildOf = (parent: ObjectID, child: ObjectID): boolean => {
 			while (true) {

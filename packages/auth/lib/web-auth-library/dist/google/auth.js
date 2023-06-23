@@ -22,7 +22,7 @@ async function getAuthToken(options) {
   // Attempt to retrieve the token from the cache
   const keyId = credentials?.private_key_id ?? credentials.client_email;
   const cacheKey = Symbol.for(`${keyId}:${scope}`);
-  console.log("CAHCE", cache, cacheKey);
+
   if (ENABLE_DANGEROUS_CACHE) {
     let token = cache.get(cacheKey);
     if (!token) {

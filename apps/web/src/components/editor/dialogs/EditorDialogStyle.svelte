@@ -102,7 +102,6 @@
 							step={1}
 							value={$mapStyle.endsWith('-plain') ? 0 : 1}
 							on:change={(e) => {
-								console.log(e.target.value);
 								if (e.target.value == 1) {
 									$mapStyle = $mapStyle.replace('-plain', '-satellite');
 								} else {

@@ -382,7 +382,7 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 					target[1] < bounds.maxY
 				) {
 					let area = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
-					console.log('select size', area);
+
 					if (area < minSize) {
 						minSize = area;
 						currentObj = obj.id;
@@ -497,6 +497,7 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 					} else {
 						setTimeout(() => {
 							editor.editingObject.set(hover);
+							editor.editingObjectDown.set(true);
 						}, 1);
 					}
 				}

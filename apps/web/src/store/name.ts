@@ -25,8 +25,7 @@ function setCookie(name: string, value: any, days: number) {
 			expires = '; expires=' + date.toUTCString();
 		}
 		document.cookie = name + '=' + (value || '') + expires + '; path=/';
-		console.log('set cookie', name, value);
-		console.log(watchers);
+
 		let set = watchers.get(name);
 		if (set) {
 			set.forEach((callback) => callback(value));

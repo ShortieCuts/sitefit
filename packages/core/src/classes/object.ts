@@ -1257,6 +1257,13 @@ const SmartPath = makeSmartObject({
         active: true,
       },
     },
+    strokeWidth: {
+      type: {
+        name: "stroke",
+        type: "number",
+      },
+      default: 1,
+    },
     fill: {
       type: {
         name: "fill",
@@ -1298,8 +1305,13 @@ const SmartPath = makeSmartObject({
       obj.segments = structuredClone(path.segments);
       obj.transform = structuredClone(path.transform);
 
+      if (props.fill.active) {
+        obj.closed = true;
+      }
+
       obj.closed = true;
       obj.style = new Material();
+      obj.style.strokeWidth = props.strokeWidth;
       obj.style.color = [...props.stroke.value] as [
         number,
         number,

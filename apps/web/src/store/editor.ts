@@ -1498,9 +1498,8 @@ export class EditorContext {
 		this.selection.set([id]);
 		this.computeEffectiveSelection(this.broker);
 		let obj = this.broker.project.objectsMap.get(id);
-		console.log(obj);
+
 		if (obj) {
-			console.log(obj.parent);
 			this.rootGroup.set(obj.parent ?? null);
 		}
 	}
@@ -1669,8 +1668,6 @@ export class EditorContext {
 				transaction.delete(id);
 			}
 		}
-
-		console.log(transaction);
 
 		this.broker.commitTransaction(transaction);
 

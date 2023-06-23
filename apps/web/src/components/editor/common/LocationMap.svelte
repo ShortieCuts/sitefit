@@ -66,8 +66,6 @@
 
 	$: {
 		if (map) {
-			console.log('location changed', location, myLocation);
-
 			if (
 				myLocation[0] != location[0] ||
 				myLocation[1] != location[1] ||

@@ -98,7 +98,7 @@ const Providers: Record<ParcelProvider, Provider> = {
 			let results = (await fetch(
 				`https://reportallusa.com/api/parcels?client=TvPfJ4QxHO&v=4&rpp=1&spatial_intersect=POINT(${lon}%20${lat})&si_srid=4326`
 			).then((res) => res.json())) as any;
-			console.log(results);
+
 			if (results.results.length === 0) {
 				return null;
 			} else {
@@ -154,7 +154,7 @@ const Providers: Record<ParcelProvider, Provider> = {
 			let results = (await fetch(
 				`https://app.regrid.com/api/v1/search.json?radius=1&limit=1&lat=${lat}&lon=${lon}&token=eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJyZWdyaWQuY29tIiwiaWF0IjoxNjg2NjgyMzMxLCJleHAiOjE2ODkyNzQzMzEsInUiOjI0MDY2OSwiZyI6MjMxNTMsImNhcCI6InBhOnRzOnBzOmJmOm1hOnR5OmVvOnNiIn0.VIYB-WaARmk5v2eTBnIu3wvacE-2E0Kvw0ktkxi79Vo`
 			).then((res) => res.json())) as any;
-			console.log(results);
+
 			if (results.results.length === 0) {
 				return null;
 			} else {

@@ -118,7 +118,7 @@
 			let transaction = broker.project.createTransaction();
 			if (bias != 0) {
 				let parentId = broker.project.objectsMap.get(to)?.parent ?? null;
-				console.log(parentId, bias);
+
 				let list = broker.project.objects.filter((o) => {
 					if (typeof parentId === 'string') {
 						return o.parent === parentId;
