@@ -441,6 +441,9 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 			hover = ascendToRoot(editor, broker, hover);
 			if (sels.includes(hover)) {
 				canChangeSelection = false;
+				if (ev.shiftKey) {
+					canChangeSelection = true;
+				}
 			}
 
 			let hoverObj = broker.project.objectsMap.get(hover);
@@ -491,7 +494,14 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 				}
 			} else {
 				if (hover) {
-					editor.selection.set([...get(editor.selection), hover]);
+					console.log('hover', hover);
+					let currentSelection = get(editor.selection);
+					if (currentSelection.includes(hover)) {
+						currentSelection = currentSelection.filter((x) => x != hover);
+					} else {
+						currentSelection.push(hover);
+					}
+					editor.selection.set(currentSelection);
 
 					editor.computeEffectiveSelection(broker);
 					editor.rootGroup.set(null);
