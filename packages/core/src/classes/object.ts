@@ -56,6 +56,7 @@ export class Object2D implements Serializable {
   originalCad?: CadID;
   style: Material;
   order: number = 0;
+  pinned?: boolean;
 
   quadtreeObject: Rectangle | null = null;
 
@@ -173,6 +174,7 @@ export class Object2D implements Serializable {
       originalCad: this.originalCad,
       style: this.style,
       order: this.order ?? 0,
+      pinned: this.pinned ?? false,
     };
   }
 
@@ -200,6 +202,7 @@ export class Object2D implements Serializable {
     if ("originalCad" in data) this.originalCad = data.originalCad;
     if ("style" in data) this.style = data.style;
     if ("order" in data) this.order = data.order;
+    if ("pinned" in data) this.pinned = data.pinned;
   }
 }
 
@@ -1280,6 +1283,7 @@ const SmartPath = makeSmartObject({
 
     if (props.fill.active) {
       let obj = new Path();
+      obj.pinned = path.pinned;
       obj.id = `${path.id}-path-fill`;
       obj.name = `${path.name} (obj)`;
       obj.segments = structuredClone(path.segments);
@@ -1300,6 +1304,7 @@ const SmartPath = makeSmartObject({
 
     if (props.stroke.active) {
       let obj = new Path();
+      obj.pinned = path.pinned;
       obj.id = `${path.id}-path-stroke`;
       obj.name = `${path.name} (obj)`;
       obj.segments = structuredClone(path.segments);
@@ -1324,6 +1329,7 @@ const SmartPath = makeSmartObject({
 
     if (props.measureArea) {
       let obj = new Path();
+      obj.pinned = path.pinned;
       obj.id = `${path.id}-path-area`;
       obj.name = `Area`;
       obj.segments = structuredClone(path.segments);
@@ -1447,6 +1453,8 @@ const SmartPath = makeSmartObject({
         obj.closed = false;
         obj.measurement = true;
         obj.transform = structuredClone(path.transform);
+
+        obj.pinned = path.pinned;
 
         obj.computeShape();
 

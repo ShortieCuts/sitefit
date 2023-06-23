@@ -210,21 +210,25 @@ class RenderPath implements RenderObject2D {
 			mat2.transparent = obj.style.color[3] < 1;
 			mat2.opacity = obj.style.color[3];
 
-			if (overlay.globalOpacity < 1) {
-				mat.transparent = true;
-				mat.opacity = overlay.globalOpacity;
-				mat2.transparent = true;
-				mat2.opacity = overlay.globalOpacity;
+			if (obj.pinned) {
+				if (overlay.pinnedOpacity < 1) {
+					mat.transparent = true;
+					mat.opacity = overlay.pinnedOpacity;
+					mat2.transparent = true;
+					mat2.opacity = overlay.pinnedOpacity;
+				}
+			} else {
+				if (overlay.globalOpacity < 1) {
+					mat.transparent = true;
+					mat.opacity = overlay.globalOpacity;
+					mat2.transparent = true;
+					mat2.opacity = overlay.globalOpacity;
+				}
 			}
 
 			if (overlay.cadOverrideColor) {
 				mat.color.set(overlay.cadOverrideColor as any);
 				mat2.color.set(overlay.cadOverrideColor as any);
-			}
-
-			if (obj.smartObject) {
-				mat.transparent = true;
-				mat.opacity = 0;
 			}
 
 			if (this.active) {
@@ -407,6 +411,11 @@ class RenderPath implements RenderObject2D {
 		this.line.position.setZ(obj.transform.position[1]);
 		this.line.scale.setX(obj.transform.size[0]);
 		this.line.scale.setZ(obj.transform.size[1]);
+		if (obj.pinned) {
+			this.line.position.setY(-0.1);
+		} else {
+			this.line.position.setY(0.02);
+		}
 
 		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 
@@ -420,6 +429,9 @@ class RenderPath implements RenderObject2D {
 				this.filled.position.setX(obj.transform.position[0]);
 				if (obj.measurement) {
 					this.filled.position.setY(0.01);
+					if (obj.pinned) {
+						this.filled.position.setY(-0.1);
+					}
 					this.line.visible = true;
 					mat2.opacity = 0.1;
 					mat2.transparent = true;
@@ -457,6 +469,9 @@ class RenderPath implements RenderObject2D {
 					mat2.transparent = true;
 				}
 				this.filled.position.setZ(obj.transform.position[1]);
+				if (obj.pinned) {
+					this.filled.position.setY(-0.1);
+				}
 				this.filled.scale.setX(obj.transform.size[0]);
 				this.filled.scale.setZ(obj.transform.size[1]);
 
@@ -504,6 +519,15 @@ class RenderPath implements RenderObject2D {
 			}
 		}
 		this.mapUpdate(overlay, obj);
+
+		if (obj.smartObject) {
+			mat.transparent = true;
+			mat.opacity = 0;
+			mat2.opacity = 0;
+			mat2.transparent = true;
+			this.line.visible = false;
+			this.filled.visible = false;
+		}
 	}
 
 	mapUpdate(overlay: RendererOverlay | HeadlessRenderer, obj: Path): void {
@@ -1240,6 +1264,7 @@ export class RendererOverlay extends Overlay {
 	scene: THREE.Scene;
 
 	globalOpacity: number = 1;
+	pinnedOpacity: number = 1;
 	cadOverrideColor: string = '';
 
 	renderedObjects: Map<ObjectID, RenderObject2D> = new Map();
@@ -1432,14 +1457,26 @@ export class RendererOverlay extends Overlay {
 		);
 
 		const cadOpacity = this.broker.writableGlobalProperty<number>('cadOpacity', 1);
+		const boundaryOpacity = this.broker.writableGlobalProperty<number>('boundaryOpacity', 1);
 		const cadOverrideColor = this.broker.writableGlobalProperty<string>('overrideCadColor', '');
 
 		this.globalOpacity = get(cadOpacity);
+		this.pinnedOpacity = get(boundaryOpacity);
 		this.cadOverrideColor = get(cadOverrideColor);
 
 		this.addUnsub(
 			cadOpacity.subscribe((val) => {
 				this.globalOpacity = val;
+				for (let [key, obj] of this.renderedObjects) {
+					obj.refresh(this, this.broker.project.objectsMap.get(key)!);
+				}
+
+				this.overlay.requestRedraw();
+			})
+		);
+		this.addUnsub(
+			boundaryOpacity.subscribe((val) => {
+				this.pinnedOpacity = val;
 				for (let [key, obj] of this.renderedObjects) {
 					obj.refresh(this, this.broker.project.objectsMap.get(key)!);
 				}
@@ -1498,6 +1535,7 @@ export class HeadlessRenderer {
 	overlayElement: HTMLElement;
 
 	globalOpacity: number = 1;
+	pinnedOpacity: number = 1;
 	cadOverrideColor: string = '';
 
 	constructor(scene: THREE.Scene, overlayElement: HTMLElement) {

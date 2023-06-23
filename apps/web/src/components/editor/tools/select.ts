@@ -432,6 +432,7 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 	let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 
 	let canChangeSelection = true;
+	let pinnedHover = false;
 
 	if (hover || get(editor.canTranslate)) {
 		let sels = get(editor.effectiveSelection);
@@ -441,75 +442,94 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 			if (sels.includes(hover)) {
 				canChangeSelection = false;
 			}
-		}
-		if (get(editor.canTranslate)) {
-			canChangeSelection = false;
-			editor.selectToolCursor.set(Cursors.grabbing);
-		}
-		editor.canTranslate.set(false);
 
-		startTransform(editor, broker);
-		editor.translating.set(true);
-		editor.selectionDown.set(false);
-		lastPosition = get(editor.currentMousePositionRelative);
+			let hoverObj = broker.project.objectsMap.get(hover);
+			if (hoverObj && hoverObj.pinned && !get(editor.canTranslate)) {
+				{
+					pinnedHover = true;
+				}
+			}
+		}
+
+		if (!pinnedHover) {
+			if (get(editor.canTranslate)) {
+				canChangeSelection = false;
+				editor.selectToolCursor.set(Cursors.grabbing);
+			}
+			editor.canTranslate.set(false);
+
+			startTransform(editor, broker);
+			editor.translating.set(true);
+			editor.selectionDown.set(false);
+			lastPosition = get(editor.currentMousePositionRelative);
+		}
 	}
 
 	if (canChangeSelection) {
 		editor.editingObject.set(null);
 		editor.editingObjectDown.set(false);
-		if (!ev.shiftKey) {
-			if (hover) {
-				editor.select(hover);
-				let hoverObj = broker.project.objectsMap.get(hover);
-				if (hoverObj) {
-					if (hoverObj.type == ObjectType.Path) {
-						let hoverPath = hoverObj as Path;
-						if (hoverPath.segments.length == 2) {
-							editor.editingObject.set(hover);
+
+		if (!pinnedHover) {
+			if (!ev.shiftKey) {
+				if (hover) {
+					editor.select(hover);
+					let hoverObj = broker.project.objectsMap.get(hover);
+					if (hoverObj) {
+						if (hoverObj.type == ObjectType.Path) {
+							let hoverPath = hoverObj as Path;
+							if (hoverPath.segments.length == 2) {
+								editor.editingObject.set(hover);
+							}
+						}
+					}
+				} else {
+					// We don't reset the root until mouse up
+					let cacheRoot = get(editor.rootGroup);
+					editor.deselectAll();
+					editor.rootGroup.set(cacheRoot);
+					needsRootReset = true;
+				}
+			} else {
+				if (hover) {
+					editor.selection.set([...get(editor.selection), hover]);
+
+					editor.computeEffectiveSelection(broker);
+					editor.rootGroup.set(null);
+				} else {
+					selectionAdditional = [...get(editor.selection)];
+				}
+			}
+		} else {
+			editor.deselectAll();
+			editor.hoveringObject.set('');
+		}
+	} else {
+		if (!pinnedHover) {
+			if (Date.now() - clickTimer < 300) {
+				// Double click
+				if (hover) {
+					let obj = broker.project.objectsMap.get(hover);
+					if (obj) {
+						if (obj.type == 'group') {
+							editor.rootGroup.set(hover);
+						} else {
+							setTimeout(() => {
+								editor.editingObject.set(hover);
+								editor.editingObjectDown.set(true);
+							}, 1);
 						}
 					}
 				}
-			} else {
-				// We don't reset the root until mouse up
-				let cacheRoot = get(editor.rootGroup);
-				editor.deselectAll();
-				editor.rootGroup.set(cacheRoot);
-				needsRootReset = true;
-			}
-		} else {
-			if (hover) {
-				editor.selection.set([...get(editor.selection), hover]);
-
-				editor.computeEffectiveSelection(broker);
-				editor.rootGroup.set(null);
-			} else {
-				selectionAdditional = [...get(editor.selection)];
-			}
-		}
-	} else {
-		if (Date.now() - clickTimer < 300) {
-			// Double click
-			if (hover) {
-				let obj = broker.project.objectsMap.get(hover);
-				if (obj) {
-					if (obj.type == 'group') {
-						editor.rootGroup.set(hover);
-					} else {
-						setTimeout(() => {
-							editor.editingObject.set(hover);
-							editor.editingObjectDown.set(true);
-						}, 1);
-					}
+				hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
+				if (hover) {
+					hover = ascendToRoot(editor, broker, hover);
+					editor.select(hover);
+					editor.hoveringObject.set(hover);
 				}
-			}
-			hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
-			if (hover) {
-				hover = ascendToRoot(editor, broker, hover);
-				editor.select(hover);
-				editor.hoveringObject.set(hover);
 			}
 		}
 	}
+
 	clickTimer = Date.now();
 	computeStartBox(editor, broker);
 }
@@ -616,6 +636,25 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 	let isRotating = get(editor.rotating);
 	let isScaling = get(editor.scaling);
 	let canTransform = !get(editor.editingObjectDown);
+
+	// let effectiveSelection = get(editor.effectiveSelection);
+	// if (effectiveSelection.length == 1) {
+	// 	for (let objId of effectiveSelection) {
+	// 		let obj = broker.project.objectsMap.get(objId);
+	// 		if (obj) {
+	// 			if (obj.pinned) {
+	// 				canTransform = false;
+	// 				isTranslating = false;
+	// 				isRotating = false;
+	// 				isScaling = false;
+
+	// 				editor.deselectAll();
+
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	if (access === 'WRITE' && (isTranslating || isScaling || isRotating) && canTransform) {
 		// Transforming
@@ -1272,8 +1311,13 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 			let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 
 			if (hover) {
-				hover = ascendToRoot(editor, broker, hover);
-				if (get(editor.hoveringObject) !== hover) editor.hoveringObject.set(hover);
+				let hoverObj = broker.project.objectsMap.get(hover);
+				if (hoverObj) {
+					if (!hoverObj.pinned) {
+						hover = ascendToRoot(editor, broker, hover);
+						if (get(editor.hoveringObject) !== hover) editor.hoveringObject.set(hover);
+					}
+				}
 			} else {
 				if (get(editor.hoveringObject) !== '') editor.hoveringObject.set('');
 			}
@@ -1387,6 +1431,14 @@ function computeSelectionBox(
 		}
 	}
 
+	if (selection.length > 1) {
+		for (let i = selection.length - 1; i >= 0; i--) {
+			let obj = broker.project.objectsMap.get(selection[i]);
+			if (obj && obj.pinned) {
+				selection.splice(i, 1);
+			}
+		}
+	}
 	editor.selection.set([...selectionAdditional, ...selection]);
 	editor.computeEffectiveSelection(broker);
 }

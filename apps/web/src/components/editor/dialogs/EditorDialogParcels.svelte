@@ -22,9 +22,20 @@
 	function stageObject(d: ParcelData) {
 		let p = new Path();
 		p.name = 'Parcel ' + d.address_street;
+		p.pinned = true;
+		p.smartObject = 'path';
+		p.smartProperties = {
+			strokeWidth: 10,
+			stroke: {
+				value: [255 / 255, 235 / 255, 59 / 255, 1],
+				active: true
+			},
+			fill: {
+				value: [255 / 255, 235 / 255, 59 / 255, 0.3],
+				active: true
+			}
+		};
 		p.style = new Material();
-		p.style.color = [255 / 255, 235 / 255, 59 / 255, 0.3];
-		p.style.filled = true;
 
 		let mainPoly = d.geometry;
 		let overlay = get(editor.overlay);
