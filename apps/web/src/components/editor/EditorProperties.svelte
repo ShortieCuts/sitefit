@@ -393,6 +393,13 @@
 			}, 109);
 		};
 	}
+
+	function prettifyName(name: string) {
+		return name
+			.replace(/([A-Z])/g, ' $1')
+			.replace(/^./, (str) => str.toUpperCase())
+			.trim();
+	}
 </script>
 
 {#if $sessionAccess == 'WRITE'}
@@ -408,7 +415,11 @@
 			<div class="properties-transform flex flex-col space-y-2 p-2">
 				<div class="flex flex-row space-x-2">
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label for="props-x" class="mr-2 ml-1 w-4 flex items-center justify-center">X</label>
+						<label
+							for="props-x"
+							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
+							>X</label
+						>
 						<input
 							id="props-x"
 							class="w-full h-6 cursor-default"
@@ -417,7 +428,11 @@
 						/>
 					</div>
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label for="props-w" class="mr-2 ml-1 w-4 flex items-center justify-center">W</label>
+						<label
+							for="props-w"
+							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
+							>W</label
+						>
 						<input
 							id="props-w"
 							class="w-full h-6 cursor-default"
@@ -428,7 +443,11 @@
 				</div>
 				<div class="flex flex-row space-x-2">
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label for="props-y" class="mr-2 ml-1 w-4 flex items-center justify-center">Y</label>
+						<label
+							for="props-y"
+							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
+							>Y</label
+						>
 						<input
 							id="props-y"
 							class="w-full h-6 cursor-default"
@@ -437,7 +456,11 @@
 						/>
 					</div>
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label for="props-h" class="mr-2 ml-1 w-4 flex items-center justify-center">H</label>
+						<label
+							for="props-h"
+							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
+							>H</label
+						>
 						<input
 							id="props-h"
 							class="w-full h-6 cursor-default"
@@ -448,9 +471,12 @@
 				</div>
 				<div class="flex flex-row space-x-2">
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label for="props-a" class="mr-2 ml-1 w-4 flex items-center justify-center"
-							><Fa icon={faCompassDrafting} /></label
+						<label
+							for="props-a"
+							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
 						>
+							A
+						</label>
 						<input
 							id="props-a"
 							class="w-full cursor-default"
@@ -506,9 +532,11 @@
 				{#each properties as prop}
 					<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
 						<span
-							class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-end pr-2"
+							class="flex-shrink-0 h-full min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
 						>
-							{prop.name.startsWith('smartProperties') ? prop.name.slice(16) : prop.name}
+							{prettifyName(
+								prop.name.startsWith('smartProperties') ? prop.name.slice(16) : prop.name
+							)}
 						</span>
 						{#if prop.type == 'string'}
 							<input
