@@ -86,6 +86,8 @@ export const ShapeTool = {
 			broker.stagingObject.set(newObj);
 		}
 
+		editor.activeTool.set('pan');
+
 		this.commit(editor, broker);
 	},
 	onMove: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {

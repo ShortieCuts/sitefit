@@ -226,7 +226,7 @@
 		let transaction = broker.project.createTransaction();
 		let obj = new Cornerstone();
 		obj.id = '_cornerstone';
-		obj.name = 'Cornerstone';
+		obj.name = 'Site Location';
 		obj.geo = [location[0], location[1]];
 		obj.heading = location[2];
 		transaction.create(obj);
@@ -409,7 +409,6 @@
 	});
 
 	onDestroy(() => {
-		
 		if (browser) {
 			document.removeEventListener('copy', onCopy);
 			document.removeEventListener('paste', onPaste);
@@ -795,7 +794,7 @@
 	</div>
 </div>
 
-{#if !$isMobile && $effectiveSelection.length > 0 && $activeDialog != "parcels"}
+{#if !$isMobile && $effectiveSelection.length > 0 && $activeDialog != 'parcels'}
 	<div
 		transition:fly={{ duration: 200, y: 40, opacity: 0 }}
 		class="dialog-slide bg-white w-[300px] fixed right-10 bottom-10 z-20 h-auto border-gray-200 border shadow-lg rounded-lg"

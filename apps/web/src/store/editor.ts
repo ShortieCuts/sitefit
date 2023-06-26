@@ -648,7 +648,7 @@ export class ProjectBroker {
 				let transaction = this.project.createTransaction();
 				let obj = new Cornerstone();
 				obj.id = '_cornerstone';
-				obj.name = 'Cornerstone';
+				obj.name = 'Site Location';
 				obj.geo = [0, 0];
 				obj.heading = 0;
 				transaction.create(obj);

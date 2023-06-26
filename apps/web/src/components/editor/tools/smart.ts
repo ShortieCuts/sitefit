@@ -47,6 +47,7 @@ export const SmartTool = {
 
 			if (!CAN_MULTI_CLICK) {
 				this.commit(editor, broker);
+				editor.activeTool.set('pan');
 			}
 		}
 	},
@@ -76,6 +77,7 @@ export const SmartTool = {
 		if (!isEmpty) {
 			let id = broker.commitStagedObject();
 			if (id) editor.select(id);
+			editor.activeTool.set('pan');
 		}
 
 		broker.stagingObject.set(null);
