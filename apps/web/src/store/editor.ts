@@ -1332,6 +1332,11 @@ export class EditorContext {
 	flyHome() {
 		let obj = this.broker.project.objects.find((c) => {
 			if (!c.parent && c.type != ObjectType.Cornerstone) {
+				let bounds = this.broker.project.computeBoundsMulti([c.id]);
+				let center = this.getBoundsCenter(bounds);
+				if (isNaN(center[0]) || isNaN(center[1])) {
+					return false;
+				}
 				return true;
 			}
 		});
