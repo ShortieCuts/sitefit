@@ -12,6 +12,8 @@
 
 	export let doubleclick = false;
 
+	export let noWrap = true;
+
 	let dispatch = createEventDispatcher();
 
 	function commit() {
@@ -80,9 +82,18 @@
 		/>
 	{:else}
 		<span
-			class="border-0 bg-transparent color-white {fullWidth
+			class="border-0 bg-transparent color-white {noWrap ? 'editable-label-nowrap' : ''} {fullWidth
 				? 'block min-w-full w-full text-left'
 				: 'w-auto'}">{value}</span
 		>
 	{/if}
 </div>
+
+<style>
+	.editable-label-nowrap {
+		white-space: nowrap;
+		max-width: 166px;
+		text-overflow: ellipsis;
+		overflow: hidden;
+	}
+</style>
