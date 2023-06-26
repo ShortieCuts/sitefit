@@ -967,6 +967,7 @@ const Parking = makeSmartObject({
         ];
 
         obj.style = new Material();
+        obj.style.strokeWidth = path.style.strokeWidth;
         obj.style.color = [...p.style.color];
 
         objs.push(obj);
@@ -981,6 +982,7 @@ const Parking = makeSmartObject({
       p.name = `${path.name} (Line)`;
       p.segments = path.segments.map((s) => [...s]);
       p.style = new Material();
+      p.style.strokeWidth = path.style.strokeWidth;
       p.style.color = [...path.style.color];
       p.transform.position = [...path.transform.position];
       p.transform.rotation = path.transform.rotation;
@@ -996,6 +998,7 @@ const Parking = makeSmartObject({
       p.segments = path.segments.map((s) => [...s]);
       p.style = new Material();
       p.style.color = [...path.style.color];
+      p.style.strokeWidth = path.style.strokeWidth;
       p.transform.position = [...path.transform.position];
       p.transform.rotation = path.transform.rotation;
       p.transform.size = [...path.transform.size];
@@ -1036,6 +1039,7 @@ const Parking = makeSmartObject({
         p.name = `${path.name} (Aisle)`;
         p.segments = path.segments.map((s) => [...s]);
         p.style = new Material();
+        p.style.strokeWidth = path.style.strokeWidth;
         p.style.color = [...path.style.color];
         p.transform.position = [...path.transform.position];
         p.transform.rotation = path.transform.rotation;
