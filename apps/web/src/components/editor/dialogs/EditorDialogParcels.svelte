@@ -5,7 +5,7 @@
 		faMapMarked,
 		faWarning
 	} from '@fortawesome/free-solid-svg-icons';
-	import { Material, Path } from 'core';
+	import { Material, ObjectType, Path } from 'core';
 	import ComboDrop from 'src/components/common/ComboDrop.svelte';
 	import MobileDrawer from 'src/components/nav/MobileDrawer.svelte';
 	import { getSvelteContext } from 'src/store/editor';
@@ -13,12 +13,14 @@
 	import { isMobile } from 'src/store/responsive';
 	import Fa from 'svelte-fa';
 	import { get } from 'svelte/store';
+	import EditorProperties from '../EditorProperties.svelte';
 
 	const { editor, broker } = getSvelteContext();
 
 	const { zoom, selectedParcelLonLat, parcelProvider } = editor;
 
 	let selectedParcel: ParcelData | null = null;
+	let selectedParcelExisting: Path | null = null;
 	function stageObject(d: ParcelData) {
 		let p = new Path();
 		p.name = 'Parcel ' + d.address_street;
@@ -65,6 +67,7 @@
 	}
 	let loadedParcelFor = [0, 0];
 	$: {
+		selectedParcelExisting = null;
 		if ($selectedParcelLonLat[0] !== 0 || $selectedParcelLonLat[1] !== 0) {
 			(async () => {
 				if (
@@ -79,10 +82,44 @@
 					);
 
 					if (selectedParcel) stageObject(selectedParcel);
+					else {
+						broker.stagingObject.set(null);
+						selectedParcel = null;
+					}
 				}
 			})();
 		} else {
+			broker.stagingObject.set(null);
 			selectedParcel = null;
+
+			let selectedObjects = get(editor.effectiveSelection);
+			if (selectedObjects.length == 1) {
+				let selectedObject = broker.project.objectsMap.get(selectedObjects[0]);
+				if (selectedObject && selectedObject.pinned && selectedObject.type == ObjectType.Path) {
+					let selectedPath = selectedObject as Path;
+					let p = new Path();
+					p.name = 'Parcel outline';
+					p.pinned = true;
+					p.smartObject = 'path';
+					p.smartProperties = {
+						strokeWidth: 10,
+						stroke: {
+							value: [255 / 255, 235 / 255, 59 / 255, 1],
+							active: true
+						},
+						fill: {
+							value: [255 / 255, 235 / 255, 59 / 255, 0.3],
+							active: true
+						}
+					};
+					p.style = new Material();
+
+					p.segments = structuredClone(selectedPath.segments);
+
+					broker.stagingObject.set(p);
+					selectedParcelExisting = selectedPath;
+				}
+			}
 		}
 	}
 </script>
@@ -152,6 +189,28 @@
 				<span class="ml-2"> Zoom in to view parcels </span>
 			</div>
 		</div>
+	{:else if selectedParcelExisting}
+		<div class="text-lg flex flex-row items-center justify-center mx-4 rounded-md bg-gray-50">
+			<EditorProperties showTransform={false} />
+		</div>
+		<div class="flex flex-row justify-end mx-4">
+			<button
+				class="btn mt-2 mr-2"
+				on:click={() => {
+					editor.deselectAll();
+					broker.stagingObject.set(null);
+					selectedParcelExisting = null;
+				}}>Deselect</button
+			>
+			<button
+				class="btn mt-2 btn-danger"
+				on:click={() => {
+					editor.deleteSelection(broker);
+					broker.stagingObject.set(null);
+					selectedParcelExisting = null;
+				}}>Delete Parcel</button
+			>
+		</div>
 	{:else if $selectedParcelLonLat[0] == 0 && $selectedParcelLonLat[1] == 0}
 		<div class="flex flex-col p-4">
 			<div
@@ -186,7 +245,6 @@
 						if (newId) editor.select(newId);
 						$selectedParcelLonLat[0] = 0;
 						$selectedParcelLonLat[1] = 0;
-						editor.activateDialog('');
 					}}>Save Parcel</button
 				>
 			</div>

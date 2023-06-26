@@ -1459,7 +1459,8 @@ export function getObjectAtCursor(
 	editor: EditorContext,
 	broker: ProjectBroker,
 	cursor: [number, number],
-	cursorScreen: [number, number]
+	cursorScreen: [number, number],
+	filterObjects?: (obj: Object2D) => boolean
 ): ObjectID | null {
 	let topObject = null;
 	let topZ = -Infinity;
@@ -1495,6 +1496,7 @@ export function getObjectAtCursor(
 
 	for (let obj of quadObjects) {
 		if (!obj.flatShape) continue;
+		if (filterObjects && !filterObjects(obj)) continue;
 		for (let fl of obj.flatShape) {
 			let [dist, seg] = distanceTo(fl, point(cursor[0], cursor[1]));
 			if (dist < get(editor.screenScale) / 2) {

@@ -18,6 +18,8 @@
 
 	import { feetToMeters, metersToFeet } from '$lib/util/distance';
 
+	export let showTransform = true;
+
 	const { broker, editor } = getSvelteContext();
 
 	const { effectiveSelection } = editor;
@@ -401,62 +403,64 @@
 				{$effectiveSelection.length} selected objects
 			{/if}
 		</div>
-		<div class="properties-transform flex flex-col space-y-2 p-2">
-			<div class="flex flex-row space-x-2">
-				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-					<label for="props-x" class="mr-2 ml-1 w-4 flex items-center justify-center">X</label>
-					<input
-						id="props-x"
-						class="w-full h-6 cursor-default"
-						bind:value={propertiesDisplay.x}
-						on:change={doTransformChange('x')}
-					/>
+		{#if showTransform}
+			<div class="properties-transform flex flex-col space-y-2 p-2">
+				<div class="flex flex-row space-x-2">
+					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+						<label for="props-x" class="mr-2 ml-1 w-4 flex items-center justify-center">X</label>
+						<input
+							id="props-x"
+							class="w-full h-6 cursor-default"
+							bind:value={propertiesDisplay.x}
+							on:change={doTransformChange('x')}
+						/>
+					</div>
+					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+						<label for="props-w" class="mr-2 ml-1 w-4 flex items-center justify-center">W</label>
+						<input
+							id="props-w"
+							class="w-full h-6 cursor-default"
+							bind:value={propertiesDisplay.width}
+							on:change={doTransformChange('width')}
+						/>
+					</div>
 				</div>
-				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-					<label for="props-w" class="mr-2 ml-1 w-4 flex items-center justify-center">W</label>
-					<input
-						id="props-w"
-						class="w-full h-6 cursor-default"
-						bind:value={propertiesDisplay.width}
-						on:change={doTransformChange('width')}
-					/>
+				<div class="flex flex-row space-x-2">
+					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+						<label for="props-y" class="mr-2 ml-1 w-4 flex items-center justify-center">Y</label>
+						<input
+							id="props-y"
+							class="w-full h-6 cursor-default"
+							bind:value={propertiesDisplay.y}
+							on:change={doTransformChange('y')}
+						/>
+					</div>
+					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+						<label for="props-h" class="mr-2 ml-1 w-4 flex items-center justify-center">H</label>
+						<input
+							id="props-h"
+							class="w-full h-6 cursor-default"
+							bind:value={propertiesDisplay.height}
+							on:change={doTransformChange('height')}
+						/>
+					</div>
+				</div>
+				<div class="flex flex-row space-x-2">
+					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+						<label for="props-a" class="mr-2 ml-1 w-4 flex items-center justify-center"
+							><Fa icon={faCompassDrafting} /></label
+						>
+						<input
+							id="props-a"
+							class="w-full cursor-default"
+							bind:value={propertiesDisplay.angle}
+							on:change={doTransformChange('angle')}
+						/>
+					</div>
+					<div class="flex-1 flex flex-row" />
 				</div>
 			</div>
-			<div class="flex flex-row space-x-2">
-				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-					<label for="props-y" class="mr-2 ml-1 w-4 flex items-center justify-center">Y</label>
-					<input
-						id="props-y"
-						class="w-full h-6 cursor-default"
-						bind:value={propertiesDisplay.y}
-						on:change={doTransformChange('y')}
-					/>
-				</div>
-				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-					<label for="props-h" class="mr-2 ml-1 w-4 flex items-center justify-center">H</label>
-					<input
-						id="props-h"
-						class="w-full h-6 cursor-default"
-						bind:value={propertiesDisplay.height}
-						on:change={doTransformChange('height')}
-					/>
-				</div>
-			</div>
-			<div class="flex flex-row space-x-2">
-				<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-					<label for="props-a" class="mr-2 ml-1 w-4 flex items-center justify-center"
-						><Fa icon={faCompassDrafting} /></label
-					>
-					<input
-						id="props-a"
-						class="w-full cursor-default"
-						bind:value={propertiesDisplay.angle}
-						on:change={doTransformChange('angle')}
-					/>
-				</div>
-				<div class="flex-1 flex flex-row" />
-			</div>
-		</div>
+		{/if}
 		{#if showStyle}
 			<div class="border-b border-gray-200" />
 			<div class="properties-style flex flex-col space-y-2 p-2">

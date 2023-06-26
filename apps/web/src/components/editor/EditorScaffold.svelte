@@ -795,7 +795,7 @@
 	</div>
 </div>
 
-{#if !$isMobile && $effectiveSelection.length > 0}
+{#if !$isMobile && $effectiveSelection.length > 0 && $activeDialog != "parcels"}
 	<div
 		transition:fly={{ duration: 200, y: 40, opacity: 0 }}
 		class="dialog-slide bg-white w-[300px] fixed right-10 bottom-10 z-20 h-auto border-gray-200 border shadow-lg rounded-lg"

@@ -14,7 +14,7 @@
 	import * as THREE from 'three';
 	import Flatten from '@flatten-js/core';
 	import { GuidesOverlay } from './overlays/Guides';
-	import { calculateGuides } from './tools/select';
+	import { calculateGuides, getObjectAtCursor } from './tools/select';
 	import { getDraggable } from 'src/store/draggable';
 	import { faCompactDisc, faCompass, faTextHeight } from '@fortawesome/free-solid-svg-icons';
 	import { translateDXF } from '$lib/util/dxf';
@@ -308,7 +308,24 @@
 
 			map.onClick((ev: MouseMapEvent) => {
 				if (get(editor.activeDialog) == 'parcels') {
-					editor.selectedParcelLonLat.set([ev.lon, ev.lat]);
+					let cursor = get(editor.currentMousePositionRelative);
+					let cursorScreen = get(editor.currentMousePositionScreen);
+					let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen, (obj) => {
+						return obj.pinned ?? false;
+					});
+
+					editor.deselectAll();
+					editor.selectedParcelLonLat.set([0, 0]);
+					if (hover) {
+						let hoverObj = broker.project.objectsMap.get(hover);
+						if (hoverObj) {
+							if (hoverObj.pinned) {
+								editor.select(hover);
+							}
+						}
+					}
+					if (get(editor.effectiveSelection).length == 0)
+						editor.selectedParcelLonLat.set([ev.lon, ev.lat]);
 				}
 
 				if (!$isMobile) return;
