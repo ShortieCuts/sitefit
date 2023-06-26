@@ -2,7 +2,7 @@
 	import DialogSlideUp from 'src/components/common/DialogSlideUp.svelte';
 	import ResponsiveGroup from 'src/components/common/ResponsiveGroup.svelte';
 	import { getSvelteContext } from 'src/store/editor';
-	import type { ProjectMapStyle } from 'core';
+	import type { Color, ProjectMapStyle } from 'core';
 	import TransparencySvg from '../common/TransparencySvg.svelte';
 	import { get, writable } from 'svelte/store';
 	import ColorInput from '../common/ColorInput.svelte';
@@ -15,6 +15,38 @@
 	const boundaryOpacity = broker.writableGlobalProperty<number>('boundaryOpacity', 1);
 	const cadOpacity = broker.writableGlobalProperty<number>('cadOpacity', 1);
 	const overrideCadColor = broker.writableGlobalProperty<string>('overrideCadColor', '');
+
+	let defaultBoundaryProps = {
+		strokeWidth: 10,
+		stroke: {
+			value: [255 / 255, 235 / 255, 59 / 255, 1] as Color,
+			active: true
+		},
+		fill: {
+			value: [255 / 255, 235 / 255, 59 / 255, 0.3] as Color,
+			active: true
+		}
+	};
+	const defaultBoundaryStrokeWidth = broker.writableGlobalProperty<number>(
+		'defaultBoundaryStrokeWidth',
+		defaultBoundaryProps.strokeWidth
+	);
+	const defaultBoundaryStrokeActive = broker.writableGlobalProperty<boolean>(
+		'defaultBoundaryStrokeActive',
+		defaultBoundaryProps.stroke.active
+	);
+	const defaultBoundaryStrokeValue = broker.writableGlobalProperty<Color>(
+		'defaultBoundaryStrokeValue',
+		defaultBoundaryProps.stroke.value
+	);
+	const defaultBoundaryFillActive = broker.writableGlobalProperty<boolean>(
+		'defaultBoundaryFillActive',
+		defaultBoundaryProps.fill.active
+	);
+	const defaultBoundaryFillValue = broker.writableGlobalProperty<Color>(
+		'defaultBoundaryFillValue',
+		defaultBoundaryProps.fill.value
+	);
 
 	function setTo(mode: 'original' | 'black' | 'white' | 'custom') {
 		return () => {
@@ -45,7 +77,10 @@
 </script>
 
 <DialogSlideUp>
-	<ResponsiveGroup hide={$isMobile ? [] : ['group-0']} groups={['Map', 'Transparency', 'Colors']}>
+	<ResponsiveGroup
+		hide={$isMobile ? [] : ['group-0']}
+		groups={['Map', 'Transparency', 'Colors', 'Boundaries']}
+	>
 		<div slot="group-0" class="flex flex-row items-center space-x-2 py-8 select-none overflow-auto">
 			{#each MAP_STYLES as style}
 				<button
@@ -118,7 +153,7 @@
 				</div>
 			</div>
 		</div>
-		<div slot="group-2">
+		<div slot="group-2" class="mb-4 pt-4">
 			<div class="grid justify-center" style="grid-template-columns: auto">
 				<span class="justify-self-start text-gray-400 mb-2">Override CAD Colors</span>
 				<div class="inline-flex w-fit flex-row items-center justify-center space-x-2">
@@ -169,6 +204,70 @@
 						/>
 					</div>
 				{/if}
+			</div>
+		</div>
+		<div slot="group-3" class="pt-4 space-y-2">
+			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+				<span
+					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-end pr-2"
+				>
+					Stroke Width
+				</span>
+				<input
+					class="w-full px-1"
+					type="number"
+					bind:value={$defaultBoundaryStrokeWidth}
+					min="0"
+					max="1000"
+				/>
+			</div>
+			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+				<span
+					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-end pr-2"
+				>
+					Stroke Color
+				</span>
+				<input
+					class="mx-2"
+					type="checkbox"
+					checked={$defaultBoundaryStrokeActive}
+					on:change={() => {
+						$defaultBoundaryStrokeActive = !$defaultBoundaryStrokeActive;
+					}}
+				/>
+				<span class:line-through={!$defaultBoundaryStrokeActive}>
+					<ColorInput
+						noVerticalBorder
+						value={$defaultBoundaryStrokeValue}
+						on:change={(e) => {
+							$defaultBoundaryStrokeValue = e.detail;
+						}}
+					/>
+				</span>
+			</div>
+			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+				<span
+					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-end pr-2"
+				>
+					Fill Color
+				</span>
+				<input
+					class="mx-2"
+					type="checkbox"
+					checked={$defaultBoundaryFillActive}
+					on:change={() => {
+						$defaultBoundaryFillActive = !$defaultBoundaryFillActive;
+					}}
+				/>
+				<span class:line-through={!$defaultBoundaryFillActive}>
+					<ColorInput
+						noVerticalBorder
+						value={$defaultBoundaryFillValue}
+						on:change={(e) => {
+							$defaultBoundaryFillValue = e.detail;
+						}}
+					/>
+				</span>
 			</div>
 		</div>
 	</ResponsiveGroup>

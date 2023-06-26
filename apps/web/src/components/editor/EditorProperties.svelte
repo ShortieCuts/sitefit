@@ -467,6 +467,7 @@
 				<div class="flex flex-row space-x-2 border-gray-200 rounded-md border p-1">
 					<div>
 						<ColorInput
+							noVerticalBorder
 							bind:value={propertiesDisplay.style.color}
 							on:change={doStyleChange('color')}
 						/>
@@ -570,6 +571,7 @@
 										: 'opacity-50 pointer-events-none line-through'}
 								>
 									<ColorInput
+										noVerticalBorder
 										value={propertiesDisplay.props[prop.name]?.value ?? [0, 0, 0, 1]}
 										on:change={doPropChange(prop)}
 									/>

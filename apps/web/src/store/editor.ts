@@ -598,8 +598,14 @@ export class ProjectBroker {
 
 	writableGlobalProperty<T>(key: GlobalProjectPropertiesKey, defaultValue: T): Writable<T> {
 		let internalWritable = this.globalPropertyStores.get(key) as Writable<T>;
+
 		if (!internalWritable) {
-			internalWritable = writable(defaultValue);
+			let useValue = defaultValue;
+			let initialValue = this.project.globalProperties[key];
+			if (initialValue !== undefined) {
+				useValue = initialValue as T;
+			}
+			internalWritable = writable(useValue);
 			this.globalPropertyStores.set(key, internalWritable);
 		}
 

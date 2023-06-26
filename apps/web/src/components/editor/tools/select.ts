@@ -375,7 +375,7 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 		let minSize = Infinity;
 		let currentObj: string | null = null;
 		for (let obj of broker.project.objects) {
-			if (!obj.parent) {
+			if (!obj.parent && !obj.pinned) {
 				let bounds = broker.project.computeBounds(obj.id);
 				if (
 					target[0] > bounds.minX &&

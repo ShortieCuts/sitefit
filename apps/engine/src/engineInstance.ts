@@ -508,6 +508,15 @@ export class EngineInstance {
     if (isWriteGlobalProperty(data)) {
       if (session.checkAccess("WRITE")) {
         const clampedNumbers = ["cadOpacity", "boundaryOpacity"];
+        const colors = [
+          "defaultBoundaryStrokeValue",
+          "defaultBoundaryFillValue",
+        ];
+        const plainNumbers = ["defaultBoundaryStrokeWidth"];
+        const booleans = [
+          "defaultBoundaryStrokeActive",
+          "defaultBoundaryFillActive",
+        ];
         if (data.key == "mapStyle") {
           if (
             [
@@ -539,6 +548,37 @@ export class EngineInstance {
           this.enqueueBroadcast(data);
           this.dirty = true;
           this.enqueueSave();
+        } else if (colors.includes(data.key)) {
+          if (Array.isArray(data.value) && data.value.length == 4) {
+            for (let i = 0; i < 4; i++) {
+              if (typeof data.value[i] != "number") {
+                return;
+              }
+            }
+            this.project.globalProperties[data.key] = data.value as [
+              number,
+              number,
+              number,
+              number
+            ];
+            this.enqueueBroadcast(data);
+            this.dirty = true;
+            this.enqueueSave();
+          }
+        } else if (plainNumbers.includes(data.key)) {
+          if (typeof data.value == "number") {
+            this.project.globalProperties[data.key] = data.value;
+            this.enqueueBroadcast(data);
+            this.dirty = true;
+            this.enqueueSave();
+          }
+        } else if (booleans.includes(data.key)) {
+          if (typeof data.value == "boolean") {
+            this.project.globalProperties[data.key] = data.value;
+            this.enqueueBroadcast(data);
+            this.dirty = true;
+            this.enqueueSave();
+          }
         }
       }
     } else if (isCommitTransaction(data)) {

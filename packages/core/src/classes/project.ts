@@ -4,6 +4,7 @@ import { makeObject, Object2D } from "./object";
 import type { Serializable } from "./serializable";
 import { Quadtree, Rectangle } from "../../lib/quadtree/index.esm";
 import Flatten from "@flatten-js/core";
+import { Color } from "./color";
 
 export type ProjectMapStyle =
   | "google-simple"
@@ -20,6 +21,12 @@ export type GlobalProjectProperties = {
   boundaryOpacity?: number;
   cadOpacity?: number;
   overrideCadColor?: string;
+
+  defaultBoundaryStrokeWidth?: number;
+  defaultBoundaryStrokeActive?: boolean;
+  defaultBoundaryStrokeValue?: Color;
+  defaultBoundaryFillActive?: boolean;
+  defaultBoundaryFillValue?: Color;
 };
 
 export type GlobalProjectPropertiesKey = keyof GlobalProjectProperties;

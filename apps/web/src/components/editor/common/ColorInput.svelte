@@ -5,6 +5,7 @@
 
 	const dispatch = createEventDispatcher();
 
+	export let noVerticalBorder = false;
 	export let small = false;
 
 	export let value: [number, number, number, number] | undefined = [0, 0, 0, 1];
@@ -43,7 +44,11 @@
 	}
 </script>
 
-<div class=" flex flex-row border border-gray-200 rounded-md hover:shadow-sm h-6">
+<div
+	class=" flex flex-row border border-gray-200 rounded-md hover:shadow-sm h-6"
+	class:border-y-0={noVerticalBorder}
+	class:rounded-none={noVerticalBorder}
+>
 	{#if value}
 		<div
 			class="w-4 h-4 mx-1 my-auto rounded"
@@ -88,7 +93,7 @@
 		{#if !small}
 			{valueToHEX(value)}
 			<div class="border-l border-gray-200 mx-2" />
-			{value[3]}
+			{Math.floor(value[3]) != value[3] ? value[3].toFixed(1) : value[3]}
 			<div class="pr-2" />
 		{/if}
 	{:else}

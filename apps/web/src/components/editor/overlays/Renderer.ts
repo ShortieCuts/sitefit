@@ -1,7 +1,7 @@
 import { getSvelteContext } from 'src/store/editor';
 import { Overlay } from './Overlay';
 import * as THREE from 'three';
-import { get } from 'svelte/store';
+import { get, type Writable } from 'svelte/store';
 import {
 	Arc,
 	Circle,
@@ -17,7 +17,8 @@ import {
 	smartObjectRender,
 	makeRotationMatrix,
 	multiplyMatrix,
-	addPoints
+	addPoints,
+	type Color
 } from 'core';
 import type { Vector3 } from 'three';
 import Flatten from '@flatten-js/core';
@@ -55,6 +56,14 @@ function colorArrayToThreeColor(arr: [number, number, number, number]): THREE.Co
 let DOMPurify: any = null;
 if (typeof window !== 'undefined') {
 	DOMPurify = createDOMPurify(window);
+}
+
+function compareArray(a: any[], b: any[]) {
+	if (a.length !== b.length) return false;
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) return false;
+	}
+	return true;
 }
 
 class RenderPath implements RenderObject2D {
@@ -187,7 +196,56 @@ class RenderPath implements RenderObject2D {
 		if (obj.smartObject) {
 			let smartObject = getSmartObject(obj.smartObject);
 			if (smartObject) {
-				let children = smartObjectRender(obj, obj.smartObject, obj.smartProperties ?? {});
+				let properties = obj.smartProperties ?? {};
+				if (obj.pinned) {
+					properties = structuredClone(overlay.defaultBoundaryProps);
+					console.log('rpops', properties);
+					let defaultBoundaryProps = {
+						strokeWidth: 10,
+						stroke: {
+							value: [255 / 255, 235 / 255, 59 / 255, 1] as Color,
+							active: true
+						},
+						fill: {
+							value: [255 / 255, 235 / 255, 59 / 255, 0.3] as Color,
+							active: true
+						}
+					};
+
+					let mySmartProperties = obj.smartProperties ?? {};
+
+					if (mySmartProperties.strokeWidth != defaultBoundaryProps.strokeWidth) {
+						properties.strokeWidth = mySmartProperties.strokeWidth;
+					}
+
+					if (mySmartProperties.stroke) {
+						if (mySmartProperties.stroke.active != defaultBoundaryProps.stroke.active) {
+							properties.stroke.active = mySmartProperties.stroke.active;
+						}
+
+						if (
+							mySmartProperties.stroke.value &&
+							!compareArray(mySmartProperties.stroke.value, defaultBoundaryProps.stroke.value)
+						) {
+							properties.stroke.value = mySmartProperties.stroke.value;
+						}
+					}
+
+					if (mySmartProperties.fill) {
+						if (mySmartProperties.fill.active != defaultBoundaryProps.fill.active) {
+							properties.fill.active = mySmartProperties.fill.active;
+						}
+
+						if (
+							mySmartProperties.fill.value &&
+							!compareArray(mySmartProperties.fill.value, defaultBoundaryProps.fill.value)
+						) {
+							properties.fill.value = mySmartProperties.fill.value;
+						}
+					}
+				}
+
+				let children = smartObjectRender(obj, obj.smartObject, properties);
 
 				for (let child of children) {
 					let ro = createRenderObject(overlay, child);
@@ -1266,6 +1324,27 @@ export class RendererOverlay extends Overlay {
 	globalOpacity: number = 1;
 	pinnedOpacity: number = 1;
 	cadOverrideColor: string = '';
+	defaultBoundaryProps: {
+		strokeWidth: number;
+		stroke: {
+			value: Color;
+			active: boolean;
+		};
+		fill: {
+			value: Color;
+			active: boolean;
+		};
+	} = {
+		strokeWidth: 10,
+		stroke: {
+			value: [0, 0, 0, 0],
+			active: false
+		},
+		fill: {
+			value: [0, 0, 0, 0],
+			active: false
+		}
+	};
 
 	renderedObjects: Map<ObjectID, RenderObject2D> = new Map();
 
@@ -1460,9 +1539,53 @@ export class RendererOverlay extends Overlay {
 		const boundaryOpacity = this.broker.writableGlobalProperty<number>('boundaryOpacity', 1);
 		const cadOverrideColor = this.broker.writableGlobalProperty<string>('overrideCadColor', '');
 
+		this.defaultBoundaryProps = {
+			strokeWidth: 10,
+			stroke: {
+				value: [255 / 255, 235 / 255, 59 / 255, 1] as Color,
+				active: true
+			},
+			fill: {
+				value: [255 / 255, 235 / 255, 59 / 255, 0.3] as Color,
+				active: true
+			}
+		};
+		const defaultBoundaryStrokeWidth = this.broker.writableGlobalProperty<number>(
+			'defaultBoundaryStrokeWidth',
+			this.defaultBoundaryProps.strokeWidth
+		);
+		const defaultBoundaryStrokeActive = this.broker.writableGlobalProperty<boolean>(
+			'defaultBoundaryStrokeActive',
+			this.defaultBoundaryProps.stroke.active
+		);
+		const defaultBoundaryStrokeValue = this.broker.writableGlobalProperty<Color>(
+			'defaultBoundaryStrokeValue',
+			this.defaultBoundaryProps.stroke.value
+		);
+		const defaultBoundaryFillActive = this.broker.writableGlobalProperty<boolean>(
+			'defaultBoundaryFillActive',
+			this.defaultBoundaryProps.fill.active
+		);
+		const defaultBoundaryFillValue = this.broker.writableGlobalProperty<Color>(
+			'defaultBoundaryFillValue',
+			this.defaultBoundaryProps.fill.value
+		);
+
 		this.globalOpacity = get(cadOpacity);
 		this.pinnedOpacity = get(boundaryOpacity);
 		this.cadOverrideColor = get(cadOverrideColor);
+
+		this.defaultBoundaryProps = {
+			strokeWidth: get(defaultBoundaryStrokeWidth),
+			stroke: {
+				value: get(defaultBoundaryStrokeValue),
+				active: get(defaultBoundaryStrokeActive)
+			},
+			fill: {
+				value: get(defaultBoundaryFillValue),
+				active: get(defaultBoundaryFillActive)
+			}
+		};
 
 		this.addUnsub(
 			cadOpacity.subscribe((val) => {
@@ -1494,6 +1617,35 @@ export class RendererOverlay extends Overlay {
 				this.overlay.requestRedraw();
 			})
 		);
+
+		let doSubWatch = (prop: Writable<any>, cb: (val: any) => void) => {
+			this.addUnsub(
+				prop.subscribe((val) => {
+					cb(val);
+					for (let [key, obj] of this.renderedObjects) {
+						obj.refresh(this, this.broker.project.objectsMap.get(key)!);
+					}
+
+					this.overlay.requestRedraw();
+				})
+			);
+		};
+
+		doSubWatch(defaultBoundaryStrokeWidth, (val) => {
+			this.defaultBoundaryProps.strokeWidth = val;
+		});
+		doSubWatch(defaultBoundaryStrokeActive, (val) => {
+			this.defaultBoundaryProps.stroke.active = val;
+		});
+		doSubWatch(defaultBoundaryStrokeValue, (val) => {
+			this.defaultBoundaryProps.stroke.value = val;
+		});
+		doSubWatch(defaultBoundaryFillActive, (val) => {
+			this.defaultBoundaryProps.fill.active = val;
+		});
+		doSubWatch(defaultBoundaryFillValue, (val) => {
+			this.defaultBoundaryProps.fill.value = val;
+		});
 	}
 
 	appendElement(el: HTMLElement) {
@@ -1537,6 +1689,27 @@ export class HeadlessRenderer {
 	globalOpacity: number = 1;
 	pinnedOpacity: number = 1;
 	cadOverrideColor: string = '';
+	defaultBoundaryProps: {
+		strokeWidth: number;
+		stroke: {
+			value: Color;
+			active: boolean;
+		};
+		fill: {
+			value: Color;
+			active: boolean;
+		};
+	} = {
+		strokeWidth: 10,
+		stroke: {
+			value: [0, 0, 0, 0],
+			active: false
+		},
+		fill: {
+			value: [0, 0, 0, 0],
+			active: false
+		}
+	};
 
 	constructor(scene: THREE.Scene, overlayElement: HTMLElement) {
 		this.scene = scene;
