@@ -125,7 +125,8 @@
 								let rval = props[prop];
 								propertiesMap.set(`smartProperties.${prop}`, {
 									...rprop.type,
-									name: `smartProperties.${prop}`
+									name: `smartProperties.${prop}`,
+									displayName: rprop.displayName ?? prop
 								});
 								propertiesMapCounter.set(
 									`smartProperties.${prop}`,
@@ -534,9 +535,7 @@
 						<span
 							class="flex-shrink-0 h-full min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
 						>
-							{prettifyName(
-								prop.name.startsWith('smartProperties') ? prop.name.slice(16) : prop.name
-							)}
+							{prettifyName(prop.displayName ?? prop.name)}
 						</span>
 						{#if prop.type == 'string'}
 							<input

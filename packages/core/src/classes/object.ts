@@ -724,6 +724,7 @@ export function makeObject(data: any) {
 
 export type ObjectProperty = {
   name: string;
+  displayName?: string;
   type?:
     | "number"
     | "angle"
@@ -895,6 +896,7 @@ const Parking = makeSmartObject({
     },
     distance: {
       default: 5, // Meters
+      displayName: "space length",
       type: {
         name: "distance",
         type: "meters",
