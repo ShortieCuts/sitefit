@@ -47,6 +47,7 @@
 		'defaultBoundaryFillValue',
 		defaultBoundaryProps.fill.value
 	);
+	const measurementFontSize = broker.writableGlobalProperty<number>('measurementFontSize', 1);
 
 	function setTo(mode: 'original' | 'black' | 'white' | 'custom') {
 		return () => {
@@ -79,7 +80,7 @@
 <DialogSlideUp>
 	<ResponsiveGroup
 		hide={$isMobile ? [] : ['group-0']}
-		groups={['Map', 'Transparency', 'Colors', 'Boundaries']}
+		groups={['Map', 'Transparency', 'Colors', 'Boundaries', 'Measurement']}
 	>
 		<div slot="group-0" class="flex flex-row items-center space-x-2 py-8 select-none overflow-auto">
 			{#each MAP_STYLES as style}
@@ -206,7 +207,7 @@
 				{/if}
 			</div>
 		</div>
-		<div slot="group-3" class="pt-4 space-y-2">
+		<div slot="group-3" class="py-4 space-y-2">
 			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
 				<span
 					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-end pr-2"
@@ -268,6 +269,22 @@
 						}}
 					/>
 				</span>
+			</div>
+		</div>
+		<div slot="group-4" class="pt-4 space-y-2">
+			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+				<span
+					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-end pr-2"
+				>
+					Font Size
+				</span>
+				<input
+					class="w-full px-1"
+					type="number"
+					bind:value={$measurementFontSize}
+					min="0"
+					max="1000"
+				/>
 			</div>
 		</div>
 	</ResponsiveGroup>

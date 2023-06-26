@@ -512,7 +512,10 @@ export class EngineInstance {
           "defaultBoundaryStrokeValue",
           "defaultBoundaryFillValue",
         ];
-        const plainNumbers = ["defaultBoundaryStrokeWidth"];
+        const plainNumbers = [
+          "defaultBoundaryStrokeWidth",
+          "measurementFontSize",
+        ];
         const booleans = [
           "defaultBoundaryStrokeActive",
           "defaultBoundaryFillActive",

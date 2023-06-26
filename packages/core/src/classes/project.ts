@@ -27,6 +27,8 @@ export type GlobalProjectProperties = {
   defaultBoundaryStrokeValue?: Color;
   defaultBoundaryFillActive?: boolean;
   defaultBoundaryFillValue?: Color;
+
+  measurementFontSize: number;
 };
 
 export type GlobalProjectPropertiesKey = keyof GlobalProjectProperties;

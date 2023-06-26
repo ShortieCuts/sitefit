@@ -100,6 +100,7 @@
 			if (object) {
 				let type = object.type;
 				for (let p of ObjectProperties[type]) {
+					if (p.condition && !p.condition(object)) continue;
 					propertiesMap.set(p.name, p);
 
 					propertiesMapCounter.set(p.name, (propertiesMapCounter.get(p.name) || 0) + 1);

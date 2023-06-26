@@ -222,6 +222,7 @@ export class Path extends Object2D implements Serializable {
   bezierHandles: BezierHandle[] = [];
   closed: boolean = false;
   width: number = 1;
+  measurementFontSize?: number;
 
   measurement?: boolean = false;
 
@@ -367,6 +368,7 @@ export class Path extends Object2D implements Serializable {
       width: this.width,
       closed: this.closed,
       measurement: this.measurement,
+      measurementFontSize: this.measurementFontSize,
       smartObject: this.smartObject,
       smartProperties: this.smartProperties,
       disconnected: this.disconnected,
@@ -381,6 +383,8 @@ export class Path extends Object2D implements Serializable {
     if ("width" in data) this.width = data.width;
     if ("closed" in data) this.closed = data.closed;
     if ("measurement" in data) this.measurement = data.measurement;
+    if ("measurementFontSize" in data)
+      this.measurementFontSize = data.measurementFontSize;
     if ("smartObject" in data) this.smartObject = data.smartObject;
     if ("smartProperties" in data) this.smartProperties = data.smartProperties;
     if ("disconnected" in data) this.disconnected = data.disconnected;
@@ -733,12 +737,21 @@ export type ObjectProperty = {
     | "meters"
     | "color-toggle";
   options?: string[];
+  condition?: (obj: Object2D) => boolean;
 };
 
 export const ObjectProperties: {
   [key in ObjectType]: ObjectProperty[];
 } = {
-  [ObjectType.Path]: [],
+  [ObjectType.Path]: [
+    {
+      name: "measurementFontSize",
+      type: "number",
+      condition: (obj: Path) => {
+        return !!obj.measurement;
+      },
+    },
+  ],
   [ObjectType.Group]: [],
   [ObjectType.Note]: [
     {

@@ -596,6 +596,7 @@ class RenderPath implements RenderObject2D {
 		if (!this.textEl) return;
 
 		let text = this.textEl.innerText;
+		let pinnedSize = 0;
 
 		let objBounds = obj.getBounds();
 		let center = [(objBounds.minX + objBounds.maxX) / 2, (objBounds.minY + objBounds.maxY) / 2];
@@ -607,13 +608,23 @@ class RenderPath implements RenderObject2D {
 			center[0] += 2;
 			let p = overlay.editor.positionToLonLat(objBounds.minX, objBounds.minY);
 			let p2 = overlay.editor.positionToLonLat(objBounds.maxX, objBounds.maxY);
+			let p3 = overlay.editor.positionToLonLat(
+				objBounds.minX,
+				objBounds.minY +
+					(obj.measurementFontSize && obj.measurementFontSize != 0
+						? obj.measurementFontSize
+						: overlay.measurementFontSize)
+			);
 
 			let pos1 = overlay.overlay.lonLatToContainerPixel(p[0], p[1]);
 			let pos2 = overlay.overlay.lonLatToContainerPixel(p2[0], p2[1]);
-			if (!pos1 || !pos2) return;
+			let pos3 = overlay.overlay.lonLatToContainerPixel(p3[0], p3[1]);
+			if (!pos1 || !pos2 || !pos3) return;
 			lineSize = Math.sqrt(Math.pow(pos2[0] - pos1[0], 2) + Math.pow(pos2[1] - pos1[1], 2));
 			pos.x = (pos1[0] + pos2[0]) / 2;
 			pos.y = (pos1[1] + pos2[1]) / 2;
+
+			pinnedSize = Math.sqrt(Math.pow(pos3[0] - pos1[0], 2) + Math.pow(pos3[1] - pos1[1], 2));
 		}
 
 		if (obj.segments.length == 2) {
@@ -637,14 +648,23 @@ class RenderPath implements RenderObject2D {
 		let lineGap = 20;
 		let fontSize = (lineSize - lineGap * 2) / (text.length * fontAspectRatio);
 
-		if (fontSize <= 10) {
-			this.textEl.style.fontSize = `10px`;
-			let dx = Math.cos(angle + Math.PI / 2);
-			let dy = Math.sin(angle + Math.PI / 2);
-			pos.x += dx * 15;
-			pos.y += dy * 15;
+		if (true) {
+			if (pinnedSize < 2) {
+				this.textEl.style.display = 'none';
+			} else {
+				this.textEl.style.display = 'flex';
+				this.textEl.style.fontSize = `${pinnedSize}px`;
+			}
 		} else {
-			this.textEl.style.fontSize = `${Math.min(fontSize, 18)}px`;
+			if (fontSize <= 10) {
+				this.textEl.style.fontSize = `10px`;
+				let dx = Math.cos(angle + Math.PI / 2);
+				let dy = Math.sin(angle + Math.PI / 2);
+				pos.x += dx * 15;
+				pos.y += dy * 15;
+			} else {
+				this.textEl.style.fontSize = `${Math.min(fontSize, 18)}px`;
+			}
 		}
 		// this.textEl.style.width = `${screenSize * text.length * fontAspectRatio}px`;
 		// this.textEl.style.top = pos.y + 'px';
@@ -1324,6 +1344,7 @@ export class RendererOverlay extends Overlay {
 	globalOpacity: number = 1;
 	pinnedOpacity: number = 1;
 	cadOverrideColor: string = '';
+	measurementFontSize: number = 1;
 	defaultBoundaryProps: {
 		strokeWidth: number;
 		stroke: {
@@ -1538,6 +1559,10 @@ export class RendererOverlay extends Overlay {
 		const cadOpacity = this.broker.writableGlobalProperty<number>('cadOpacity', 1);
 		const boundaryOpacity = this.broker.writableGlobalProperty<number>('boundaryOpacity', 1);
 		const cadOverrideColor = this.broker.writableGlobalProperty<string>('overrideCadColor', '');
+		const measurementFontSize = this.broker.writableGlobalProperty<number>(
+			'measurementFontSize',
+			1
+		);
 
 		this.defaultBoundaryProps = {
 			strokeWidth: 10,
@@ -1574,6 +1599,7 @@ export class RendererOverlay extends Overlay {
 		this.globalOpacity = get(cadOpacity);
 		this.pinnedOpacity = get(boundaryOpacity);
 		this.cadOverrideColor = get(cadOverrideColor);
+		this.measurementFontSize = get(measurementFontSize);
 
 		this.defaultBoundaryProps = {
 			strokeWidth: get(defaultBoundaryStrokeWidth),
@@ -1646,6 +1672,9 @@ export class RendererOverlay extends Overlay {
 		doSubWatch(defaultBoundaryFillValue, (val) => {
 			this.defaultBoundaryProps.fill.value = val;
 		});
+		doSubWatch(measurementFontSize, (val) => {
+			this.measurementFontSize = val;
+		});
 	}
 
 	appendElement(el: HTMLElement) {
@@ -1689,6 +1718,7 @@ export class HeadlessRenderer {
 	globalOpacity: number = 1;
 	pinnedOpacity: number = 1;
 	cadOverrideColor: string = '';
+	measurementFontSize: number = 1;
 	defaultBoundaryProps: {
 		strokeWidth: number;
 		stroke: {
