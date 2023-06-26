@@ -52,7 +52,7 @@
 				</div>
 				<div class="border-b-2 border-gray-100" />
 				<div>
-					<a
+					<!-- <a
 						href="/"
 						data-sveltekit-reload
 						class="flex flex-row items-center px-4 py-2 hover:bg-gray-100"
@@ -67,7 +67,7 @@
 					>
 						<div class="icon-sm mr-2"><IconFile /></div>
 						CADs
-					</a>
+					</a> -->
 					<a
 						href="/user/settings"
 						data-sveltekit-reload

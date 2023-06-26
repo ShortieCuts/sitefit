@@ -27,7 +27,7 @@
 	let nameUpdating = false;
 </script>
 
-<AppLanding auth={data.user}>
+<AppLanding auth={data.user} nav={false} back backHref={'/user/settings'}>
 	<div class="flex flex-col pb-20 space-y-2">
 		<div class="-mx-4 border-t-[6px] border-gray-100 left-0" />
 		<div class="flex flex-row text-lg items-center py-2 px-2">
