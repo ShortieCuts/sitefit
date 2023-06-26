@@ -1039,6 +1039,7 @@ type Upload = {
 
 export class EditorContext {
 	activeTool: Writable<string> = writable('pan');
+	activeToolFlags: Writable<any> = writable(null);
 	measureToolCount: Writable<number> = writable(0);
 	activeToolSmartObject: Writable<string> = writable('');
 	activeToolSmartObjectProperties: Writable<any> = writable({});

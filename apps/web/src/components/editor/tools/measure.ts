@@ -14,7 +14,7 @@ export const MeasurementTool = {
 	access: 'WRITE',
 	shortcut: 'm',
 	hidden: true,
-	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
+	onDown(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
 		committed = false;
 		active = true;
 
@@ -43,6 +43,9 @@ export const MeasurementTool = {
 				}
 				return obj;
 			});
+			if (get(editor.activeToolFlags)?.measureSegment) {
+				this.commit(editor, broker);
+			}
 		}
 	},
 

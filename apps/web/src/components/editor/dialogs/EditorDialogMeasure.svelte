@@ -14,11 +14,27 @@
 			class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
 			on:click={() => {
 				editor.activeTool.set('measurement');
+				editor.activeToolFlags.set({
+					measureSegment: true
+				});
+				editor.activateDialog('');
+			}}
+		>
+			<img src="/img/distance-segment.png" class="max-w-[32px]" alt="Distance ft" />
+			<div class="ml-4">Measure Distance</div>
+		</button>
+		<button
+			class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
+			on:click={() => {
+				editor.activeTool.set('measurement');
+				editor.activeToolFlags.set({
+					measureSegment: false
+				});
 				editor.activateDialog('');
 			}}
 		>
 			<img src="/img/distance.png" class="max-w-[32px]" alt="Distance ft" />
-			<div class="ml-4">Measure Distance/Perimeter</div>
+			<div class="ml-4">Measure Perimeter</div>
 		</button>
 		<button
 			class="flex flex-row items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
