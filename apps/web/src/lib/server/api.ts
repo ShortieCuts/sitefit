@@ -137,7 +137,7 @@ export function validateRequestWithAccess<T>(
 				});
 			}
 
-			if (project.ownerId === user.id || ADMIN_EMAILS.includes(user.email)) {
+			if (project.ownerId === user.id || ADMIN_EMAILS.includes(user.email.toLowerCase())) {
 				return await fn(payload, user);
 			}
 

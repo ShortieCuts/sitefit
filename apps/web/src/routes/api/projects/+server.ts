@@ -22,8 +22,8 @@ export const POST = (async ({ request }) => {
 		),
 		async (input, user) => {
 			if (input.admin) {
-				if (!ADMIN_EMAILS.includes(user.email)) {
-					throw error(403, 'You are not an admin');
+				if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+					throw error(403, 'You are not an admin ' + user.email);
 				}
 
 				let cads = await db()

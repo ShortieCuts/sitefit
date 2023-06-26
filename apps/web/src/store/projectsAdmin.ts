@@ -13,6 +13,10 @@ export async function refreshData() {
 		admin: true
 	});
 
+	if (projects.error) {
+		alert(projects.message);
+	}
+
 	realTree = projects.data;
 
 	refreshStore();
