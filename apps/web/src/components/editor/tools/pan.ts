@@ -3,6 +3,7 @@ import { ascendToRoot, getObjectAtCursor, selectDown, selectMove, selectUp } fro
 import type { EditorContext, ProjectBroker } from 'src/store/editor';
 import { get } from 'svelte/store';
 import { Cursors } from '../cursors';
+import { ObjectType, Path } from 'core';
 
 let downPosition: [number, number] = [0, 0];
 export const PanTool = {
@@ -18,6 +19,12 @@ export const PanTool = {
 		let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 
 		if (hover) {
+			let hoverObj = broker.project.objectsMap.get(hover);
+			if (hoverObj) {
+				if (hoverObj.pinned) {
+					return;
+				}
+			}
 			hover = ascendToRoot(editor, broker, hover);
 			if (get(editor.hoveringObject) == hover) {
 				if (get(editor.selection).includes(hover)) {
@@ -38,11 +45,29 @@ export const PanTool = {
 			let cursorScreen = get(editor.currentMousePositionScreen);
 			let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
 			if (hover) {
+				let hoverObj = broker.project.objectsMap.get(hover);
+				if (hoverObj) {
+					if (hoverObj.pinned) {
+						return;
+					}
+				}
+
 				hover = ascendToRoot(editor, broker, hover);
 				editor.selection.set([hover]);
+				editor.editingObject.set(null);
 
 				editor.computeEffectiveSelection(broker);
 				editor.rootGroup.set(null);
+
+				let hoverObjRoot = broker.project.objectsMap.get(hover);
+				if (hoverObjRoot) {
+					if (hoverObjRoot.type == ObjectType.Path) {
+						let hoverPath = hoverObjRoot as Path;
+						if (hoverPath.segments.length == 2) {
+							editor.editingObject.set(hover);
+						}
+					}
+				}
 			} else {
 				editor.selection.set([]);
 				editor.computeEffectiveSelection(broker);

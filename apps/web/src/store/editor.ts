@@ -1521,6 +1521,7 @@ export class EditorContext {
 	deselectAll() {
 		this.selection.set([]);
 		this.effectiveSelection.set([]);
+		this.editingObject.set(null);
 		this.rootGroup.set(null);
 	}
 

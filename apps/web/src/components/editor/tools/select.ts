@@ -1397,7 +1397,7 @@ function computeSelectionBox(
 	});
 	for (let obj of quadObjects) {
 		if (!obj.flatShape) continue;
-		if (IGNORED_OBJECTS.includes(obj.type)) continue;
+		if (IGNORED_OBJECTS.includes(obj.type) || obj.pinned) continue;
 		let doesIntersect = false;
 		for (let fl of obj.flatShape) {
 			if (doesIntersect) continue;
