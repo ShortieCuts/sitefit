@@ -1,8 +1,9 @@
-import { loadTile, type ParcelProvider, type Tile } from 'src/store/parcels';
+import { loadTile, type ParcelData, type ParcelProvider, type Tile } from 'src/store/parcels';
 import polygonClipping from 'polygon-clipping';
 import { get } from 'svelte/store';
 import type { EditorContext } from 'src/store/editor';
 import type { MapProvider } from '../maps/generic';
+import whichPolygon from 'which-polygon';
 
 const TILE_SIZE = 256;
 function project(lonLat: [number, number]) {
@@ -36,6 +37,50 @@ export class ParcelOverlay {
 		for (let key in this.robustParcels) {
 			if (this.robustParcels[key].data) this.robustParcels[key].data.destroy();
 		}
+	}
+
+	getParcelPolyAt(lonLat: [number, number]): ParcelData | null {
+		let robustParcels = this.robustParcels;
+		for (let key in robustParcels) {
+			let parcel = robustParcels[key];
+			if (parcel) {
+				let sourceData = {
+					type: 'geojson',
+					data: {
+						properties: {},
+						type: 'FeatureCollection',
+						features: [] as any[]
+					}
+				};
+
+				sourceData.data.features.push({
+					type: 'Feature',
+					geometry: {
+						type: 'MultiPolygon',
+						coordinates: parcel.poly
+					},
+					properties: {
+						robust_id: parcel.id
+					}
+				});
+				let query = whichPolygon(sourceData.data);
+
+				let hit = query(lonLat);
+				if (hit) {
+					return {
+						owner: '',
+						geometry: sourceData.data.features[0].geometry,
+						address_street: '',
+						latitude: lonLat[0],
+						longitude: lonLat[1],
+						county: '',
+						id: key
+					};
+				}
+			}
+		}
+
+		return null;
 	}
 
 	async loadTile(lonLat: [number, number]) {

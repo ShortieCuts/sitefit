@@ -19,6 +19,8 @@
 
 	const { zoom, selectedParcelLonLat, parcelProvider } = editor;
 
+	const USE_EXACT_PARCEL_DATA = false;
+
 	let selectedParcel: ParcelData | null = null;
 	let selectedParcelExisting: Path | null = null;
 	function stageObject(d: ParcelData) {
@@ -75,11 +77,19 @@
 					loadedParcelFor[1] != $selectedParcelLonLat[1]
 				) {
 					loadedParcelFor = [...$selectedParcelLonLat];
-					selectedParcel = await loadParcel(
-						$selectedParcelLonLat[0],
-						$selectedParcelLonLat[1],
-						get(editor.parcelProvider)
-					);
+					if (USE_EXACT_PARCEL_DATA) {
+						selectedParcel = await loadParcel(
+							$selectedParcelLonLat[0],
+							$selectedParcelLonLat[1],
+							get(editor.parcelProvider)
+						);
+					} else {
+						let parcelOverlay = get(editor.parcelOverlay);
+						if (parcelOverlay) {
+							let results = parcelOverlay.getParcelPolyAt($selectedParcelLonLat);
+							selectedParcel = results;
+						}
+					}
 
 					if (selectedParcel) stageObject(selectedParcel);
 					else {

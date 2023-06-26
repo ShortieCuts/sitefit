@@ -54,6 +54,7 @@ import { cookieName } from './name';
 import type { ParcelProvider } from './parcels';
 import type { MapProvider } from 'src/components/editor/maps/generic';
 import type { MapProviderOverlay } from 'src/components/editor/overlays/Overlay';
+import type { ParcelOverlay } from 'src/components/editor/overlays/Parcel';
 
 export let WEBSOCKET_URL = dev ? 'localhost:8787' : 'engine.cad-mapper.workers.dev';
 
@@ -1067,6 +1068,7 @@ export class EditorContext {
 
 	selectedParcelLonLat: Writable<[number, number]> = writable([0, 0]);
 	parcelProvider: Writable<ParcelProvider> = writable('reportall');
+	parcelOverlay: Writable<ParcelOverlay | null> = writable(null);
 
 	previewObjects: Writable<Object2D[]> = writable([]);
 	needsPreviewRender: Writable<boolean> = writable(false);

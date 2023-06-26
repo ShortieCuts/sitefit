@@ -427,6 +427,9 @@
 				if (floatingDist > 0.005 && broker.project.objects.length <= 1) {
 					(async () => {
 						await broker.getOrCreateCornerstone();
+						// Wrap longitude
+						closeLng = (((closeLng % 360) + 540) % 360) - 180;
+
 						$geo = [closeLng, closeLat];
 					})();
 				}
@@ -506,6 +509,7 @@
 				if (parcelOverlay) parcelOverlay.destroy();
 
 				parcelOverlay = new ParcelOverlay(map, $parcelProvider);
+				editor.parcelOverlay.set(parcelOverlay);
 				parcelOverlay.loadViewport();
 				activeProvider = $parcelProvider;
 			}
@@ -513,6 +517,7 @@
 			if (parcelOverlay) {
 				parcelOverlay.destroy();
 				parcelOverlay = null;
+				editor.parcelOverlay.set(null);
 			}
 		}
 	}

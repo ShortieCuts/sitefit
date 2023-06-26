@@ -1501,7 +1501,7 @@ export function getObjectAtCursor(
 		if (filterObjects && !filterObjects(obj)) continue;
 		for (let fl of obj.flatShape) {
 			let [dist, seg] = distanceTo(fl, point(cursor[0], cursor[1]));
-			if (dist < get(editor.screenScale) / 2) {
+			if (dist < get(editor.screenScale)) {
 				if ((obj.order ?? 0) >= topZ) {
 					topZ = obj.order ?? 0;
 					topObject = obj.id;
