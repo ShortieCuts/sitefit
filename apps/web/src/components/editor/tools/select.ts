@@ -66,6 +66,8 @@ let transformStartBox: Flatten.Box | null = null;
 let transformStartObjects = new Map<ObjectID, Object2D>();
 let clickTimer = 0;
 
+export const noParcelFilter = (obj: Object2D) => !(obj.pinned ?? false);
+
 function computeStartBox(editor: EditorContext, broker: ProjectBroker) {
 	transformStartObjects.clear();
 	let sels = get(editor.effectiveSelection);
@@ -429,7 +431,7 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 
 	let cursor = get(editor.currentMousePositionRelative);
 	let cursorScreen = get(editor.currentMousePositionScreen);
-	let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
+	let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen, noParcelFilter);
 
 	let canChangeSelection = true;
 	let pinnedHover = false;
@@ -530,7 +532,7 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 						}
 					}
 				}
-				hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
+				hover = getObjectAtCursor(editor, broker, cursor, cursorScreen, noParcelFilter);
 				if (hover) {
 					hover = ascendToRoot(editor, broker, hover);
 					editor.select(hover);
@@ -1318,7 +1320,7 @@ export function selectMove(ev: MouseEvent, editor: EditorContext, broker: Projec
 		}
 		if (!get(editor.selectionDown) && !(isTranslating || isScaling || isRotating)) {
 			// Hover object highlight
-			let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
+			let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen, noParcelFilter);
 
 			if (hover) {
 				let hoverObj = broker.project.objectsMap.get(hover);

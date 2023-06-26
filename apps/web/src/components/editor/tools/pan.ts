@@ -1,5 +1,12 @@
 import { faHand } from '@fortawesome/free-solid-svg-icons';
-import { ascendToRoot, getObjectAtCursor, selectDown, selectMove, selectUp } from './select';
+import {
+	ascendToRoot,
+	getObjectAtCursor,
+	noParcelFilter,
+	selectDown,
+	selectMove,
+	selectUp
+} from './select';
 import type { EditorContext, ProjectBroker } from 'src/store/editor';
 import { get } from 'svelte/store';
 import { Cursors } from '../cursors';
@@ -16,7 +23,7 @@ export const PanTool = {
 
 		let cursor = get(editor.currentMousePositionRelative);
 		let cursorScreen = get(editor.currentMousePositionScreen);
-		let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
+		let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen, noParcelFilter);
 
 		if (hover) {
 			let hoverObj = broker.project.objectsMap.get(hover);
@@ -43,7 +50,7 @@ export const PanTool = {
 		if (Math.sqrt(dx * dx + dy * dy) < 0.01) {
 			let cursor = get(editor.currentMousePositionRelative);
 			let cursorScreen = get(editor.currentMousePositionScreen);
-			let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen);
+			let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen, noParcelFilter);
 			if (hover) {
 				let hoverObj = broker.project.objectsMap.get(hover);
 				if (hoverObj) {
