@@ -740,6 +740,7 @@ export type ObjectProperty = {
   options?: string[];
   condition?: (obj: Object2D) => boolean;
   multiplier?: number;
+  displayUnits?: string;
 };
 
 export const ObjectProperties: {
@@ -895,6 +896,7 @@ const Parking = makeSmartObject({
         name: "angle",
         type: "number",
       },
+      displayUnits: "°",
     },
     distance: {
       default: 5, // Meters

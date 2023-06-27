@@ -16,7 +16,13 @@
 
 	import ColorInput from './common/ColorInput.svelte';
 
-	import { feetToMeters, metersToFeet } from '$lib/util/distance';
+	import {
+		feetToMeters,
+		metersToFeet,
+		metersToFeetDecimalPrettyPrint,
+		metersToFeetPrettyPrint
+	} from '$lib/util/distance';
+	import { displayUnits } from '$lib/util/actions';
 
 	export let showTransform = true;
 
@@ -124,6 +130,7 @@
 								let rprop = smartObject.properties[prop];
 								let rval = props[prop];
 								propertiesMap.set(`smartProperties.${prop}`, {
+									...rprop,
 									...rprop.type,
 									name: `smartProperties.${prop}`,
 									displayName: rprop.displayName ?? prop
@@ -168,6 +175,8 @@
 			}
 		}
 
+		const printMeasure = (ft: number) => metersToFeetDecimalPrettyPrint(ft);
+
 		(propertiesDisplay.x = propertyMixedMap.get('x')
 			? 'Mixed'
 			: propertyValueMap.get('x')?.toFixed(2)),
@@ -176,10 +185,10 @@
 				: propertyValueMap.get('y')?.toFixed(2)),
 			(propertiesDisplay.width = propertyMixedMap.get('width')
 				? 'Mixed'
-				: propertyValueMap.get('width')?.toFixed(2)),
+				: printMeasure(propertyValueMap.get('width'))),
 			(propertiesDisplay.height = propertyMixedMap.get('height')
 				? 'Mixed'
-				: propertyValueMap.get('height')?.toFixed(2)),
+				: printMeasure(propertyValueMap.get('height'))),
 			(propertiesDisplay.angle = propertyMixedMap.get('angle')
 				? 'Mixed'
 				: rad2deg(propertyValueMap.get('angle')).toFixed(2));
@@ -458,7 +467,7 @@
 							id="props-w"
 							readonly
 							class="w-full h-6 cursor-default pl-2 text-opacity-50 text-black"
-							bind:value={propertiesDisplay.width}
+							value={propertiesDisplay.width}
 							on:change={doTransformChange('width')}
 						/>
 					</div>
@@ -472,7 +481,7 @@
 							id="props-h"
 							readonly
 							class="w-full h-6 cursor-default pl-2 text-opacity-50 text-black"
-							bind:value={propertiesDisplay.height}
+							value={propertiesDisplay.height}
 							on:change={doTransformChange('height')}
 						/>
 					</div>
@@ -489,6 +498,7 @@
 							id="props-a"
 							class="w-full cursor-default pl-2"
 							bind:value={propertiesDisplay.angle}
+							use:displayUnits={'°'}
 							on:change={doTransformChange('angle')}
 						/>
 					</div>
@@ -553,6 +563,7 @@
 							/>
 						{:else if prop.type == 'number'}
 							<input
+								use:displayUnits={prop.displayUnits ?? ''}
 								class="w-full px-1"
 								type="number"
 								value={propertiesDisplay.props[prop.name] *
@@ -563,6 +574,7 @@
 							<input
 								class="w-full px-1"
 								type="number"
+								use:displayUnits={'ft'}
 								step={1 / 12}
 								value={metersToFeet(propertiesDisplay.props[prop.name])}
 								on:change={doPropChange(prop)}
@@ -572,6 +584,7 @@
 								class="w-full px-1"
 								step="1"
 								type="number"
+								use:displayUnits={'°'}
 								value={rad2deg(propertiesDisplay.props[prop.name])}
 								on:change={doPropChange(prop)}
 							/>

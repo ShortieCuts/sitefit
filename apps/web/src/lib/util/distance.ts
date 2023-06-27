@@ -15,6 +15,17 @@ export function metersToFeetPrettyPrint(meters: number, includeInches: boolean =
 		return `${feetInt}'`;
 	}
 }
+export function metersToFeetDecimalPrettyPrint(meters: number) {
+	let feet = meters * 3.28084;
+	let inchesPerFoot = 12;
+	let feetInt = Math.floor(feet);
+	let inches = (feet - feetInt) * inchesPerFoot;
+	if (inches == 0) {
+		return `${feetInt}ft`;
+	} else {
+		return `${feetInt}.${(inches / 12).toFixed(1).substring(2)}ft`;
+	}
+}
 
 export function metersAreaToFootArea(meters: number) {
 	let feet = meters * 10.764;

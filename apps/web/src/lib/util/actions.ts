@@ -48,3 +48,53 @@ export function portal(node: HTMLElement, id = 'default') {
 	else destroy = mount(node, key);
 	return { destroy: () => destroy?.() };
 }
+
+let getWidth = (fontSize: string, value: string) => {
+	let div = document.createElement('div');
+	div.innerText = value;
+	div.style.fontSize = fontSize;
+	div.style.width = 'auto';
+	div.style.display = 'inline-block';
+	div.style.visibility = 'hidden';
+	div.style.position = 'fixed';
+	div.style.overflow = 'auto';
+	document.body.append(div);
+	let width = div.clientWidth;
+	div.remove();
+	return width;
+};
+
+export function displayUnits(node: HTMLInputElement, unit: string) {
+	if (!unit) {
+		return { destroy: () => {} };
+	}
+	let wrapperEl = document.createElement('div');
+	node.parentNode?.insertBefore(wrapperEl, node);
+	wrapperEl.appendChild(node);
+	wrapperEl.setAttribute('class', node.getAttribute('class') || '');
+	wrapperEl.classList.add('display-units-wrapper');
+	node.setAttribute('class', '');
+
+	let unitEl = document.createElement('div');
+	unitEl.innerText = unit;
+	unitEl.classList.add('display-units-unit');
+	wrapperEl.appendChild(unitEl);
+
+	let listener = () => {
+		let offset = getWidth('1rem', node.value);
+		unitEl.style.left = `${offset}px`;
+	};
+
+	listener();
+
+	node.addEventListener('input', listener);
+
+	return {
+		destroy: () => {
+			node.removeEventListener('input', listener);
+			node.setAttribute('class', wrapperEl.getAttribute('class') || '');
+			wrapperEl.parentNode?.insertBefore(node, wrapperEl);
+			wrapperEl.remove();
+		}
+	};
+}
