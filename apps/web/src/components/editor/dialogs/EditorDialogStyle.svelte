@@ -80,7 +80,7 @@
 <DialogSlideUp>
 	<ResponsiveGroup
 		hide={$isMobile ? [] : ['group-0']}
-		groups={['Map', 'Transparency', 'Colors', 'Boundaries', 'Measurement']}
+		groups={['Map', 'Transparency', 'Colors', 'Selected Parcels', 'Measurement']}
 	>
 		<div slot="group-0" class="flex flex-row items-center space-x-2 py-8 select-none overflow-auto">
 			{#each MAP_STYLES as style}
@@ -212,7 +212,7 @@
 				<span
 					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start rounded-l pl-1 pr-2"
 				>
-					Stroke Width
+					Border Width
 				</span>
 				<input
 					class="w-full px-1"
@@ -226,7 +226,7 @@
 				<span
 					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start rounded-l pl-1 pr-2"
 				>
-					Stroke Color
+					Border Color
 				</span>
 				<input
 					class="mx-2"
@@ -281,7 +281,10 @@
 				<input
 					class="w-full px-1"
 					type="number"
-					bind:value={$measurementFontSize}
+					value={$measurementFontSize * 10}
+					on:change={(e) => {
+						$measurementFontSize = e.target.value / 10;
+					}}
 					min="0"
 					max="1000"
 				/>

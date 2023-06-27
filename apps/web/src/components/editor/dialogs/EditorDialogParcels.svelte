@@ -17,7 +17,7 @@
 
 	const { editor, broker } = getSvelteContext();
 
-	const { zoom, selectedParcelLonLat, parcelProvider } = editor;
+	const { zoom, selectedParcelLonLat, parcelProvider, selection } = editor;
 
 	const USE_EXACT_PARCEL_DATA = false;
 
@@ -204,8 +204,13 @@
 			</div>
 		</div>
 	{:else if selectedParcelExisting}
-		<div class="text-lg flex flex-row items-center justify-center mx-4 rounded-md bg-gray-50">
-			<EditorProperties showTransform={false} />
+		<div
+			class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-gray-100 px-4 py-2 mt-4 mx-4"
+		>
+			<Fa icon={faMapMarked} />
+			<span class="ml-2">
+				{$selection.length} selected parcel{$selection.length > 1 ? 's' : ''}
+			</span>
 		</div>
 		<div class="flex flex-row justify-end mx-4">
 			<button
