@@ -26,7 +26,7 @@
 	function stageObject(d: ParcelData) {
 		let p = new Path();
 		p.name = 'Parcel ' + d.address_street;
-		p.pinned = true;
+		p.pinned = false;
 		p.smartObject = 'path';
 		p.smartProperties = {
 			strokeWidth: 10,
@@ -161,6 +161,10 @@
 				<button
 					class="text-blue-500"
 					on:click={() => {
+						let staged = get(broker.stagingObject);
+						if (staged) {
+							staged.pinned = true;
+						}
 						let newId = broker.commitStagedObject();
 						if (newId) editor.select(newId);
 						$selectedParcelLonLat[0] = 0;
@@ -251,6 +255,10 @@
 				<button
 					class="btn mt-2 btn-primary"
 					on:click={() => {
+						let staged = get(broker.stagingObject);
+						if (staged) {
+							staged.pinned = true;
+						}
 						let newId = broker.commitStagedObject();
 						if (newId) editor.select(newId);
 						$selectedParcelLonLat[0] = 0;
