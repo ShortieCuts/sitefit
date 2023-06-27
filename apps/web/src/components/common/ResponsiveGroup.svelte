@@ -11,15 +11,17 @@
 
 {#if $isMobile}
 	<div class="flex flex-row overflow-x-auto flex-nowrap no-scrollbars">
-		{#each groups as group}
-			<button
-				class="flex flex-row items-center justify-center first:ml-auto mx-2 last:mr-auto px-4 py-1 bg-white border-gray-600 border-[1px] rounded-md cursor-pointer"
-				class:bg-gray-600={activeGroup === group}
-				class:text-blue-500={activeGroup === group}
-				on:click={() => (activeGroup = group)}
-			>
-				{group}
-			</button>
+		{#each groups as group, i}
+			{#if !hide.includes('group-' + i)}
+				<button
+					class="flex flex-row items-center justify-center first:ml-auto mx-2 last:mr-auto px-4 py-1 bg-white border-gray-600 border-[1px] rounded-md cursor-pointer"
+					class:bg-gray-600={activeGroup === group}
+					class:text-blue-500={activeGroup === group}
+					on:click={() => (activeGroup = group)}
+				>
+					{group}
+				</button>
+			{/if}
 		{/each}
 	</div>
 	{#if slotCount >= 1 && activeGroup === groups[0] && !hide.includes('group-0')}
