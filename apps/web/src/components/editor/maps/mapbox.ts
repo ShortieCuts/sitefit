@@ -290,7 +290,7 @@ export class MapboxMapsProvider extends MapProvider {
 				source: 'source',
 				paint: {
 					'fill-color': '#ffeb3b',
-					'fill-opacity': 0.1
+					'fill-opacity': 0.01
 				}
 			});
 		}
