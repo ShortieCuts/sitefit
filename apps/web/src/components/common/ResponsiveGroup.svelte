@@ -52,63 +52,63 @@
 {:else}
 	{#if slotCount >= 1 && !hide.includes('group-0')}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-[2px] flex-1" />
-			<div class="mx-2 font-bold">{groups[0]}</div>
-			<div class="bg-gray-200 h-[2px] flex-1" />
+			<div class="" />
+			<div class="mx-2 ml-8 font-bold">{groups[0]}</div>
+			<div class="" />
 		</div>
 		<slot name="group-0" />
 	{/if}
 
 	{#if slotCount >= 2 && !hide.includes('group-1')}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-[2px] flex-1" />
-			<div class="mx-2 font-bold">{groups[1]}</div>
-			<div class="bg-gray-200 h-[2px] flex-1" />
+			<div class="" />
+			<div class="mx-2 ml-8 font-bold">{groups[1]}</div>
+			<div class="" />
 		</div>
 		<slot name="group-1" />
 	{/if}
 
 	{#if slotCount >= 3 && !hide.includes('group-2')}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-[2px] flex-1" />
-			<div class="mx-2 font-bold">{groups[2]}</div>
-			<div class="bg-gray-200 h-[2px] flex-1" />
+			<div class="" />
+			<div class="mx-2 ml-8 font-bold">{groups[2]}</div>
+			<div class="" />
 		</div>
 		<slot name="group-2" />
 	{/if}
 
 	{#if slotCount >= 4 && !hide.includes('group-3')}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-[2px] flex-1" />
-			<div class="mx-2 font-bold">{groups[3]}</div>
-			<div class="bg-gray-200 h-[2px] flex-1" />
+			<div class="" />
+			<div class="mx-2 ml-8 font-bold">{groups[3]}</div>
+			<div class="" />
 		</div>
 		<slot name="group-3" />
 	{/if}
 
 	{#if slotCount >= 5 && !hide.includes('group-4')}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-[2px] flex-1" />
-			<div class="mx-2 font-bold">{groups[4]}</div>
-			<div class="bg-gray-200 h-[2px] flex-1" />
+			<div class="" />
+			<div class="mx-2 ml-8 font-bold">{groups[4]}</div>
+			<div class="" />
 		</div>
 		<slot name="group-4" />
 	{/if}
 
 	{#if slotCount >= 6 && !hide.includes('group-5')}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-[2px] flex-1" />
-			<div class="mx-2 font-bold">{groups[5]}</div>
-			<div class="bg-gray-200 h-[2px] flex-1" />
+			<div class="" />
+			<div class="mx-2 ml-8 font-bold">{groups[5]}</div>
+			<div class="" />
 		</div>
 		<slot name="group-5" />
 	{/if}
 
 	{#if slotCount >= 7 && !hide.includes('group-6')}
 		<div class="flex flex-row items-center">
-			<div class="bg-gray-200 h-[2px] flex-1" />
-			<div class="mx-2 font-bold">{groups[6]}</div>
-			<div class="bg-gray-200 h-[2px] flex-1" />
+			<div class="" />
+			<div class="mx-2 ml-8 font-bold">{groups[6]}</div>
+			<div class="" />
 		</div>
 		<slot name="group-6" />
 	{/if}

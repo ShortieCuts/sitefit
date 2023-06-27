@@ -104,10 +104,10 @@
 
 		<div slot="group-1">
 			<div class="flex flex-col items-center pt-4">
-				<div class="flex flex-col w-[337px] max-w-full">
+				<div class="flex flex-col w-[337px] max-w-full mb-4">
 					<TransparencySvg />
 					<div class="grid mt-4 text-gray-500" style="grid-template-columns: 1.5fr 4fr 50px;">
-						<span>Boundaries</span>
+						<span>Parcels</span>
 						<input
 							class="w-full"
 							type="range"
