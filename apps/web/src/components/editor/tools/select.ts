@@ -1465,7 +1465,7 @@ export function getObjectAtCursor(
 	filterObjects?: (obj: Object2D) => boolean
 ): ObjectID | null {
 	let topObject = null;
-	let topZ = -Infinity;
+	let topZ = Infinity;
 	let quadObjects = broker.project.getObjectsInBounds({
 		minX: cursor[0] - 0.0001,
 		minY: cursor[1] - 0.0001,
@@ -1502,7 +1502,7 @@ export function getObjectAtCursor(
 		for (let fl of obj.flatShape) {
 			let [dist, seg] = distanceTo(fl, point(cursor[0], cursor[1]));
 			if (dist < get(editor.screenScale)) {
-				if ((obj.order ?? 0) >= topZ) {
+				if ((obj.order ?? 0) <= topZ) {
 					topZ = obj.order ?? 0;
 					topObject = obj.id;
 				}
@@ -1510,7 +1510,7 @@ export function getObjectAtCursor(
 
 			if (fl instanceof Flatten.Polygon) {
 				if (fl.contains(point(cursor[0], cursor[1]))) {
-					if ((obj.order ?? 0) >= topZ) {
+					if ((obj.order ?? 0) <= topZ) {
 						topZ = obj.order ?? 0;
 						topObject = obj.id;
 					}

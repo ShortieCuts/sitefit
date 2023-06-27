@@ -1,10 +1,16 @@
 <script lang="ts">
-	import { faObjectGroup, faObjectUngroup } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faArrowsDownToLine,
+		faArrowsUpToLine,
+		faObjectGroup,
+		faObjectUngroup
+	} from '@fortawesome/free-solid-svg-icons';
 	import { ObjectType } from 'core';
 	import { getSvelteContext } from 'src/store/editor';
 
 	import Fa from 'svelte-fa';
 	import KeyBind from './KeyBind.svelte';
+	import { get } from 'svelte/store';
 	const { editor, broker } = getSvelteContext();
 	const { selection } = editor;
 
@@ -49,3 +55,18 @@
 {#if canGroup || canUngroup}
 	<div class="my-2 w-full border-b border-gray-200" />
 {/if}
+<button
+	on:click={() => {
+		broker.adjustObjectOrder(get(selection), -Infinity);
+	}}
+	><Fa icon={faArrowsUpToLine} /> Send to front
+	<KeyBind to="sendfront" />
+</button>
+<button
+	on:click={() => {
+		broker.adjustObjectOrder(get(selection), Infinity);
+	}}
+	><Fa icon={faArrowsDownToLine} /> Send to back
+	<KeyBind to="sendback" />
+</button>
+<div class="my-2 w-full border-b border-gray-200" />

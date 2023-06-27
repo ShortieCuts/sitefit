@@ -182,6 +182,20 @@
 				editorContext.groupSelection();
 			}
 		}
+
+		if ((e.code == 'BracketLeft' || e.code == 'BracketRight') && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+			e.stopPropagation();
+			let direction = -1;
+			if (e.code == 'BracketLeft') {
+				direction = 1;
+			}
+			if (e.shiftKey) {
+				broker.adjustObjectOrder(get(selection), Math.sign(direction) * Infinity);
+			} else {
+				broker.adjustObjectOrder(get(selection), direction);
+			}
+		}
 	}
 
 	function refreshLocation() {

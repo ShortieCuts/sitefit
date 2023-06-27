@@ -521,6 +521,63 @@ export class ProjectBroker {
 		return get(this.sessionAccess) == 'WRITE';
 	}
 
+	/**
+	 * Relatively adjusts an object's z-order +/- the order number
+	 *
+	 * Use -Infinity to move to the bottom
+	 * Use Infinity to move to the top
+	 */
+	adjustObjectOrder(objIds: ObjectID[], order: number) {
+		let transaction = this.project.createTransaction();
+
+		let buckets = new Map<string, Object2D[]>();
+
+		for (let objId of objIds) {
+			let obj = this.project.objectsMap.get(objId);
+			if (obj) {
+				let parent = obj.parent ?? '';
+				if (!buckets.has(parent)) {
+					buckets.set(parent, []);
+				}
+				buckets.get(parent)?.push(obj);
+			}
+		}
+
+		for (let [parentId, list] of buckets) {
+			list.sort((a, b) => a.order - b.order);
+
+			let allChildren =
+				this.project.objectsMapChildren.get(parentId) ??
+				this.project.objects.filter((obj) => !obj.parent);
+
+			let finalOrderedList = [];
+			for (let obj of allChildren) {
+				if (!list.includes(obj)) {
+					finalOrderedList.push(obj);
+				}
+			}
+
+			let index = 0;
+			if (order == -Infinity) {
+				index = 0;
+			} else if (order == Infinity) {
+				index = finalOrderedList.length;
+			} else {
+				index = list[0].order + order;
+			}
+
+			for (let i = 0; i < list.length; i++) {
+				finalOrderedList.splice(index + i, 0, list[i]);
+			}
+
+			for (let i = 0; i < finalOrderedList.length; i++) {
+				transaction.update(finalOrderedList[i].id, 'order', i);
+			}
+		}
+
+		this.commitTransaction(transaction);
+	}
+
 	commitUndo() {
 		if (!this.canWrite()) return;
 		let undo = get(this.undo);
@@ -574,7 +631,11 @@ export class ProjectBroker {
 				didChangeTree = true;
 				changedObjects.add(mutation.subject);
 			} else if (mutation.type === 'update') {
-				if (mutation.data && (mutation.data as PropertyMutation)?.key === 'parent') {
+				if (
+					mutation.data &&
+					((mutation.data as PropertyMutation)?.key === 'parent' ||
+						(mutation.data as PropertyMutation)?.key === 'order')
+				) {
 					didChangeTree = true;
 				}
 				changedObjects.add(mutation.subject);

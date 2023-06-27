@@ -248,6 +248,8 @@ class RenderPath implements RenderObject2D {
 				let children = smartObjectRender(obj, obj.smartObject, properties);
 
 				for (let child of children) {
+					child.order = obj.order;
+					child.parent = obj.parent;
 					let ro = createRenderObject(overlay, child);
 					ro.active = this.active;
 					ro.refresh(overlay, child);
@@ -472,7 +474,8 @@ class RenderPath implements RenderObject2D {
 		if (obj.pinned) {
 			this.line.position.setY(-0.1);
 		} else {
-			this.line.position.setY(0.02);
+			let y = overlay.computeObjectLayerHeight(obj);
+			this.line.position.setY(y + 0.001);
 		}
 
 		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
@@ -485,8 +488,8 @@ class RenderPath implements RenderObject2D {
 				this.filled.geometry = this.line.geometry;
 
 				this.filled.position.setX(obj.transform.position[0]);
+				this.filled.position.setY(overlay.computeObjectLayerHeight(obj));
 				if (obj.measurement) {
-					this.filled.position.setY(0.01);
 					if (obj.pinned) {
 						this.filled.position.setY(-0.1);
 					}
@@ -520,6 +523,7 @@ class RenderPath implements RenderObject2D {
 				this.filled.geometry = geo;
 
 				this.filled.position.setX(obj.transform.position[0]);
+				this.filled.position.setY(overlay.computeObjectLayerHeight(obj));
 				if (obj.measurement) {
 					this.filled.position.setY(0.01);
 					this.line.visible = true;
@@ -1376,6 +1380,25 @@ export class RendererOverlay extends Overlay {
 
 	renderedObjects: Map<ObjectID, RenderObject2D> = new Map();
 
+	computeObjectLayerHeight(baseObj: Object2D) {
+		let obj: Object2D | undefined = baseObj;
+
+		let parentChain = [obj];
+
+		while (obj.parent) {
+			obj = this.broker.project.objectsMap.get(obj.parent);
+			if (!obj) break;
+			parentChain.unshift(obj);
+		}
+
+		let height = 0.1;
+		for (let i = 0; i < parentChain.length; i++) {
+			height -= parentChain[i].order / (i + 1) / 500;
+		}
+
+		return height;
+	}
+
 	init(): void {
 		super.init();
 
@@ -1751,6 +1774,10 @@ export class HeadlessRenderer {
 	constructor(scene: THREE.Scene, overlayElement: HTMLElement) {
 		this.scene = scene;
 		this.overlayElement = overlayElement;
+	}
+
+	computeObjectLayerHeight(baseObj: Object2D) {
+		return 0.01;
 	}
 
 	appendElement(el: HTMLElement) {

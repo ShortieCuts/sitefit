@@ -1,5 +1,6 @@
 <script lang="ts">
-	export let to: '' | 'delete' | 'group' | 'ungroup' | 'copy' | 'paste' = '';
+	export let to: '' | 'delete' | 'group' | 'ungroup' | 'copy' | 'paste' | 'sendfront' | 'sendback' =
+		'';
 
 	const bindNames: {
 		[key in typeof to]: string;
@@ -9,7 +10,9 @@
 		group: 'Ctrl+G',
 		ungroup: 'Ctrl+Shift+G',
 		copy: 'Ctrl+C',
-		paste: 'Ctrl+V'
+		paste: 'Ctrl+V',
+		sendfront: 'Ctrl+Shift+]',
+		sendback: 'Ctrl+Shift+['
 	};
 
 	function translateToMac(key: string) {
