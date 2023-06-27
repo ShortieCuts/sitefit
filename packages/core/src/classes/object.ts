@@ -1280,12 +1280,14 @@ const SmartPath = makeSmartObject({
         value: [0, 0, 0, 1],
         active: true,
       },
+      displayName: "Border",
     },
     strokeWidth: {
       type: {
         name: "stroke",
         type: "number",
       },
+      displayName: "Border Width",
       default: 1,
     },
     fill: {

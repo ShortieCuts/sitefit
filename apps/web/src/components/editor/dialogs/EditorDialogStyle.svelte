@@ -207,7 +207,7 @@
 				{/if}
 			</div>
 		</div>
-		<div slot="group-3" class="py-4 space-y-2">
+		<div slot="group-3" class="py-4 space-y-2 mx-6">
 			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
 				<span
 					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start rounded-l pl-1 pr-2"
@@ -271,7 +271,7 @@
 				</span>
 			</div>
 		</div>
-		<div slot="group-4" class="pt-4 space-y-2">
+		<div slot="group-4" class="pt-4 space-y-2 mx-6">
 			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
 				<span
 					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start rounded-l pl-1 pr-2"
