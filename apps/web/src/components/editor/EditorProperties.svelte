@@ -418,73 +418,76 @@
 		</div>
 		{#if showTransform}
 			<div class="properties-transform flex flex-col space-y-2 p-2">
-				<div class="flex flex-row space-x-2">
+				<div class="flex flex-col space-y-2">
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
 						<label
 							for="props-x"
-							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
-							>X</label
+							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
 						>
+							X
+						</label>
 						<input
 							id="props-x"
-							class="w-full h-6 cursor-default"
+							class="w-full h-6 cursor-default pl-2"
 							bind:value={propertiesDisplay.x}
 							on:change={doTransformChange('x')}
 						/>
 					</div>
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
 						<label
-							for="props-w"
-							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
-							>W</label
-						>
-						<input
-							id="props-w"
-							class="w-full h-6 cursor-default"
-							bind:value={propertiesDisplay.width}
-							on:change={doTransformChange('width')}
-						/>
-					</div>
-				</div>
-				<div class="flex flex-row space-x-2">
-					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label
 							for="props-y"
-							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
+							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
 							>Y</label
 						>
 						<input
 							id="props-y"
-							class="w-full h-6 cursor-default"
+							class="w-full h-6 cursor-default pl-2"
 							bind:value={propertiesDisplay.y}
 							on:change={doTransformChange('y')}
+						/>
+					</div>
+				</div>
+				<div class="flex flex-col space-y-2">
+					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+						<label
+							for="props-w"
+							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+							>Width</label
+						>
+						<input
+							id="props-w"
+							readonly
+							class="w-full h-6 cursor-default pl-2 text-opacity-50 text-black"
+							bind:value={propertiesDisplay.width}
+							on:change={doTransformChange('width')}
 						/>
 					</div>
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
 						<label
 							for="props-h"
-							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
-							>H</label
+							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+							>Height</label
 						>
 						<input
 							id="props-h"
-							class="w-full h-6 cursor-default"
+							readonly
+							class="w-full h-6 cursor-default pl-2 text-opacity-50 text-black"
 							bind:value={propertiesDisplay.height}
 							on:change={doTransformChange('height')}
 						/>
 					</div>
 				</div>
-				<div class="flex flex-row space-x-2">
+				<div class="flex flex-col">
 					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
 						<label
 							for="props-a"
-							class="bg-gray-200 min-w-[10px] mr-2 rounded-l w-10 flex items-center justify-center"
+							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
 						>
-							A
+							Angle
 						</label>
 						<input
 							id="props-a"
-							class="w-full cursor-default"
+							class="w-full cursor-default pl-2"
 							bind:value={propertiesDisplay.angle}
 							on:change={doTransformChange('angle')}
 						/>

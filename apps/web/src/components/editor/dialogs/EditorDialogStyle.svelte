@@ -226,7 +226,7 @@
 				<span
 					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start rounded-l pl-1 pr-2"
 				>
-					Border Color
+					Border
 				</span>
 				<input
 					class="mx-2"
@@ -236,21 +236,31 @@
 						$defaultBoundaryStrokeActive = !$defaultBoundaryStrokeActive;
 					}}
 				/>
-				<span class:line-through={!$defaultBoundaryStrokeActive}>
-					<ColorInput
-						noVerticalBorder
-						value={$defaultBoundaryStrokeValue}
-						on:change={(e) => {
-							$defaultBoundaryStrokeValue = e.detail;
-						}}
-					/>
-				</span>
 			</div>
+			{#if $defaultBoundaryStrokeActive}
+				<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+					<span
+						class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start rounded-l pl-1 pr-2"
+					>
+						Border Color
+					</span>
+
+					<span class:line-through={!$defaultBoundaryStrokeActive}>
+						<ColorInput
+							noVerticalBorder
+							value={$defaultBoundaryStrokeValue}
+							on:change={(e) => {
+								$defaultBoundaryStrokeValue = e.detail;
+							}}
+						/>
+					</span>
+				</div>
+			{/if}
 			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
 				<span
 					class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start rounded-l pl-1 pr-2"
 				>
-					Fill Color
+					Fill
 				</span>
 				<input
 					class="mx-2"
@@ -260,16 +270,25 @@
 						$defaultBoundaryFillActive = !$defaultBoundaryFillActive;
 					}}
 				/>
-				<span class:line-through={!$defaultBoundaryFillActive}>
-					<ColorInput
-						noVerticalBorder
-						value={$defaultBoundaryFillValue}
-						on:change={(e) => {
-							$defaultBoundaryFillValue = e.detail;
-						}}
-					/>
-				</span>
 			</div>
+			{#if $defaultBoundaryFillActive}
+				<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+					<span
+						class="flex-shrink-0 h-full w-28 min-w-20 overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start rounded-l pl-1 pr-2"
+					>
+						Fill Color
+					</span>
+					<span class:line-through={!$defaultBoundaryFillActive}>
+						<ColorInput
+							noVerticalBorder
+							value={$defaultBoundaryFillValue}
+							on:change={(e) => {
+								$defaultBoundaryFillValue = e.detail;
+							}}
+						/>
+					</span>
+				</div>
+			{/if}
 		</div>
 		<div slot="group-4" class="pt-4 space-y-2 mx-6">
 			<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
