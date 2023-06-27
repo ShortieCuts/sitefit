@@ -246,7 +246,7 @@
 		</MobileDrawer>
 	{/if}
 	{#if hasSelection}
-		{#if $mobileToolMode === ''}
+		{#if $mobileToolMode === '' && get(editor.activeDialog) != 'parcels'}
 			<MobileDrawer>
 				<div>
 					<button

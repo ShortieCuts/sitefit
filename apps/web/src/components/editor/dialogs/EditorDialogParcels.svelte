@@ -70,6 +70,7 @@
 	let loadedParcelFor = [0, 0];
 	$: {
 		selectedParcelExisting = null;
+		console.log('selectedParcelExisting', $selection);
 		if ($selectedParcelLonLat[0] !== 0 || $selectedParcelLonLat[1] !== 0) {
 			(async () => {
 				if (
@@ -128,6 +129,7 @@
 
 					broker.stagingObject.set(p);
 					selectedParcelExisting = selectedPath;
+					console.log('selectedParcelExisting', selectedParcelExisting);
 				}
 			}
 		}
@@ -142,6 +144,32 @@
 			>
 				<Fa icon={faWarning} />
 				<span class="ml-2"> Zoom in to view parcels </span>
+			</div>
+		{:else if selectedParcelExisting}
+			<div
+				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-gray-100 px-4 py-2 mt-4 mx-4"
+			>
+				<Fa icon={faMapMarked} />
+				<span class="ml-2">
+					{$selection.length} selected parcel{$selection.length > 1 ? 's' : ''}
+				</span>
+			</div>
+			<div>
+				<button
+					on:click={() => {
+						editor.deselectAll();
+						broker.stagingObject.set(null);
+						selectedParcelExisting = null;
+					}}>Deselect</button
+				>
+				<button
+					class="text-red-500"
+					on:click={() => {
+						editor.deleteSelection(broker);
+						broker.stagingObject.set(null);
+						selectedParcelExisting = null;
+					}}>Delete Parcel</button
+				>
 			</div>
 		{:else if $selectedParcelLonLat[0] == 0 && $selectedParcelLonLat[1] == 0}
 			<div
@@ -169,7 +197,6 @@
 						if (newId) editor.select(newId);
 						$selectedParcelLonLat[0] = 0;
 						$selectedParcelLonLat[1] = 0;
-						editor.activateDialog('');
 					}}>Save Parcel</button
 				>
 				<button

@@ -308,6 +308,19 @@
 
 			map.onClick((ev: MouseMapEvent) => {
 				if (get(editor.activeDialog) == 'parcels') {
+					if ($isMobile) {
+						if (!map) return;
+
+						const referenceOverlay = map.getOverlayProxy();
+						editor.currentMousePosition.set([ev.lat, ev.lon]);
+
+						let vec = referenceOverlay.lonLatToVector3(ev.lon, ev.lat);
+
+						editor.currentMousePositionRelative.set(
+							broker.normalizeVector([vec?.x ?? 0, vec?.z ?? 0])
+						);
+						editor.currentMousePositionScreen.set([ev.domEvent.clientX, ev.domEvent.clientY]);
+					}
 					let cursor = get(editor.currentMousePositionRelative);
 					let cursorScreen = get(editor.currentMousePositionScreen);
 					let hover = getObjectAtCursor(editor, broker, cursor, cursorScreen, (obj) => {
@@ -321,6 +334,7 @@
 						if (hoverObj) {
 							if (hoverObj.pinned) {
 								editor.select(hover);
+								console.log('selected', hover);
 							}
 						}
 					}

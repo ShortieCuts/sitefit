@@ -96,15 +96,10 @@ export class ParcelOverlay {
 
 		const worldCoordinate = project(lonLat);
 
-		const pixelCoordinate = new google.maps.Point(
-			Math.floor(worldCoordinate[0] * scale),
-			Math.floor(worldCoordinate[1] * scale)
-		);
-
-		const tileCoordinate = new google.maps.Point(
-			Math.floor((worldCoordinate[0] * scale) / TILE_SIZE),
-			Math.floor((worldCoordinate[1] * scale) / TILE_SIZE)
-		);
+		const tileCoordinate = {
+			x: Math.floor((worldCoordinate[0] * scale) / TILE_SIZE),
+			y: Math.floor((worldCoordinate[1] * scale) / TILE_SIZE)
+		};
 		let tileKey = `${tileCoordinate.x},${tileCoordinate.y},${zoomFloored}`;
 		if (this.loadedTiles.has(tileKey)) {
 			return;

@@ -367,7 +367,7 @@ export function calculateGuides(
 export function selectDown(ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) {
 	if (get(isMobile)) {
 		let toolMode = get(editor.mobileToolMode);
-		if (toolMode == 'transform') {
+		if (toolMode == 'transform' || get(editor.activeDialog) == 'parcels') {
 			return;
 		}
 		// Search through top-level objects to select
