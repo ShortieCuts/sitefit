@@ -739,6 +739,7 @@ export type ObjectProperty = {
     | "color-toggle";
   options?: string[];
   condition?: (obj: Object2D) => boolean;
+  multiplier?: number;
 };
 
 export const ObjectProperties: {
@@ -751,6 +752,7 @@ export const ObjectProperties: {
       condition: (obj: Path) => {
         return !!obj.measurement;
       },
+      multiplier: 10,
     },
   ],
   [ObjectType.Group]: [],

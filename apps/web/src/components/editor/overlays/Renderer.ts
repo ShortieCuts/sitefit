@@ -654,6 +654,13 @@ class RenderPath implements RenderObject2D {
 			} else {
 				this.textEl.style.display = 'flex';
 				this.textEl.style.fontSize = `${pinnedSize}px`;
+
+				if (pinnedSize * text.length * fontAspectRatio > lineSize) {
+					let dx = Math.cos(angle + Math.PI / 2);
+					let dy = Math.sin(angle + Math.PI / 2);
+					pos.x += dx * pinnedSize;
+					pos.y += dy * pinnedSize;
+				}
 			}
 		} else {
 			if (fontSize <= 10) {

@@ -212,6 +212,10 @@
 					return;
 				}
 
+				if (typeof prop.multiplier !== 'undefined') {
+					num /= prop.multiplier;
+				}
+
 				setTo = num;
 			} else if (prop.type == 'angle') {
 				let num = parseFloat((e.target as HTMLInputElement).value);
@@ -548,7 +552,8 @@
 							<input
 								class="w-full px-1"
 								type="number"
-								bind:value={propertiesDisplay.props[prop.name]}
+								value={propertiesDisplay.props[prop.name] *
+									(typeof prop.multiplier == 'number' ? prop.multiplier : 1)}
 								on:change={doPropChange(prop)}
 							/>
 						{:else if prop.type == 'meters'}
