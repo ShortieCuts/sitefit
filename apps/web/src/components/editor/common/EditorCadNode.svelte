@@ -226,13 +226,13 @@
 		>
 			{#if node.children && node.children.length > 0}
 				<button
-					class="cursor-default w-6 h-6 hover:bg-gray-200 flex items-center justify-center rounded-md text-gray-400"
+					class="cursor-default w-6 h-6 min-w-[1.5rem] hover:bg-gray-200 flex items-center justify-center rounded-md text-gray-400"
 					on:click|stopPropagation={toggle}
 				>
 					<Fa icon={isOpen ? faCaretDown : faCaretRight} /></button
 				>
 			{:else}
-				<div class="w-6 h-6" />
+				<div class="w-6 h-6 min-w-[1.5rem]" />
 			{/if}
 			<span class="w-6 h-6 flex items-center justify-center">
 				{#if node.type == 'folder' && node.name == 'Trash'}
