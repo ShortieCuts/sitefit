@@ -400,6 +400,8 @@
 		editorContext.selection.set(newSelection);
 		editorContext.computeEffectiveSelection(broker);
 		editorContext.rootGroup.set(null);
+
+		broker.centerObjectsOnPoint(newSelection, get(editorContext.currentMousePositionRelative));
 	}
 
 	function onPaste(e: ClipboardEvent) {

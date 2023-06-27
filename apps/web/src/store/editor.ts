@@ -506,6 +506,25 @@ export class ProjectBroker {
 		this.commitTransaction(trans, true);
 	}
 
+	centerObjectsOnPoint(objIds: ObjectID[], point: [number, number]) {
+		let bounds = this.project.computeBoundsMulti(objIds);
+		let center = [(bounds.minX + bounds.maxX) / 2, (bounds.minY + bounds.maxY) / 2] as [
+			number,
+			number
+		];
+
+		let rootTrans = this.project.createTransaction();
+
+		for (let objId of objIds) {
+			let obj = this.project.objectsMap.get(objId);
+			if (obj) {
+				let trans = this.project.translateObject(objId, point[0] - center[0], point[1] - center[1]);
+				rootTrans.mutations.push(...trans.mutations);
+			}
+		}
+		this.commitTransaction(rootTrans, false);
+	}
+
 	createObject(obj: Object2D) {
 		let uid = this.allocateId();
 		obj.id = uid;
