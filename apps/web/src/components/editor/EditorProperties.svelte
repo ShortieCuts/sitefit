@@ -246,7 +246,7 @@
 				setTo = (e.target as HTMLInputElement).checked;
 			} else if (prop.type == 'string') {
 				setTo = (e.target as HTMLInputElement).value;
-			} else if ((prop.type = 'color-toggle')) {
+			} else if (prop.type == 'color-toggle') {
 				if (e.target && e.target instanceof HTMLInputElement) {
 					setTo = {
 						active: e.target.checked,
@@ -258,6 +258,8 @@
 						value: e.detail
 					};
 				}
+			} else if (prop.type == 'color') {
+				setTo = e.detail;
 			}
 
 			if (setTo !== null) {
@@ -625,6 +627,14 @@
 										on:change={doPropChange(prop)}
 									/>
 								</div>
+							</div>
+						{:else if prop.type == 'color'}
+							<div class="flex flex-row">
+								<ColorInput
+									noVerticalBorder
+									value={propertiesDisplay.props[prop.name] ?? [0, 0, 0, 1]}
+									on:change={doPropChange(prop)}
+								/>
 							</div>
 						{/if}
 					</div>

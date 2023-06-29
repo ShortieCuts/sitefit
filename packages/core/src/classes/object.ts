@@ -7,6 +7,7 @@ import { Serializable } from "./serializable";
 
 import Flatten from "@flatten-js/core";
 import { Rectangle } from "../../lib/quadtree/index.esm";
+import { Color } from "./color";
 
 const {
   Polygon,
@@ -225,6 +226,7 @@ export class Path extends Object2D implements Serializable {
   measurementFontSize?: number;
 
   measurement?: boolean = false;
+  measurementBackgroundColor?: Color;
 
   smartObject?: string;
   smartProperties?: any;
@@ -1273,6 +1275,30 @@ const SmartPath = makeSmartObject({
         type: "boolean",
       },
     },
+    measurementFontSize: {
+      default: 1,
+      type: {
+        name: "measurementFontSize",
+        type: "number",
+      },
+      multiplier: 10,
+    },
+    measurementFontColor: {
+      default: [80 / 255, 200 / 255, 255 / 255, 1],
+      type: {
+        name: "measurementFontColor",
+        type: "color",
+      },
+    },
+    measurementBackgroundColor: {
+      default: [255 / 255, 255 / 255, 255 / 255, 1],
+      type: {
+        name: "measurementBackgroundColor",
+        type: "color",
+      },
+      displayName: "Measurement Bg Color",
+    },
+
     stroke: {
       type: {
         name: "stroke",
@@ -1355,15 +1381,29 @@ const SmartPath = makeSmartObject({
     if (props.measureArea) {
       let obj = new Path();
       obj.pinned = path.pinned;
-      obj.id = `${path.id}-path-area`;
+
+      obj.id = path.id;
       obj.name = `Area`;
+      obj.measurementFontSize = props.measurementFontSize;
       obj.segments = structuredClone(path.segments);
       obj.transform = structuredClone(path.transform);
 
       obj.style = new Material();
-      obj.style.color = [...path.style.color];
+
+      obj.style.color = props.measurementFontColor as [
+        number,
+        number,
+        number,
+        number
+      ];
+      obj.measurementBackgroundColor = props.measurementBackgroundColor as [
+        number,
+        number,
+        number,
+        number
+      ];
       obj.measurement = true;
-      obj.style.filled = true;
+      obj.style.filled = false;
       obj.closed = true;
 
       obj.computeShape();
@@ -1467,13 +1507,25 @@ const SmartPath = makeSmartObject({
       let counter = 0;
       let makeRuler = (from: [number, number], to: [number, number]) => {
         let obj = new Path();
-        obj.id = `${path.id}-path-edges-${counter++}`;
+        obj.id = path.id;
         obj.name = `Edges`;
         obj.segments = [from, to];
-
+        obj.measurementFontSize = props.measurementFontSize;
         obj.style = new Material();
         obj.style.type = "color";
-        obj.style.color = [...path.style.color];
+        obj.style.color = props.measurementFontColor as [
+          number,
+          number,
+          number,
+          number
+        ];
+        obj.measurementBackgroundColor = props.measurementBackgroundColor as [
+          number,
+          number,
+          number,
+          number
+        ];
+
         obj.style.filled = false;
         obj.closed = false;
         obj.measurement = true;

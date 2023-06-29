@@ -140,7 +140,7 @@ class RenderPath implements RenderObject2D {
 			childDiv.style.background = 'white';
 			childDiv.style.padding = '2px 4px';
 			childDiv.style.borderRadius = '2px';
-			childDiv.style.border = `2px dashed ${colorArrayToCss(obj.style.color)}`;
+			// childDiv.style.border = `2px dashed ${colorArrayToCss(obj.style.color)}`;
 			childDiv.dataset.hoverable = 'true';
 			childDiv.dataset.objectId = obj.id;
 
@@ -199,7 +199,7 @@ class RenderPath implements RenderObject2D {
 				let properties = obj.smartProperties ?? {};
 				if (obj.pinned) {
 					properties = structuredClone(overlay.defaultBoundaryProps);
-					console.log('rpops', properties);
+
 					let defaultBoundaryProps = {
 						strokeWidth: 10,
 						stroke: {
@@ -299,10 +299,14 @@ class RenderPath implements RenderObject2D {
 		if (obj.measurement && this.textEl) {
 			let el = this.textEl.querySelector('div') as HTMLDivElement;
 			if (el) {
-				if (this.active) {
-					el.style.background = '#cdefff';
+				if (obj.measurementBackgroundColor) {
+					el.style.background = colorArrayToCss(obj.measurementBackgroundColor);
 				} else {
-					el.style.background = 'white';
+					if (this.active) {
+						el.style.background = '#cdefff';
+					} else {
+						el.style.background = 'white';
+					}
 				}
 			}
 		}
@@ -475,7 +479,7 @@ class RenderPath implements RenderObject2D {
 			this.line.position.setY(-0.1);
 		} else {
 			let y = overlay.computeObjectLayerHeight(obj);
-			this.line.position.setY(y + 0.001);
+			this.line.position.setY(y + 0.00001);
 		}
 
 		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));

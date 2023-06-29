@@ -10,6 +10,12 @@
 
 	export let value: [number, number, number, number] | undefined = [0, 0, 0, 1];
 
+	$: {
+		if (typeof value !== 'undefined' && !Array.isArray(value)) {
+			value = [0, 0, 0, 1];
+		}
+	}
+
 	function valueToRGB(value: [number, number, number, number] | undefined) {
 		if (!value) {
 			return {
