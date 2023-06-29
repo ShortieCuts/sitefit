@@ -227,6 +227,7 @@ export class Path extends Object2D implements Serializable {
 
   measurement?: boolean = false;
   measurementBackgroundColor?: Color;
+  measurementFontColor?: Color;
 
   smartObject?: string;
   smartProperties?: any;
@@ -1390,7 +1391,8 @@ const SmartPath = makeSmartObject({
 
       obj.style = new Material();
 
-      obj.style.color = props.measurementFontColor as [
+      obj.style.color = [0, 0, 0, 0];
+      obj.measurementFontColor = props.measurementFontColor as [
         number,
         number,
         number,
@@ -1403,7 +1405,7 @@ const SmartPath = makeSmartObject({
         number
       ];
       obj.measurement = true;
-      obj.style.filled = false;
+      obj.style.filled = true;
       obj.closed = true;
 
       obj.computeShape();
@@ -1513,7 +1515,8 @@ const SmartPath = makeSmartObject({
         obj.measurementFontSize = props.measurementFontSize;
         obj.style = new Material();
         obj.style.type = "color";
-        obj.style.color = props.measurementFontColor as [
+        obj.style.color = [0, 0, 0, 0];
+        obj.measurementFontColor = props.measurementFontColor as [
           number,
           number,
           number,

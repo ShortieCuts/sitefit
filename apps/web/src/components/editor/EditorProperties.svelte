@@ -145,7 +145,15 @@
 					}
 				}
 
+				let origRotation = object.transform.rotation;
+
+				object.transform.rotation = 0;
+				object.computeShape();
+
 				let bounds = object.getBounds();
+
+				object.transform.rotation = origRotation;
+				object.computeShape();
 
 				trackProperty('x', bounds.minX);
 				trackProperty('y', bounds.minY);
@@ -175,7 +183,7 @@
 			}
 		}
 
-		const printMeasure = (ft: number) => metersToFeetDecimalPrettyPrint(ft);
+		const printMeasure = (ft: number) => metersToFeet(ft).toFixed(1).replace(/\.0$/, '');
 
 		(propertiesDisplay.x = propertyMixedMap.get('x')
 			? 'Mixed'
@@ -297,6 +305,44 @@
 			}
 
 			let transaction = broker.project.createTransaction();
+			function updateSize(obj: Object2D, axis: 'width' | 'height', toVal: number) {
+				if (obj.type == ObjectType.Path) {
+					let path = obj as Path;
+					let minX = Infinity;
+					let minY = Infinity;
+					let maxX = -Infinity;
+					let maxY = -Infinity;
+
+					for (let seg of path.segments) {
+						minX = Math.min(minX, seg[0]);
+						minY = Math.min(minY, seg[1]);
+						maxX = Math.max(maxX, seg[0]);
+						maxY = Math.max(maxY, seg[1]);
+					}
+
+					let width = maxX - minX;
+					let height = maxY - minY;
+
+					let scale = 1;
+
+					if (axis == 'width') {
+						scale = toVal / width;
+					} else {
+						scale = toVal / height;
+					}
+
+					let newSegments = [];
+					for (let seg of path.segments) {
+						if (axis == 'width') {
+							newSegments.push([minX + (seg[0] - minX) * scale, seg[1]]);
+						} else {
+							newSegments.push([seg[0], minY + (seg[1] - minY) * scale]);
+						}
+					}
+					transaction.update(path.id, 'segments', newSegments);
+				}
+			}
+
 			for (const id of $effectiveSelection) {
 				const object = broker.project.objectsMap.get(id);
 				if (object) {
@@ -317,9 +363,11 @@
 							});
 							break;
 						case 'width':
+							updateSize(object, 'width', feetToMeters(value));
 							recalculateProperties();
 							break;
 						case 'height':
+							updateSize(object, 'height', feetToMeters(value));
 							recalculateProperties();
 							break;
 						case 'angle':
@@ -342,7 +390,6 @@
 	function doStyleChange(prop: keyof Material) {
 		return (e: CustomEvent | InputEvent) => {
 			let value: any;
-			console.log(e);
 			if (e.target) {
 				value = (e.target as HTMLInputElement).value;
 			} else {
@@ -467,9 +514,9 @@
 						>
 						<input
 							id="props-w"
-							readonly
-							class="w-full h-6 cursor-default pl-2 text-opacity-50 text-black"
+							class="w-full h-6 cursor-default pl-2 text-black"
 							value={propertiesDisplay.width}
+							use:displayUnits={propertiesDisplay.width == 'Mixed' ? '' : 'ft'}
 							on:change={doTransformChange('width')}
 						/>
 					</div>
@@ -481,9 +528,9 @@
 						>
 						<input
 							id="props-h"
-							readonly
-							class="w-full h-6 cursor-default pl-2 text-opacity-50 text-black"
+							class="w-full h-6 cursor-default pl-2 text-black"
 							value={propertiesDisplay.height}
+							use:displayUnits={propertiesDisplay.height == 'Mixed' ? '' : 'ft'}
 							on:change={doTransformChange('height')}
 						/>
 					</div>

@@ -1,16 +1,24 @@
 export function metersToFeetPrettyPrint(meters: number, includeInches: boolean = true) {
 	let feet = meters * 3.28084;
+	// Round to nearest inch
+
+	feet = Math.round(feet * 12) / 12;
+
 	let inchesPerFoot = 12;
 	let feetInt = Math.floor(feet);
 	let inches = (feet - feetInt) * inchesPerFoot;
 	let inchesInt = Math.floor(inches);
 	let inchesFrac = inches - inchesInt;
 	let inchesFracStr = inchesFrac.toFixed(2).substring(1);
-	if (inchesFracStr == '00') {
+	if (inchesFracStr == '.00') {
 		inchesFracStr = '';
 	}
 	if (includeInches) {
-		return `${feetInt}' ${inchesInt}${inchesFracStr}"`;
+		if (inchesInt == 0) {
+			return `${feetInt}'`;
+		} else {
+			return `${feetInt}' ${inchesInt}${inchesFracStr}"`;
+		}
 	} else {
 		return `${feetInt}'`;
 	}

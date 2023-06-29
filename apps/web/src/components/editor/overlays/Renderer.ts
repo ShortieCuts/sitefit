@@ -498,7 +498,9 @@ class RenderPath implements RenderObject2D {
 						this.filled.position.setY(-0.1);
 					}
 					this.line.visible = true;
-					mat2.opacity = 0.1;
+					if (obj.style && obj.style.color[3] != 0) {
+						mat2.opacity = 0.1;
+					}
 					mat2.transparent = true;
 				}
 				this.filled.position.setZ(obj.transform.position[1]);
@@ -531,7 +533,9 @@ class RenderPath implements RenderObject2D {
 				if (obj.measurement) {
 					this.filled.position.setY(0.01);
 					this.line.visible = true;
-					mat2.opacity = 0.1;
+					if (obj.style && obj.style.color[3] != 0) {
+						mat2.opacity = 0.1;
+					}
 					mat2.transparent = true;
 				}
 				this.filled.position.setZ(obj.transform.position[1]);
@@ -646,8 +650,11 @@ class RenderPath implements RenderObject2D {
 		}
 
 		let screenSize = 16;
-
-		if (obj.style.color) this.textEl.style.color = colorArrayToCss(obj.style.color);
+		if (obj.measurementFontColor) {
+			this.textEl.style.color = colorArrayToCss(obj.measurementFontColor);
+		} else {
+			if (obj.style.color) this.textEl.style.color = colorArrayToCss(obj.style.color);
+		}
 		// let fontAspectRatio = fontAspectRatio;
 
 		let charCount = text.length;

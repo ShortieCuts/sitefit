@@ -88,11 +88,17 @@ export function displayUnits(node: HTMLInputElement, unit: string) {
 	listener();
 
 	node.addEventListener('input', listener);
+	node.addEventListener('change', listener);
+
+	let observer = new MutationObserver(listener);
+	observer.observe(node, { attributes: true, childList: true, subtree: true });
 
 	return {
 		destroy: () => {
 			node.removeEventListener('input', listener);
+			node.removeEventListener('change', listener);
 			node.setAttribute('class', wrapperEl.getAttribute('class') || '');
+			observer.disconnect();
 			wrapperEl.parentNode?.insertBefore(node, wrapperEl);
 			wrapperEl.remove();
 		}
