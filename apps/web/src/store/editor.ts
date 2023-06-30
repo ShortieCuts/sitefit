@@ -1432,6 +1432,11 @@ export class EditorContext {
 
 		if (obj) {
 			this.flyToObject(obj.id);
+		} else {
+			let cornerstone = this.broker.project.objectsMap.get('_cornerstone');
+			if (cornerstone) {
+				this.flyToObject(cornerstone.id);
+			}
 		}
 	}
 
