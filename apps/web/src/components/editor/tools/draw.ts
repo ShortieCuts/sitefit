@@ -17,6 +17,7 @@ export const DrawTool = {
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		realPoints = [];
 		let obj = new Path();
+		obj.order = broker.getHighestOrder();
 		obj.style = new Material();
 		obj.style.color = hexColorToArray(get(editor.toolPrimaryColor));
 		obj.style.filled = false;

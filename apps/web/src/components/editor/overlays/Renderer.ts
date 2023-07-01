@@ -214,34 +214,38 @@ class RenderPath implements RenderObject2D {
 
 					let mySmartProperties = obj.smartProperties ?? {};
 
-					if (mySmartProperties.strokeWidth != defaultBoundaryProps.strokeWidth) {
-						properties.strokeWidth = mySmartProperties.strokeWidth;
-					}
-
-					if (mySmartProperties.stroke) {
-						if (mySmartProperties.stroke.active != defaultBoundaryProps.stroke.active) {
-							properties.stroke.active = mySmartProperties.stroke.active;
+					if (!overlay.forceParcelStyle) {
+						if (mySmartProperties.strokeWidth != defaultBoundaryProps.strokeWidth) {
+							properties.strokeWidth = mySmartProperties.strokeWidth;
 						}
 
-						if (
-							mySmartProperties.stroke.value &&
-							!compareArray(mySmartProperties.stroke.value, defaultBoundaryProps.stroke.value)
-						) {
-							properties.stroke.value = mySmartProperties.stroke.value;
-						}
-					}
+						if (mySmartProperties.stroke) {
+							if (mySmartProperties.stroke.active != defaultBoundaryProps.stroke.active) {
+								properties.stroke.active = mySmartProperties.stroke.active;
+							}
 
-					if (mySmartProperties.fill) {
-						if (mySmartProperties.fill.active != defaultBoundaryProps.fill.active) {
-							properties.fill.active = mySmartProperties.fill.active;
+							if (
+								mySmartProperties.stroke.value &&
+								!compareArray(mySmartProperties.stroke.value, defaultBoundaryProps.stroke.value)
+							) {
+								properties.stroke.value = mySmartProperties.stroke.value;
+							}
 						}
 
-						if (
-							mySmartProperties.fill.value &&
-							!compareArray(mySmartProperties.fill.value, defaultBoundaryProps.fill.value)
-						) {
-							properties.fill.value = mySmartProperties.fill.value;
+						if (mySmartProperties.fill) {
+							if (mySmartProperties.fill.active != defaultBoundaryProps.fill.active) {
+								properties.fill.active = mySmartProperties.fill.active;
+							}
+
+							if (
+								mySmartProperties.fill.value &&
+								!compareArray(mySmartProperties.fill.value, defaultBoundaryProps.fill.value)
+							) {
+								properties.fill.value = mySmartProperties.fill.value;
+							}
 						}
+					} else {
+						properties = structuredClone(defaultBoundaryProps);
 					}
 				}
 
@@ -265,9 +269,11 @@ class RenderPath implements RenderObject2D {
 			mat.color.set(colorArrayToThreeColor(obj.style.color));
 			mat2.color.set(colorArrayToThreeColor(obj.style.color));
 
-			mat.transparent = obj.style.color[3] < 1;
+			// mat.transparent = obj.style.color[3] < 1;
+			mat.transparent = true;
 			mat.opacity = obj.style.color[3];
-			mat2.transparent = obj.style.color[3] < 1;
+			// mat2.transparent = obj.style.color[3] < 1;
+			mat2.transparent = true;
 			mat2.opacity = obj.style.color[3];
 
 			if (obj.pinned) {
@@ -476,26 +482,42 @@ class RenderPath implements RenderObject2D {
 		this.line.scale.setX(obj.transform.size[0]);
 		this.line.scale.setZ(obj.transform.size[1]);
 		if (obj.pinned) {
-			this.line.position.setY(-0.1);
+			this.line.position.setY(0);
+			this.line.renderOrder = -10000;
+			mat.depthTest = false;
 		} else {
 			let y = overlay.computeObjectLayerHeight(obj);
-			this.line.position.setY(y + 0.00001);
+			this.line.renderOrder = y;
+			this.line.position.setY(0);
+			mat.depthTest = false;
+			if (this.active) {
+				this.line.renderOrder = 99998;
+			}
 		}
 
 		this.line.setRotationFromEuler(new THREE.Euler(0, -obj.transform.rotation, 0));
 
 		if (obj.style && obj.style.filled) {
 			this.filled.visible = true;
+			if (obj.pinned) {
+				this.filled.renderOrder = -10000;
+				mat2.depthTest = false;
+			} else {
+				let y = overlay.computeObjectLayerHeight(obj);
+				this.filled.renderOrder = y;
+				mat2.depthTest = false;
+			}
 			if (obj.disconnected) {
 				this.line.visible = false;
 
 				this.filled.geometry = this.line.geometry;
 
 				this.filled.position.setX(obj.transform.position[0]);
-				this.filled.position.setY(overlay.computeObjectLayerHeight(obj));
+				// this.filled.position.setY(overlay.computeObjectLayerHeight(obj));
+
 				if (obj.measurement) {
 					if (obj.pinned) {
-						this.filled.position.setY(-0.1);
+						this.filled.position.setY(0);
 					}
 					this.line.visible = true;
 					if (obj.style && obj.style.color[3] != 0) {
@@ -529,9 +551,9 @@ class RenderPath implements RenderObject2D {
 				this.filled.geometry = geo;
 
 				this.filled.position.setX(obj.transform.position[0]);
-				this.filled.position.setY(overlay.computeObjectLayerHeight(obj));
+				this.filled.position.setY(0);
 				if (obj.measurement) {
-					this.filled.position.setY(0.01);
+					this.filled.position.setY(0);
 					this.line.visible = true;
 					if (obj.style && obj.style.color[3] != 0) {
 						mat2.opacity = 0.1;
@@ -540,7 +562,7 @@ class RenderPath implements RenderObject2D {
 				}
 				this.filled.position.setZ(obj.transform.position[1]);
 				if (obj.pinned) {
-					this.filled.position.setY(-0.1);
+					this.filled.position.setY(0);
 				}
 				this.filled.scale.setX(obj.transform.size[0]);
 				this.filled.scale.setZ(obj.transform.size[1]);
@@ -792,7 +814,8 @@ class RenderArc implements RenderObject2D {
 		if (obj.style && obj.style.color) {
 			mat.color.set(colorArrayToThreeColor(obj.style.color));
 
-			mat.transparent = obj.style.color[3] < 1;
+			// mat.transparent = obj.style.color[3] < 1;
+			mat.transparent = true;
 			mat.opacity = obj.style.color[3];
 
 			if (this.active) {
@@ -1389,25 +1412,12 @@ export class RendererOverlay extends Overlay {
 		}
 	};
 
+	forceParcelStyle: boolean = false;
+
 	renderedObjects: Map<ObjectID, RenderObject2D> = new Map();
 
 	computeObjectLayerHeight(baseObj: Object2D) {
-		let obj: Object2D | undefined = baseObj;
-
-		let parentChain = [obj];
-
-		while (obj.parent) {
-			obj = this.broker.project.objectsMap.get(obj.parent);
-			if (!obj) break;
-			parentChain.unshift(obj);
-		}
-
-		let height = 0.1;
-		for (let i = 0; i < parentChain.length; i++) {
-			height -= parentChain[i].order / (i + 1) / 500;
-		}
-
-		return height;
+		return this.broker.project.computeObjectLayerHeight(baseObj);
 	}
 
 	init(): void {
@@ -1516,6 +1526,7 @@ export class RendererOverlay extends Overlay {
 				}
 			})
 		);
+
 		this.addUnsub(
 			this.editor.previewObjects.subscribe((newVal) => {
 				for (let obj of this.previewObjects) {
@@ -1675,6 +1686,16 @@ export class RendererOverlay extends Overlay {
 			})
 		);
 		this.addUnsub(
+			this.editor.activeDialog.subscribe((val) => {
+				this.forceParcelStyle = val == 'parcels';
+				for (let [key, obj] of this.renderedObjects) {
+					obj.refresh(this, this.broker.project.objectsMap.get(key)!);
+				}
+
+				this.overlay.requestRedraw();
+			})
+		);
+		this.addUnsub(
 			cadOverrideColor.subscribe((val) => {
 				this.cadOverrideColor = val;
 				for (let [key, obj] of this.renderedObjects) {
@@ -1781,6 +1802,8 @@ export class HeadlessRenderer {
 			active: false
 		}
 	};
+
+	forceParcelStyle: boolean = false;
 
 	constructor(scene: THREE.Scene, overlayElement: HTMLElement) {
 		this.scene = scene;

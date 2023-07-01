@@ -15,6 +15,7 @@ export const PenTool = {
 	onDown: (ev: MouseEvent, editor: EditorContext, broker: ProjectBroker) => {
 		if (!clickMoving) {
 			let obj = new Path();
+			obj.order = broker.getHighestOrder();
 			obj.style = new Material();
 			obj.style.color = [0, 0, 0, 1];
 			obj.style.filled = false;

@@ -57,14 +57,14 @@
 {/if}
 <button
 	on:click={() => {
-		broker.adjustObjectOrder(get(selection), -Infinity);
+		broker.adjustObjectOrder(get(selection), Infinity);
 	}}
 	><Fa icon={faArrowsUpToLine} /> Send to front
 	<KeyBind to="sendfront" />
 </button>
 <button
 	on:click={() => {
-		broker.adjustObjectOrder(get(selection), Infinity);
+		broker.adjustObjectOrder(get(selection), -Infinity);
 	}}
 	><Fa icon={faArrowsDownToLine} /> Send to back
 	<KeyBind to="sendback" />

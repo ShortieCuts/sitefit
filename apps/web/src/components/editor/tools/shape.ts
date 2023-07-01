@@ -14,6 +14,7 @@ function makeShapeObject(
 	type: 'triangle' | 'rectangle' | 'circle'
 ) {
 	let smartPath = new Path();
+
 	smartPath.name = 'Shape';
 	smartPath.style = new Material();
 	smartPath.style.color = [0 / 255, 200 / 255, 255 / 255, 1];
@@ -83,6 +84,7 @@ export const ShapeTool = {
 				[downPos[0] + 10, downPos[1] + 10],
 				get(editor.activeToolSmartObject) as any
 			);
+			newObj.order = broker.getHighestOrder();
 			broker.stagingObject.set(newObj);
 		}
 
@@ -103,6 +105,7 @@ export const ShapeTool = {
 				pos = [downPos[0] + Math.cos(angle) * length, downPos[1] + Math.sin(angle) * length];
 			}
 			let newObj = makeShapeObject(downPos, pos, get(editor.activeToolSmartObject) as any);
+			newObj.order = broker.getHighestOrder();
 			broker.stagingObject.set(newObj);
 		}
 	}

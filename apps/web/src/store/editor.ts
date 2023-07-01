@@ -406,11 +406,25 @@ export class ProjectBroker {
 		}
 	}
 
+	getHighestOrder(parentId?: string) {
+		let highest = 0;
+		for (let obj of this.project.objects) {
+			if ((parentId && obj.parent == parentId) || (!parentId && !obj.parent)) {
+				highest = Math.max(highest, obj.order);
+			}
+		}
+
+		return highest;
+	}
+
 	commitStagedObject() {
 		let staging = get(this.stagingObject);
 		if (staging) {
 			let id = this.createObject(staging);
 			this.stagingObject.set(null);
+			let highestOrder = this.getHighestOrder(staging.parent);
+			if (staging.order < highestOrder) {
+			}
 
 			if (id) {
 				let obj = this.project.objectsMap.get(id);
@@ -576,6 +590,8 @@ export class ProjectBroker {
 				}
 			}
 
+			finalOrderedList.sort((a, b) => a.order - b.order);
+
 			let index = 0;
 			if (order == -Infinity) {
 				index = 0;
@@ -595,6 +611,16 @@ export class ProjectBroker {
 		}
 
 		this.commitTransaction(transaction);
+	}
+
+	squashUndoStack(num: number) {
+		let undosToMerge = get(this.undo).slice(-num);
+		let transaction = this.project.createTransaction();
+		for (let undo of undosToMerge) {
+			transaction.mutations.push(...undo.mutations);
+		}
+		this.undo.update((u) => u.slice(0, u.length - num));
+		this.undo.update((u) => [...u, transaction]);
 	}
 
 	commitUndo() {

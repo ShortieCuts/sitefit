@@ -236,6 +236,25 @@ export class Project implements Serializable {
     return trans;
   }
 
+  computeObjectLayerHeight(baseObj: Object2D) {
+    let obj: Object2D | undefined = baseObj;
+
+    let parentChain = [obj];
+
+    while (obj.parent) {
+      obj = this.objectsMap.get(obj.parent);
+      if (!obj) break;
+      parentChain.unshift(obj);
+    }
+
+    let height = 0;
+    for (let i = 0; i < parentChain.length; i++) {
+      height += parentChain[i].order;
+    }
+
+    return height;
+  }
+
   getObjectsInBounds(bounds: {
     minX: number;
     minY: number;

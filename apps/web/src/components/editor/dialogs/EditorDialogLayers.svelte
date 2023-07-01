@@ -82,7 +82,7 @@
 		if (a.order === b.order) {
 			return a.id.localeCompare(b.id);
 		}
-		return a.order - b.order;
+		return b.order - a.order;
 	}
 
 	const { objectTreeWatcher } = broker;

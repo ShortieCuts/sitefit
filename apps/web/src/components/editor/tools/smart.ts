@@ -21,6 +21,7 @@ export const SmartTool = {
 		active = true;
 		if (!clickMoving) {
 			let obj = new Path();
+			obj.order = broker.getHighestOrder();
 			obj.style = new Material();
 			obj.style.color = [0 / 255, 200 / 255, 255 / 255, 1];
 			obj.style.filled = false;

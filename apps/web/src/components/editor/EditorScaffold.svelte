@@ -186,9 +186,9 @@
 		if ((e.code == 'BracketLeft' || e.code == 'BracketRight') && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			e.stopPropagation();
-			let direction = -1;
+			let direction = 1;
 			if (e.code == 'BracketLeft') {
-				direction = 1;
+				direction = -1;
 			}
 			if (e.shiftKey) {
 				broker.adjustObjectOrder(get(selection), Math.sign(direction) * Infinity);
@@ -402,6 +402,9 @@
 		editorContext.rootGroup.set(null);
 
 		broker.centerObjectsOnPoint(newSelection, get(editorContext.currentMousePositionRelative));
+
+		broker.adjustObjectOrder(newSelection, Infinity);
+		broker.squashUndoStack(3);
 	}
 
 	function onPaste(e: ClipboardEvent) {

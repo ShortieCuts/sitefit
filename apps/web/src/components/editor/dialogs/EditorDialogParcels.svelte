@@ -26,7 +26,7 @@
 	function stageObject(d: ParcelData) {
 		let p = new Path();
 		p.name = 'Parcel ' + d.address_street;
-		p.pinned = false;
+		p.pinned = true;
 		p.smartObject = 'path';
 		p.smartProperties = {
 			strokeWidth: 10,
@@ -70,7 +70,7 @@
 	let loadedParcelFor = [0, 0];
 	$: {
 		selectedParcelExisting = null;
-		console.log('selectedParcelExisting', $selection);
+
 		if ($selectedParcelLonLat[0] !== 0 || $selectedParcelLonLat[1] !== 0) {
 			(async () => {
 				if (
@@ -92,11 +92,14 @@
 						}
 					}
 
-					if (selectedParcel) stageObject(selectedParcel);
-					else {
+					if (selectedParcel) {
+						stageObject(selectedParcel);
+						broker.commitStagedObject();
+					} else {
 						broker.stagingObject.set(null);
 						selectedParcel = null;
 					}
+				} else {
 				}
 			})();
 		} else {
@@ -107,29 +110,7 @@
 			if (selectedObjects.length == 1) {
 				let selectedObject = broker.project.objectsMap.get(selectedObjects[0]);
 				if (selectedObject && selectedObject.pinned && selectedObject.type == ObjectType.Path) {
-					let selectedPath = selectedObject as Path;
-					let p = new Path();
-					p.name = 'Parcel outline';
-					p.pinned = true;
-					p.smartObject = 'path';
-					p.smartProperties = {
-						strokeWidth: 10,
-						stroke: {
-							value: [255 / 255, 235 / 255, 59 / 255, 1],
-							active: true
-						},
-						fill: {
-							value: [255 / 255, 235 / 255, 59 / 255, 0.3],
-							active: true
-						}
-					};
-					p.style = new Material();
-
-					p.segments = structuredClone(selectedPath.segments);
-
-					broker.stagingObject.set(p);
-					selectedParcelExisting = selectedPath;
-					console.log('selectedParcelExisting', selectedParcelExisting);
+					editor.deleteSelection(broker);
 				}
 			}
 		}
@@ -145,69 +126,12 @@
 				<Fa icon={faWarning} />
 				<span class="ml-2"> Zoom in to view parcels </span>
 			</div>
-		{:else if selectedParcelExisting}
-			<div
-				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-gray-100 px-4 py-2 mt-4 mx-4"
-			>
-				<Fa icon={faMapMarked} />
-				<span class="ml-2">
-					{$selection.length} selected parcel{$selection.length > 1 ? 's' : ''}
-				</span>
-			</div>
-			<div>
-				<button
-					on:click={() => {
-						editor.deselectAll();
-						broker.stagingObject.set(null);
-						selectedParcelExisting = null;
-					}}>Deselect</button
-				>
-				<button
-					class="text-red-500"
-					on:click={() => {
-						editor.deleteSelection(broker);
-						broker.stagingObject.set(null);
-						selectedParcelExisting = null;
-					}}>Delete Parcel</button
-				>
-			</div>
-		{:else if $selectedParcelLonLat[0] == 0 && $selectedParcelLonLat[1] == 0}
+		{:else}
 			<div
 				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-blue-300 px-4 py-2"
 			>
 				<Fa icon={faMapLocationDot} />
-				<span class="ml-2"> Tap to select a parcel </span>
-			</div>
-		{:else if selectedParcel}
-			<div
-				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-gray-100 px-4 py-2"
-			>
-				<Fa icon={faMapMarked} />
-				<span class="ml-2"> Parcel: {selectedParcel.id ?? 'Unknown'} </span>
-			</div>
-			<div>
-				<button
-					class="text-blue-500"
-					on:click={() => {
-						let staged = get(broker.stagingObject);
-						if (staged) {
-							staged.pinned = true;
-						}
-						let newId = broker.commitStagedObject();
-						if (newId) editor.select(newId);
-						$selectedParcelLonLat[0] = 0;
-						$selectedParcelLonLat[1] = 0;
-					}}>Save Parcel</button
-				>
-				<button
-					class="text-red-500"
-					on:click={() => {
-						broker.stagingObject.set(null);
-						broker.needsRender.set(true);
-						$selectedParcelLonLat[0] = 0;
-						$selectedParcelLonLat[1] = 0;
-					}}>Cancel</button
-				>
+				<span class="ml-2"> Tap to select/deselect parcels </span>
 			</div>
 		{/if}
 	</MobileDrawer>
@@ -230,73 +154,13 @@
 				<span class="ml-2"> Zoom in to view parcels </span>
 			</div>
 		</div>
-	{:else if selectedParcelExisting}
-		<div
-			class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-gray-100 px-4 py-2 mt-4 mx-4"
-		>
-			<Fa icon={faMapMarked} />
-			<span class="ml-2">
-				{$selection.length} selected parcel{$selection.length > 1 ? 's' : ''}
-			</span>
-		</div>
-		<div class="flex flex-row justify-end mx-4">
-			<button
-				class="btn mt-2 mr-2"
-				on:click={() => {
-					editor.deselectAll();
-					broker.stagingObject.set(null);
-					selectedParcelExisting = null;
-				}}>Deselect</button
-			>
-			<button
-				class="btn mt-2 btn-danger"
-				on:click={() => {
-					editor.deleteSelection(broker);
-					broker.stagingObject.set(null);
-					selectedParcelExisting = null;
-				}}>Delete Parcel</button
-			>
-		</div>
-	{:else if $selectedParcelLonLat[0] == 0 && $selectedParcelLonLat[1] == 0}
+	{:else}
 		<div class="flex flex-col p-4">
 			<div
 				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-blue-300 px-4 py-2"
 			>
 				<Fa icon={faMapLocationDot} />
-				<span class="ml-2"> Click to select a parcel </span>
-			</div>
-		</div>
-	{:else if selectedParcel}
-		<div class="flex flex-col p-4">
-			<div
-				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-gray-100 px-4 py-2"
-			>
-				<Fa icon={faMapMarked} />
-				<span class="ml-2"> Parcel: {selectedParcel.id} </span>
-			</div>
-			<div class="flex flex-row justify-end">
-				<button
-					class="btn mt-2 mr-2"
-					on:click={() => {
-						broker.stagingObject.set(null);
-						broker.needsRender.set(true);
-						$selectedParcelLonLat[0] = 0;
-						$selectedParcelLonLat[1] = 0;
-					}}>Cancel</button
-				>
-				<button
-					class="btn mt-2 btn-primary"
-					on:click={() => {
-						let staged = get(broker.stagingObject);
-						if (staged) {
-							staged.pinned = true;
-						}
-						let newId = broker.commitStagedObject();
-						if (newId) editor.select(newId);
-						$selectedParcelLonLat[0] = 0;
-						$selectedParcelLonLat[1] = 0;
-					}}>Save Parcel</button
-				>
+				<span class="ml-2"> Click to select/deselect parcels </span>
 			</div>
 		</div>
 	{/if}

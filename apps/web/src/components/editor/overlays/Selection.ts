@@ -22,7 +22,7 @@ class OutlinedBox {
 		outerOpacity = 1
 	) {
 		this.box = new THREE.Mesh(
-			new THREE.BoxGeometry(1, 0.1, 1),
+			new THREE.BoxGeometry(1, 0.001, 1),
 			new THREE.MeshBasicMaterial({
 				color: innerColor as THREE.ColorRepresentation,
 				opacity: innerOpacity,
@@ -43,13 +43,18 @@ class OutlinedBox {
 			new THREE.MeshBasicMaterial({
 				color: outerColor as THREE.ColorRepresentation,
 				opacity: outerOpacity,
-				transparent: false
+				transparent: true,
+				depthTest: false
 			})
 		);
 
 		const scene = overlay.overlay.getScene();
 		scene.add(this.box);
 		scene.add(this.line);
+		this.box.renderOrder = 1000000;
+		(this.box.material as THREE.MeshBasicMaterial).depthTest = false;
+		this.line.renderOrder = 1000001;
+		(this.line.material as THREE.MeshBasicMaterial).depthTest = false;
 	}
 
 	setVisible(visible: boolean): void {
@@ -61,7 +66,7 @@ class OutlinedBox {
 		this.box.position.copy(pos);
 		let p2 = pos.clone();
 
-		p2.y = pos.y + 0.09;
+		p2.y = pos.y + 0.001;
 		this.line.position.copy(p2);
 	}
 
@@ -174,6 +179,7 @@ class SelectionBox {
 	setPositionAndScale(pos: THREE.Vector3, scale: THREE.Vector3): void {
 		this.main.setPosition(pos);
 		this.main.setScale(scale);
+		this.main.line.renderOrder = 99999;
 
 		let rotation = this.main.box.rotation.y;
 
@@ -184,21 +190,19 @@ class SelectionBox {
 		let bottomLeftPos = multiplyMatrix([-scale.x / 2, -scale.z / 2], matrix);
 		let bottomRightPos = multiplyMatrix([scale.x / 2, -scale.z / 2], matrix);
 
-		this.topMid.setPosition(
-			new THREE.Vector3(pos.x + topMidPos[0], pos.y + 0.1, pos.z + topMidPos[1])
-		);
+		this.topMid.setPosition(new THREE.Vector3(pos.x + topMidPos[0], pos.y, pos.z + topMidPos[1]));
 
 		this.topLeft.setPosition(
-			new THREE.Vector3(pos.x + topLeftPos[0], pos.y + 0.1, pos.z + topLeftPos[1])
+			new THREE.Vector3(pos.x + topLeftPos[0], pos.y, pos.z + topLeftPos[1])
 		);
 		this.topRight.setPosition(
-			new THREE.Vector3(pos.x + topRightPos[0], pos.y + 0.1, pos.z + topRightPos[1])
+			new THREE.Vector3(pos.x + topRightPos[0], pos.y, pos.z + topRightPos[1])
 		);
 		this.bottomLeft.setPosition(
-			new THREE.Vector3(pos.x + bottomLeftPos[0], pos.y + 0.1, pos.z + bottomLeftPos[1])
+			new THREE.Vector3(pos.x + bottomLeftPos[0], pos.y, pos.z + bottomLeftPos[1])
 		);
 		this.bottomRight.setPosition(
-			new THREE.Vector3(pos.x + bottomRightPos[0], pos.y + 0.1, pos.z + bottomRightPos[1])
+			new THREE.Vector3(pos.x + bottomRightPos[0], pos.y, pos.z + bottomRightPos[1])
 		);
 
 		this.updateSize();
