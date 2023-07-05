@@ -2,9 +2,13 @@
 	import { cubicOut } from '$lib/util/easing';
 	import { getSvelteContext } from 'src/store/editor';
 	import { isMobile } from 'src/store/responsive';
-	import { onDestroy, onMount } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import Fa from 'svelte-fa';
 	import { fly } from 'svelte/transition';
+
+	export let dispatchClose = false;
+
+	const dispatch = createEventDispatcher();
 
 	let { editor } = getSvelteContext();
 </script>
@@ -16,7 +20,13 @@
 	>
 		<button
 			class="w-full flex items-center justify-center pb-4"
-			on:click={() => editor.activateDialog('')}
+			on:click={() => {
+				if (dispatchClose) {
+					dispatch('close');
+				} else {
+					editor.activateDialog('');
+				}
+			}}
 		>
 			<svg
 				width="69"

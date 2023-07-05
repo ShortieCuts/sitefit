@@ -43,10 +43,10 @@ export const dialogs: {
 		dock: 'left',
 		component: EditorDialogParcels
 	},
-	style: {
-		dock: 'left',
-		component: EditorDialogStyle
-	},
+	// style: {
+	// 	dock: 'left',
+	// 	component: EditorDialogStyle
+	// },
 	search: {
 		dock: 'left',
 		component: EditorDialogSearch

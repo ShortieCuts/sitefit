@@ -71,13 +71,13 @@
 			access: 'READ',
 			user: false
 		},
-		{
-			icon: 'palette',
-			key: 'style',
-			name: 'Style',
-			access: 'WRITE',
-			user: false
-		},
+		// {
+		// 	icon: 'palette',
+		// 	key: 'style',
+		// 	name: 'Style',
+		// 	access: 'WRITE',
+		// 	user: false
+		// },
 		{
 			icon: 'parcels',
 			key: 'parcels',
@@ -104,13 +104,13 @@
 			user: false
 		},
 
-		{
-			icon: 'palette',
-			key: 'style',
-			name: 'Style',
-			access: 'WRITE',
-			user: false
-		},
+		// {
+		// 	icon: 'palette',
+		// 	key: 'style',
+		// 	name: 'Style',
+		// 	access: 'WRITE',
+		// 	user: false
+		// },
 
 		{
 			icon: 'comment',

@@ -3,6 +3,7 @@
 		faLandmark,
 		faMapLocationDot,
 		faMapMarked,
+		faPaintBrush,
 		faWarning
 	} from '@fortawesome/free-solid-svg-icons';
 	import { Material, ObjectType, Path } from 'core';
@@ -14,12 +15,16 @@
 	import Fa from 'svelte-fa';
 	import { get } from 'svelte/store';
 	import EditorProperties from '../EditorProperties.svelte';
+	import EditorParcelStyle from './EditorParcelStyle.svelte';
+	import DialogSlideUp from 'src/components/common/DialogSlideUp.svelte';
 
 	const { editor, broker } = getSvelteContext();
 
 	const { zoom, selectedParcelLonLat, parcelProvider, selection } = editor;
 
 	const USE_EXACT_PARCEL_DATA = false;
+
+	let showParcelStyleMobile = false;
 
 	let selectedParcel: ParcelData | null = null;
 	let selectedParcelExisting: Path | null = null;
@@ -130,13 +135,33 @@
 			</div>
 		{:else}
 			<div
-				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-blue-300 px-4 py-2"
+				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-blue-300 px-4 py-2 relative"
 			>
 				<Fa icon={faMapLocationDot} />
-				<span class="ml-2"> Tap to select/deselect parcels </span>
+				<span class="ml-2">
+					Tap to select/deselect parcels
+					<button
+						class="w-8 h-8 rounded-md bg-gray-100 flex justify-center items-center right-4 absolute top-4 bottom-4 aspect-square"
+						on:click={() => {
+							showParcelStyleMobile = true;
+						}}
+					>
+						<Fa icon={faPaintBrush} />
+					</button>
+				</span>
 			</div>
 		{/if}
 	</MobileDrawer>
+	{#if showParcelStyleMobile}
+		<DialogSlideUp
+			dispatchClose={true}
+			on:close={() => {
+				showParcelStyleMobile = false;
+			}}
+		>
+			<EditorParcelStyle />
+		</DialogSlideUp>
+	{/if}
 {:else}
 	<div class="flex flex-col p-4 hidden">
 		<ComboDrop
@@ -184,4 +209,7 @@
 			{/if}
 		</div>
 	{/if}
+	<div class="mx-2">
+		<EditorParcelStyle />
+	</div>
 {/if}
