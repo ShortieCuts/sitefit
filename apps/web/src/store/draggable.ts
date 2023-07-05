@@ -3,6 +3,20 @@ import { get, writable, type Writable } from 'svelte/store';
 
 const keys = new Map<string, DraggableInstance>();
 
+function getOrCreateDragElement(): HTMLElement {
+	let el = document.querySelector('.draggable-node-floating');
+
+	if (!el) {
+		el = document.createElement('div');
+		el.classList.add('draggable-node-floating');
+		document.body.appendChild(el);
+	}
+
+	return el as HTMLElement;
+}
+
+let isDragging = false;
+
 class DraggableInstance {
 	payload: Writable<any> = writable(null);
 	key: string;
@@ -18,11 +32,18 @@ class DraggableInstance {
 	startDragging(payload: any) {
 		this.payload.set(payload);
 		this.dragging.set(true);
+
+		isDragging = true;
 	}
 
 	stopDragging() {
 		this.payload.set(null);
 		this.dragging.set(false);
+
+		isDragging = false;
+
+		let el = getOrCreateDragElement();
+		el.remove();
 	}
 
 	setSlot(slot: any, bias: number) {
@@ -54,6 +75,15 @@ if (browser) {
 			keys.forEach((key) => {
 				key.stopDragging();
 			});
+		}
+	});
+
+	window.addEventListener('mousemove', (e) => {
+		if (isDragging) {
+			let el = getOrCreateDragElement();
+
+			el.style.top = `${e.clientY - 20}px`;
+			el.style.left = `${e.clientX - 200}px`;
 		}
 	});
 }

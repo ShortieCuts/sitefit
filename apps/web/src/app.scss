@@ -141,3 +141,19 @@ body {
 	pointer-events: none;
 	background-color: transparent;
 }
+
+.draggable-node-floating {
+	position: fixed;
+
+	z-index: 1000;
+	width: 400px;
+	height: 41px;
+
+	border-radius: 2px;
+
+	background-color: rgb(222, 233, 252);
+
+	opacity: 0.9;
+
+	pointer-events: none;
+}
