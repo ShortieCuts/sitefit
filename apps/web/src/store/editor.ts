@@ -1174,7 +1174,7 @@ export class EditorContext {
 	zoom: Writable<number> = writable(0);
 
 	selectedParcelLonLat: Writable<[number, number]> = writable([0, 0]);
-	parcelProvider: Writable<ParcelProvider> = writable('reportall');
+	parcelProvider: Writable<ParcelProvider> = writable('regrid');
 	parcelOverlay: Writable<ParcelOverlay | null> = writable(null);
 
 	previewObjects: Writable<Object2D[]> = writable([]);

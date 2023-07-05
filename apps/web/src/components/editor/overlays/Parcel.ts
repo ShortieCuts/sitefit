@@ -43,6 +43,7 @@ export class ParcelOverlay {
 		let robustParcels = this.robustParcels;
 		for (let key in robustParcels) {
 			let parcel = robustParcels[key];
+
 			if (parcel) {
 				let sourceData = {
 					type: 'geojson',
@@ -68,12 +69,12 @@ export class ParcelOverlay {
 				let hit = query(lonLat);
 				if (hit) {
 					return {
-						owner: '',
+						owner: parcel.properties.owner ?? '',
 						geometry: sourceData.data.features[0].geometry,
-						address_street: '',
+						address_street: parcel.properties.address ?? '',
 						latitude: lonLat[0],
 						longitude: lonLat[1],
-						county: '',
+						county: parcel.properties.path ?? '',
 						id: key
 					};
 				}
@@ -120,7 +121,8 @@ export class ParcelOverlay {
 				robustParcels[poly.properties.robust_id] = {
 					data: undefined,
 					poly: multiPoly,
-					geo: {}
+					geo: {},
+					properties: poly.properties
 				};
 			}
 

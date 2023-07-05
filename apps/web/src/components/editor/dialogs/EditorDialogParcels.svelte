@@ -88,7 +88,9 @@
 						let parcelOverlay = get(editor.parcelOverlay);
 						if (parcelOverlay) {
 							let results = parcelOverlay.getParcelPolyAt($selectedParcelLonLat);
+
 							selectedParcel = results;
+							console.log(selectedParcel);
 						}
 					}
 
@@ -136,7 +138,7 @@
 		{/if}
 	</MobileDrawer>
 {:else}
-	<div class="flex flex-col p-4">
+	<div class="flex flex-col p-4 hidden">
 		<ComboDrop
 			bind:value={$parcelProvider}
 			options={[
@@ -162,6 +164,24 @@
 				<Fa icon={faMapLocationDot} />
 				<span class="ml-2"> Click to select/deselect parcels </span>
 			</div>
+
+			{#if selectedParcel}
+				<div class="flex flex-col rounded-lg bg-gray-50 mt-4">
+					<div class="flex flex-row p-4">
+						<div class="mr-4">Admin</div>
+						<div>{selectedParcel.county}</div>
+					</div>
+					<div class="flex flex-row p-4">
+						<div class="mr-4">Address</div>
+						<div>{selectedParcel.address_street}</div>
+					</div>
+
+					<div class="flex flex-row p-4">
+						<div class="mr-4">Owner</div>
+						<div>{selectedParcel.owner}</div>
+					</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 {/if}
