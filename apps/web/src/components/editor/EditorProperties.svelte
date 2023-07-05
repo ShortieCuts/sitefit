@@ -558,17 +558,30 @@
 		{#if showStyle}
 			<div class="border-b border-gray-200" />
 			<div class="properties-style flex flex-col space-y-2 p-2">
-				<div class="flex flex-row space-x-2 border-gray-200 rounded-md border p-1">
-					<div>
+				<div class="flex flex-col space-y-2">
+					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+						<label
+							for="props-color"
+							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+						>
+							Color
+						</label>
 						<ColorInput
 							noVerticalBorder
 							bind:value={propertiesDisplay.style.color}
 							on:change={doStyleChange('color')}
 						/>
 					</div>
-					<div class="flex-1 w-auto">
+					<div class="flex-1 flex flex-row rounded-md hover:shadow-sm">
+						<label
+							for="props-style"
+							class="min-w-[130px] overflow-hidden border-gray-200 border border-r-0 overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+						>
+							Style
+						</label>
 						<select
-							class="border-gray-200 rounded-md border w-full"
+							id="props-style"
+							class="border-gray-200 rounded-md border w-full rounded-l-none"
 							value={propertiesDisplay.style.filled?.toString() ?? 'false'}
 							on:change={(e) => {
 								doStyleChange('filled')(
@@ -580,16 +593,29 @@
 							<option value="true"> Filled </option>
 						</select>
 					</div>
+
 					{#if !propertiesDisplay.style.filled}
-						<input
-							class="w-10 px-1 border border-gray-200 rounded-md h-6"
-							type="text"
-							bind:value={propertiesDisplay.style.strokeWidth}
-							on:change={(e) => {
-								doStyleChange('strokeWidth')(new CustomEvent('change', { detail: e.target.value }));
-							}}
-						/>
+						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+							<label
+								for="props-line-width"
+								class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+							>
+								Line Width
+							</label>
+							<input
+								id="props-line-width"
+								class="w-full px-1 h-6 rounded-r-md"
+								type="text"
+								bind:value={propertiesDisplay.style.strokeWidth}
+								on:change={(e) => {
+									doStyleChange('strokeWidth')(
+										new CustomEvent('change', { detail: e.target.value })
+									);
+								}}
+							/>
+						</div>
 					{/if}
+					<div class="flex-1 flex flex-row" />
 				</div>
 			</div>
 		{/if}
@@ -605,7 +631,7 @@
 						</span>
 						{#if prop.type == 'string'}
 							<input
-								class="w-full px-1"
+								class="w-full px-1 rounded-r-md"
 								type="text"
 								bind:value={propertiesDisplay.props[prop.name]}
 								on:change={doPropChange(prop)}
@@ -613,7 +639,7 @@
 						{:else if prop.type == 'number'}
 							<input
 								use:displayUnits={prop.displayUnits ?? ''}
-								class="w-full px-1"
+								class="w-full px-1 rounded-r-md"
 								type="number"
 								value={propertiesDisplay.props[prop.name] *
 									(typeof prop.multiplier == 'number' ? prop.multiplier : 1)}
@@ -621,7 +647,7 @@
 							/>
 						{:else if prop.type == 'meters'}
 							<input
-								class="w-full px-1"
+								class="w-full px-1 rounded-r-md"
 								type="number"
 								use:displayUnits={'ft'}
 								step={1 / 12}
@@ -630,7 +656,7 @@
 							/>
 						{:else if prop.type == 'angle'}
 							<input
-								class="w-full px-1"
+								class="w-full px-1 rounded-r-md"
 								step="1"
 								type="number"
 								use:displayUnits={'°'}
