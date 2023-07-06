@@ -55,7 +55,7 @@
 	{#if slotCount >= 1 && !hide.includes('group-0')}
 		<div class="flex flex-row items-center">
 			<div class="" />
-			<div class="mx-2 ml-8 font-bold">{groups[0]}</div>
+			<div class="mx-2 ml-8 font-bold mt-6 font-xl">{groups[0]}</div>
 			<div class="" />
 		</div>
 		<slot name="group-0" />
@@ -64,7 +64,7 @@
 	{#if slotCount >= 2 && !hide.includes('group-1')}
 		<div class="flex flex-row items-center">
 			<div class="" />
-			<div class="mx-2 ml-8 font-bold">{groups[1]}</div>
+			<div class="mx-2 ml-8 font-bold mt-6 font-xl">{groups[1]}</div>
 			<div class="" />
 		</div>
 		<slot name="group-1" />
@@ -73,7 +73,7 @@
 	{#if slotCount >= 3 && !hide.includes('group-2')}
 		<div class="flex flex-row items-center">
 			<div class="" />
-			<div class="mx-2 ml-8 font-bold">{groups[2]}</div>
+			<div class="mx-2 ml-8 font-bold mt-6 font-xl">{groups[2]}</div>
 			<div class="" />
 		</div>
 		<slot name="group-2" />
@@ -82,7 +82,7 @@
 	{#if slotCount >= 4 && !hide.includes('group-3')}
 		<div class="flex flex-row items-center">
 			<div class="" />
-			<div class="mx-2 ml-8 font-bold">{groups[3]}</div>
+			<div class="mx-2 ml-8 font-bold mt-6 font-xl">{groups[3]}</div>
 			<div class="" />
 		</div>
 		<slot name="group-3" />
@@ -91,7 +91,7 @@
 	{#if slotCount >= 5 && !hide.includes('group-4')}
 		<div class="flex flex-row items-center">
 			<div class="" />
-			<div class="mx-2 ml-8 font-bold">{groups[4]}</div>
+			<div class="mx-2 ml-8 font-bold mt-6 font-xl">{groups[4]}</div>
 			<div class="" />
 		</div>
 		<slot name="group-4" />
@@ -100,7 +100,7 @@
 	{#if slotCount >= 6 && !hide.includes('group-5')}
 		<div class="flex flex-row items-center">
 			<div class="" />
-			<div class="mx-2 ml-8 font-bold">{groups[5]}</div>
+			<div class="mx-2 ml-8 font-bold mt-6 font-xl">{groups[5]}</div>
 			<div class="" />
 		</div>
 		<slot name="group-5" />
@@ -109,7 +109,7 @@
 	{#if slotCount >= 7 && !hide.includes('group-6')}
 		<div class="flex flex-row items-center">
 			<div class="" />
-			<div class="mx-2 ml-8 font-bold">{groups[6]}</div>
+			<div class="mx-2 ml-8 font-bold mt-6 font-xl">{groups[6]}</div>
 			<div class="" />
 		</div>
 		<slot name="group-6" />

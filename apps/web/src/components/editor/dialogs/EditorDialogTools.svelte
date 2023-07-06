@@ -284,7 +284,7 @@
 			<div class="ml-4">Insert Drawing</div>
 		</button>
 	</div>
-	<ResponsiveGroup groups={['Shapes', 'Pre-Made Objects', 'Smart Objects']}>
+	<ResponsiveGroup groups={['Shapes', 'Smart Objects']}>
 		<div
 			slot="group-0"
 			class="flex flex-row items-center justify-center select-none flex-wrap py-4"
@@ -300,8 +300,8 @@
 				</button>
 			{/each}
 		</div>
-		<div slot="group-1" class="flex items-center flex-col space-y-2 p-4">
-			<!-- {#each stamps as stamp}
+		<!--<div slot="group-1" class="flex items-center flex-col space-y-2 p-4">
+			{#each stamps as stamp}
 				<button
 					class="flex flex-col items-center justify-center p-2 hover:bg-gray-100 rounded-md cursor-pointer"
 					on:click={() => insertStamp(stamp)}
@@ -313,11 +313,10 @@
 						{stamp.name}
 					</div>
 				</button>
-			{/each} -->
-		</div>
+			{/each}
+		</div> -->
 
-		<div slot="group-2" class="flex items-center flex-col space-y-2 p-4">
-			<div class="text-lg">Parking</div>
+		<div slot="group-1" class="flex items-center flex-col space-y-2 p-4">
 			<div class="flex flex-row flex-wrap justify-center">
 				<button
 					class="flex m-2 flex-col items-center rounded-md border border-gray-200 p-2 hover:bg-gray-50"
