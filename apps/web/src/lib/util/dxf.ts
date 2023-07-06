@@ -42,6 +42,8 @@ let colorsMapper = {
 	}
 };
 
+const AUTO_THICK_HATCH = false;
+
 function parseHexColor(hex: string): [number, number, number, number] {
 	let r = parseInt(hex.slice(1, 3), 16);
 	let g = parseInt(hex.slice(3, 5), 16);
@@ -337,6 +339,7 @@ function translateJSON(json: any): Object2D[] {
 		let type = frag[0];
 		let dbid = frag[1];
 		let color = frag[2];
+		let prop = propMap.get(parseInt(dbid.toString()));
 		if (type == 'a') {
 			let arcObj = new Arc();
 			arcObj.transform.position = transformCoord([frag[3], frag[4]]);
@@ -406,22 +409,26 @@ function translateJSON(json: any): Object2D[] {
 			childCounts.set(dbid, arr);
 			objects.push(arcObj);
 		} else if (type == 'l') {
+			let parentGroup = getdbidGroup(dbid);
 			let path = new Path();
 			path.segments = [];
+			let isHatch = parentGroup.name == 'HATCH';
+
 			for (let l of frag[3]) {
 				let dx = l[2] - l[0];
 				let dy = l[3] - l[1];
 				let dist = Math.sqrt(dx * dx + dy * dy);
-				if (dist < 0.1) {
+
+				if (isHatch && dist < 0.1) {
 					// Probably hatch texture
 
 					if (Math.random() < 0.4) {
 						let angle = Math.random() * Math.PI * 2;
-						dx = Math.cos(angle) * dist;
-						dy = Math.sin(angle) * dist;
+						dx = Math.cos(angle);
+						dy = Math.sin(angle);
 						path.segments.push(transformCoord([l[0], l[1]] as RelativeCoordinate));
 						path.segments.push(
-							transformCoord([l[0] + dx * 140, l[1] + dy * 140] as RelativeCoordinate)
+							transformCoord([l[0] + dx * 1, l[1] + dy * 1] as RelativeCoordinate)
 						);
 					}
 				} else {
@@ -434,7 +441,7 @@ function translateJSON(json: any): Object2D[] {
 			path.id = 'path' + i;
 			path.disconnected = true;
 
-			path.parent = getdbidGroup(dbid).id;
+			path.parent = parentGroup.id;
 			let arr = childCounts.get(dbid);
 			if (!arr) {
 				arr = [];
