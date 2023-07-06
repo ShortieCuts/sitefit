@@ -21,6 +21,10 @@ function makeShapeObject(
 	smartPath.style.filled = false;
 	smartPath.closed = true;
 	smartPath.smartObject = 'path';
+	smartPath.smartProperties = {
+		strokeWidth: 15,
+		stroke: { active: true, value: [1, 1, 1, 1] }
+	};
 
 	if (type == 'rectangle') {
 		smartPath.segments.push(start);

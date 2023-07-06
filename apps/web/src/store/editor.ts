@@ -1150,7 +1150,7 @@ export class EditorContext {
 	activeToolSmartObject: Writable<string> = writable('');
 	activeToolSmartObjectProperties: Writable<any> = writable({});
 
-	toolPrimaryColor: Writable<string> = writable('#000000');
+	toolPrimaryColor: Writable<string> = writable('#FFFFFF');
 	colorPalette: Writable<string[]> = writable([
 		'#000000',
 		'#FFFFFF',

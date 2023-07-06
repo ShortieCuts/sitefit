@@ -23,13 +23,15 @@ export const SmartTool = {
 			let obj = new Path();
 			obj.order = broker.getHighestOrder();
 			obj.style = new Material();
-			obj.style.color = [0 / 255, 200 / 255, 255 / 255, 1];
+			obj.style.color = [255 / 255, 255 / 255, 255 / 255, 1];
+			obj.style.strokeWidth = 15;
 			obj.style.filled = false;
 			obj.style.type = 'color';
 			obj.name = 'Object';
 
 			obj.smartObject = get(editor.activeToolSmartObject);
 			obj.smartProperties = structuredClone(get(editor.activeToolSmartObjectProperties));
+
 			obj.parent = undefined;
 			obj.closed = false;
 			obj.segments.push(editor.getDesiredPosition());

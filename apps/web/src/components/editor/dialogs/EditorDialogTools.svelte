@@ -257,7 +257,9 @@
 			}
 		};
 
-		editor.activeToolSmartObjectProperties.set(measures[degrees.toString()]);
+		editor.activeToolSmartObjectProperties.set({
+			...measures[degrees.toString()]
+		});
 	}
 </script>
 

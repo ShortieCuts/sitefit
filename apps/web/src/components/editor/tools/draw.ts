@@ -21,6 +21,7 @@ export const DrawTool = {
 		obj.style = new Material();
 		obj.style.color = hexColorToArray(get(editor.toolPrimaryColor));
 		obj.style.filled = false;
+		obj.style.strokeWidth = 15;
 		obj.style.type = 'color';
 		obj.name = 'Drawing';
 		obj.closed = false;

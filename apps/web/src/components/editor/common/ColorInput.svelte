@@ -57,7 +57,7 @@
 >
 	{#if value}
 		<div
-			class="w-4 h-4 mx-1 my-auto rounded"
+			class="w-4 h-4 mx-1 my-auto rounded shadow-md"
 			style="background-color: rgba({value[0] * 255}, {value[1] * 255}, {value[2] *
 				255}, {value[3]})"
 		/>
