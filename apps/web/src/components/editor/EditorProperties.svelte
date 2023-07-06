@@ -23,6 +23,7 @@
 		metersToFeetPrettyPrint
 	} from '$lib/util/distance';
 	import { displayUnits } from '$lib/util/actions';
+	import { onDestroy, onMount } from 'svelte';
 
 	export let showTransform = true;
 
@@ -463,259 +464,274 @@
 			.replace(/^./, (str) => str.toUpperCase())
 			.trim();
 	}
+
+	let selectionKeyCounter = 0;
+	let sub = () => {
+		selectionKeyCounter++;
+	};
+
+	onMount(() => {
+		effectiveSelection.subscribe(sub);
+	});
+
+	onDestroy(() => {
+		sub();
+	});
 </script>
 
 {#if $sessionAccess == 'WRITE'}
-	<div class="pb-2 select-none">
-		<div class="bg-gray-200 px-4 py-1 rounded-t-lg">
-			{#if $effectiveSelection.length == 1}
-				{firstSelected?.name ?? 'Unnamed object'}
-			{:else}
-				{$effectiveSelection.length} selected objects
-			{/if}
-		</div>
-		{#if showTransform}
-			<div class="properties-transform flex flex-col space-y-2 p-2">
-				<div class="flex flex-col space-y-2">
-					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label
-							for="props-x"
-							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
-						>
-							X
-						</label>
-						<input
-							id="props-x"
-							class="w-full h-6 cursor-default pl-2"
-							bind:value={propertiesDisplay.x}
-							on:change={doTransformChange('x')}
-						/>
-					</div>
-					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label
-							for="props-y"
-							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
-							>Y</label
-						>
-						<input
-							id="props-y"
-							class="w-full h-6 cursor-default pl-2"
-							bind:value={propertiesDisplay.y}
-							on:change={doTransformChange('y')}
-						/>
-					</div>
-				</div>
-				<div class="flex flex-col space-y-2">
-					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label
-							for="props-w"
-							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
-							>Width</label
-						>
-						<input
-							id="props-w"
-							class="w-full h-6 cursor-default pl-2 text-black"
-							value={propertiesDisplay.width}
-							use:displayUnits={propertiesDisplay.width == 'Mixed' ? '' : 'ft'}
-							on:change={doTransformChange('width')}
-						/>
-					</div>
-					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label
-							for="props-h"
-							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
-							>Height</label
-						>
-						<input
-							id="props-h"
-							class="w-full h-6 cursor-default pl-2 text-black"
-							value={propertiesDisplay.height}
-							use:displayUnits={propertiesDisplay.height == 'Mixed' ? '' : 'ft'}
-							on:change={doTransformChange('height')}
-						/>
-					</div>
-				</div>
-				<div class="flex flex-col">
-					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label
-							for="props-a"
-							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
-						>
-							Angle
-						</label>
-						<input
-							id="props-a"
-							class="w-full cursor-default pl-2"
-							bind:value={propertiesDisplay.angle}
-							use:displayUnits={'°'}
-							on:change={doTransformChange('angle')}
-						/>
-					</div>
-					<div class="flex-1 flex flex-row" />
-				</div>
+	{#key selectionKeyCounter}
+		<div class="pb-2 select-none">
+			<div class="bg-gray-200 px-4 py-1 rounded-t-lg">
+				{#if $effectiveSelection.length == 1}
+					{firstSelected?.name ?? 'Unnamed object'}
+				{:else}
+					{$effectiveSelection.length} selected objects
+				{/if}
 			</div>
-		{/if}
-		{#if showStyle}
-			<div class="border-b border-gray-200" />
-			<div class="properties-style flex flex-col space-y-2 p-2">
-				<div class="flex flex-col space-y-2">
-					<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
-						<label
-							for="props-color"
-							class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
-						>
-							Color
-						</label>
-						<ColorInput
-							noVerticalBorder
-							bind:value={propertiesDisplay.style.color}
-							on:change={doStyleChange('color')}
-						/>
-					</div>
-					<div class="flex-1 flex flex-row rounded-md hover:shadow-sm">
-						<label
-							for="props-style"
-							class="min-w-[130px] overflow-hidden border-gray-200 border border-r-0 overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
-						>
-							Style
-						</label>
-						<select
-							id="props-style"
-							class="border-gray-200 rounded-md border w-full rounded-l-none"
-							value={propertiesDisplay.style.filled?.toString() ?? 'false'}
-							on:change={(e) => {
-								doStyleChange('filled')(
-									new CustomEvent('change', { detail: e.target.value == 'true' })
-								);
-							}}
-						>
-							<option value="false"> Line </option>
-							<option value="true"> Filled </option>
-						</select>
-					</div>
-
-					{#if !propertiesDisplay.style.filled}
+			{#if showTransform}
+				<div class="properties-transform flex flex-col space-y-2 p-2">
+					<div class="flex flex-col space-y-2">
 						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
 							<label
-								for="props-line-width"
+								for="props-x"
 								class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
 							>
-								Line Width
+								X
 							</label>
 							<input
-								id="props-line-width"
-								class="w-full px-1 h-6 rounded-r-md"
-								type="text"
-								bind:value={propertiesDisplay.style.strokeWidth}
-								on:change={(e) => {
-									doStyleChange('strokeWidth')(
-										new CustomEvent('change', { detail: e.target.value })
-									);
-								}}
+								id="props-x"
+								class="w-full h-6 cursor-default pl-2"
+								bind:value={propertiesDisplay.x}
+								on:change={doTransformChange('x')}
 							/>
 						</div>
-					{/if}
-					<div class="flex-1 flex flex-row" />
-				</div>
-			</div>
-		{/if}
-		{#if properties.length > 0}
-			<div class="border-b border-gray-200" />
-			<div class="space-y-2 mt-2">
-				{#each properties as prop}
-					<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
-						<span
-							class="flex-shrink-0 h-full min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
-						>
-							{prettifyName(prop.displayName ?? prop.name)}
-						</span>
-						{#if prop.type == 'string'}
+						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+							<label
+								for="props-y"
+								class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+								>Y</label
+							>
 							<input
-								class="w-full px-1 rounded-r-md"
-								type="text"
-								bind:value={propertiesDisplay.props[prop.name]}
-								on:change={doPropChange(prop)}
+								id="props-y"
+								class="w-full h-6 cursor-default pl-2"
+								bind:value={propertiesDisplay.y}
+								on:change={doTransformChange('y')}
 							/>
-						{:else if prop.type == 'number'}
+						</div>
+					</div>
+					<div class="flex flex-col space-y-2">
+						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+							<label
+								for="props-w"
+								class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+								>Width</label
+							>
 							<input
-								use:displayUnits={prop.displayUnits ?? ''}
-								class="w-full px-1 rounded-r-md"
-								type="number"
-								value={propertiesDisplay.props[prop.name] *
-									(typeof prop.multiplier == 'number' ? prop.multiplier : 1)}
-								on:change={doPropChange(prop)}
+								id="props-w"
+								class="w-full h-6 cursor-default pl-2 text-black"
+								value={propertiesDisplay.width}
+								use:displayUnits={propertiesDisplay.width == 'Mixed' ? '' : 'ft'}
+								on:change={doTransformChange('width')}
 							/>
-						{:else if prop.type == 'meters'}
+						</div>
+						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+							<label
+								for="props-h"
+								class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+								>Height</label
+							>
 							<input
-								class="w-full px-1 rounded-r-md"
-								type="number"
-								use:displayUnits={'ft'}
-								step={1 / 12}
-								value={metersToFeet(propertiesDisplay.props[prop.name])}
-								on:change={doPropChange(prop)}
+								id="props-h"
+								class="w-full h-6 cursor-default pl-2 text-black"
+								value={propertiesDisplay.height}
+								use:displayUnits={propertiesDisplay.height == 'Mixed' ? '' : 'ft'}
+								on:change={doTransformChange('height')}
 							/>
-						{:else if prop.type == 'angle'}
+						</div>
+					</div>
+					<div class="flex flex-col">
+						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+							<label
+								for="props-a"
+								class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+							>
+								Angle
+							</label>
 							<input
-								class="w-full px-1 rounded-r-md"
-								step="1"
-								type="number"
+								id="props-a"
+								class="w-full cursor-default pl-2"
+								bind:value={propertiesDisplay.angle}
 								use:displayUnits={'°'}
-								value={rad2deg(propertiesDisplay.props[prop.name])}
-								on:change={doPropChange(prop)}
+								on:change={doTransformChange('angle')}
 							/>
-						{:else if prop.type == 'boolean'}
-							<input
-								class="ml-2 px-1"
-								type="checkbox"
-								checked={propertiesDisplay.props[prop.name]}
-								on:change={doPropChange(prop)}
+						</div>
+						<div class="flex-1 flex flex-row" />
+					</div>
+				</div>
+			{/if}
+			{#if showStyle}
+				<div class="border-b border-gray-200" />
+				<div class="properties-style flex flex-col space-y-2 p-2">
+					<div class="flex flex-col space-y-2">
+						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+							<label
+								for="props-color"
+								class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+							>
+								Color
+							</label>
+							<ColorInput
+								noVerticalBorder
+								bind:value={propertiesDisplay.style.color}
+								on:change={doStyleChange('color')}
 							/>
-						{:else if prop.type == 'geo'}
-							<input
-								class="w-1/2 px-1"
-								type="number"
-								value={propertiesDisplay.props[prop.name][0]}
-							/>
-							<input
-								class="w-1/2 px-1"
-								type="number"
-								value={propertiesDisplay.props[prop.name][1]}
-							/>
-						{:else if prop.type == 'color-toggle'}
-							<div class="flex flex-row">
-								<input
-									class="ml-2 px-1 mr-2"
-									type="checkbox"
-									checked={propertiesDisplay.props[prop.name]?.active ?? false}
-									on:change={doPropChange(prop)}
-								/>
-								<div
-									class={propertiesDisplay.props[prop.name]?.active ?? false
-										? ''
-										: 'opacity-50 pointer-events-none line-through'}
+						</div>
+						<div class="flex-1 flex flex-row rounded-md hover:shadow-sm">
+							<label
+								for="props-style"
+								class="min-w-[130px] overflow-hidden border-gray-200 border border-r-0 overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+							>
+								Style
+							</label>
+							<select
+								id="props-style"
+								class="border-gray-200 rounded-md border w-full rounded-l-none"
+								value={propertiesDisplay.style.filled?.toString() ?? 'false'}
+								on:change={(e) => {
+									doStyleChange('filled')(
+										new CustomEvent('change', { detail: e.target.value == 'true' })
+									);
+								}}
+							>
+								<option value="false"> Line </option>
+								<option value="true"> Filled </option>
+							</select>
+						</div>
+
+						{#if !propertiesDisplay.style.filled}
+							<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
+								<label
+									for="props-line-width"
+									class="min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
 								>
-									<ColorInput
-										noVerticalBorder
-										value={propertiesDisplay.props[prop.name]?.value ?? [0, 0, 0, 1]}
-										on:change={doPropChange(prop)}
-									/>
-								</div>
-							</div>
-						{:else if prop.type == 'color'}
-							<div class="flex flex-row">
-								<ColorInput
-									noVerticalBorder
-									value={propertiesDisplay.props[prop.name] ?? [0, 0, 0, 1]}
-									on:change={doPropChange(prop)}
+									Line Width
+								</label>
+								<input
+									id="props-line-width"
+									class="w-full px-1 h-6 rounded-r-md"
+									type="text"
+									bind:value={propertiesDisplay.style.strokeWidth}
+									on:change={(e) => {
+										doStyleChange('strokeWidth')(
+											new CustomEvent('change', { detail: e.target.value })
+										);
+									}}
 								/>
 							</div>
 						{/if}
+						<div class="flex-1 flex flex-row" />
 					</div>
-				{/each}
-			</div>
-		{/if}
-		<div />
-	</div>
+				</div>
+			{/if}
+			{#if properties.length > 0}
+				<div class="border-b border-gray-200" />
+				<div class="space-y-2 mt-2">
+					{#each properties as prop}
+						<div class="border-gray-200 border rounded-md mx-2 flex flex-row h-6 flex-shrink-0">
+							<span
+								class="flex-shrink-0 h-full min-w-[130px] overflow-hidden overflow-ellipsis bg-gray-200 capitalize text-sm flex items-center justify-start pl-1 rounded-l pr-2"
+							>
+								{prettifyName(prop.displayName ?? prop.name)}
+							</span>
+							{#if prop.type == 'string'}
+								<input
+									class="w-full px-1 rounded-r-md"
+									type="text"
+									bind:value={propertiesDisplay.props[prop.name]}
+									on:change={doPropChange(prop)}
+								/>
+							{:else if prop.type == 'number'}
+								<input
+									use:displayUnits={prop.displayUnits ?? ''}
+									class="w-full px-1 rounded-r-md"
+									type="number"
+									value={propertiesDisplay.props[prop.name] *
+										(typeof prop.multiplier == 'number' ? prop.multiplier : 1)}
+									on:change={doPropChange(prop)}
+								/>
+							{:else if prop.type == 'meters'}
+								<input
+									class="w-full px-1 rounded-r-md"
+									type="number"
+									use:displayUnits={'ft'}
+									step={1 / 12}
+									value={metersToFeet(propertiesDisplay.props[prop.name])}
+									on:change={doPropChange(prop)}
+								/>
+							{:else if prop.type == 'angle'}
+								<input
+									class="w-full px-1 rounded-r-md"
+									step="1"
+									type="number"
+									use:displayUnits={'°'}
+									value={rad2deg(propertiesDisplay.props[prop.name])}
+									on:change={doPropChange(prop)}
+								/>
+							{:else if prop.type == 'boolean'}
+								<input
+									class="ml-2 px-1"
+									type="checkbox"
+									checked={propertiesDisplay.props[prop.name]}
+									on:change={doPropChange(prop)}
+								/>
+							{:else if prop.type == 'geo'}
+								<input
+									class="w-1/2 px-1"
+									type="number"
+									value={propertiesDisplay.props[prop.name][0]}
+								/>
+								<input
+									class="w-1/2 px-1"
+									type="number"
+									value={propertiesDisplay.props[prop.name][1]}
+								/>
+							{:else if prop.type == 'color-toggle'}
+								<div class="flex flex-row">
+									<input
+										class="ml-2 px-1 mr-2"
+										type="checkbox"
+										checked={propertiesDisplay.props[prop.name]?.active ?? false}
+										on:change={doPropChange(prop)}
+									/>
+									<div
+										class={propertiesDisplay.props[prop.name]?.active ?? false
+											? ''
+											: 'opacity-50 pointer-events-none line-through'}
+									>
+										<ColorInput
+											noVerticalBorder
+											value={propertiesDisplay.props[prop.name]?.value ?? [0, 0, 0, 1]}
+											on:change={doPropChange(prop)}
+										/>
+									</div>
+								</div>
+							{:else if prop.type == 'color'}
+								<div class="flex flex-row">
+									<ColorInput
+										noVerticalBorder
+										value={propertiesDisplay.props[prop.name] ?? [0, 0, 0, 1]}
+										on:change={doPropChange(prop)}
+									/>
+								</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+			<div />
+		</div>
+	{/key}
 {:else}
 	<div class="select-none">
 		<div class="bg-gray-200 px-4 py-1 rounded-lg">
