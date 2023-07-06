@@ -1285,6 +1285,12 @@ export class EditorContext {
 		}
 	}
 
+	onIdleMapClick() {
+		if (get(this.activeDialog) != 'parcels') {
+			this.activateDialog('');
+		}
+	}
+
 	guard(p: Promise<any>) {
 		return p.catch((e) => {
 			console.error(e);

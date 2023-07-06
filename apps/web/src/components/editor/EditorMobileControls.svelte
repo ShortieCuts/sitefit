@@ -27,7 +27,7 @@
 
 	$: hasSelection = $effectiveSelection.length > 0;
 
-	const { mobileToolMode, activeTool, measureToolCount } = editor;
+	const { mobileToolMode, activeTool, measureToolCount, activeToolFlags } = editor;
 
 	let selectedSize = { width: 0, height: 0 };
 	let lastLongitude = $longitude;
@@ -175,12 +175,14 @@
 						}}><Fa icon={faMapPin} /> Start Measurement</button
 					>
 				{:else}
-					<button
-						class="text-blue-500"
-						on:click={() => {
-							editor.clickDownTool();
-						}}><Fa icon={faMapPin} /> Continue Measurement</button
-					>
+					{#if !$activeToolFlags.measureSegment}
+						<button
+							class="text-blue-500"
+							on:click={() => {
+								editor.clickDownTool();
+							}}><Fa icon={faMapPin} /> Continue Measurement</button
+						>
+					{/if}
 					<button
 						class="text-green-500"
 						on:click={() => {

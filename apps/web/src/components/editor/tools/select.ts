@@ -468,6 +468,8 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 			editor.selectionDown.set(false);
 			lastPosition = get(editor.currentMousePositionRelative);
 		}
+	} else {
+		editor.onIdleMapClick();
 	}
 
 	if (canChangeSelection) {

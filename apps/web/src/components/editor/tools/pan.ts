@@ -39,6 +39,7 @@ export const PanTool = {
 				}
 			}
 		} else {
+			editor.onIdleMapClick();
 			if (get(editor.selectToolCursor) != Cursors.default) {
 				selectDown(ev, editor, broker);
 			}
