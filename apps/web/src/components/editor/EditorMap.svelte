@@ -38,6 +38,7 @@
 	import { MapboxMapsProvider } from './maps/mapbox';
 	import { MAP_STYLES } from './maps/mapStyles';
 	import { localStoragePreference } from '$lib/client/prefs';
+	import { dialogs } from './dialogs';
 
 	const MIN_ZOOM = 1;
 	const MAX_ZOOM = 45;
@@ -61,6 +62,8 @@
 	const mapStyle = broker.writableGlobalProperty('mapStyle', 'google-satellite');
 
 	let containerEl: HTMLElement;
+
+	$: shiftRight = $activeDialog && (dialogs[$activeDialog]?.dock ?? 'left') === 'left';
 
 	const mapProviders = {
 		google: GoogleMapsProvider,
@@ -971,7 +974,7 @@
 {#if !$isMobile}
 	<div
 		class="absolute bottom-4 left-4 transition-all z-[2]"
-		style={$activeDialog == '' ? '' : 'left: calc(400px + 1rem);'}
+		style={shiftRight ? 'left: calc(400px + 1rem);' : ''}
 	>
 		{#if showManualMapZoomWarning && !styleSelectorOpen}
 			<button
