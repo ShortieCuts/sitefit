@@ -30,7 +30,7 @@
 		<slot />
 	</div>
 {:else}
-	<div class:pt-2={!fullHeight} class:h-full={fullHeight}>
+	<div class:pt-2={!fullHeight} class:h-full={fullHeight} class="flex flex-col">
 		<slot />
 	</div>
 {/if}

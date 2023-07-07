@@ -658,6 +658,10 @@ export async function processCadUploads(
 	let promises: Promise<string>[] = [];
 	editor.uploadStatus.set('idle');
 
+	if (get(editor.activeDialog) != 'cads') {
+		editor.activateDialog('cads');
+	}
+
 	let uploads: { name: string; data: any; id: number }[] = [];
 
 	function updateUpload(
