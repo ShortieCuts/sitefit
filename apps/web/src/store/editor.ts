@@ -1204,6 +1204,8 @@ export class EditorContext {
 
 	// This is written to by the renderer when using google
 	warnFarObject: Writable<boolean> = writable(false);
+	warnFarCamera: Writable<boolean> = writable(false);
+	
 	farObjects: Writable<ObjectID[]> = writable([]);
 
 	translating: Writable<boolean> = writable(false);

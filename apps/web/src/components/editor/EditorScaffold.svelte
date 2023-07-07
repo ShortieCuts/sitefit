@@ -7,6 +7,7 @@
 		faArrowsLeftRight,
 		faArrowsUpDown,
 		faBackward,
+		faClose,
 		faCog,
 		faComment,
 		faCopy,
@@ -72,6 +73,7 @@
 	import { cubicOut } from '$lib/util/easing';
 	import ColorInput from './common/ColorInput.svelte';
 	import { colorArrayToHex, hexColorToArray } from '$lib/util/color';
+	import { localStoragePreference } from '$lib/client/prefs';
 
 	// export let auth: AuthState;
 	export let projectId: string;
@@ -95,6 +97,7 @@
 	const {
 		activeDialog,
 		warnFarObject,
+		warnFarCamera,
 		effectiveSelection,
 		selection,
 		toasts,
@@ -107,6 +110,11 @@
 		colorPalette,
 		toolPrimaryColor
 	} = editorContext;
+
+	const hiddenFarWarning = localStoragePreference(
+		'project.' + broker.projectId + '.hiddenFarWarning',
+		'false'
+	);
 
 	let needsCornerstone = false;
 
@@ -906,7 +914,7 @@
 		</div>
 	{/each}
 
-	{#if $warnFarObject}
+	{#if ($warnFarObject || $warnFarCamera) && $hiddenFarWarning == 'false'}
 		<div
 			in:fly={{
 				y: 100
@@ -924,6 +932,12 @@
 			}}
 			on:keydown={(e) => {}}
 		>
+			<button
+				class="w-6 h-6 text-sm flex items-center justify-center absolute -top-2 -right-2 rounded-full bg-red-500 text-white hover:bg-red-400"
+				on:click|stopPropagation={() => {
+					$hiddenFarWarning = 'true';
+				}}><Fa icon={faClose} /></button
+			>
 			<div
 				class="flex-shrink-0 w-14 bg-gray-200 flex items-center justify-center text-lg opacity-50 text-yellow-500"
 			>
@@ -938,6 +952,14 @@
 				>. If you're trying to start a new Site, then create a new one in the Site menu to the left.
 				Or you can relocate the current Site Location if the old one is no longer useful.
 				<div class="flex flex-row mt-2 space-x-2">
+					<button
+						on:click|stopPropagation={async () => {
+							editorContext.flyHome();
+						}}
+						class="btn"
+					>
+						Go back
+					</button>
 					<button
 						on:click|stopPropagation={async () => {
 							let res = await createProject({
@@ -957,8 +979,11 @@
 						}}
 						class="btn"
 						>Create a New Site
-						<InfoPopover
-							>This will save everything in this Site, and create a new one in the current location.
+						<InfoPopover>
+							<div class="max-w-[180px]">
+								This will save everything in this Site, and create a new one in the current
+								location.
+							</div>
 						</InfoPopover></button
 					>
 
@@ -969,10 +994,12 @@
 						}}
 						class="btn"
 						>Relocate this site
-						<InfoPopover
-							>Moving the Site Location for this Site means anything too far from the new location
-							will be degraded or lost. If you're trying to start something new, then create a new
-							Site in the Site menu.
+						<InfoPopover>
+							<div class="max-w-[180px]">
+								Moving the Site Location for this Site means anything too far from the new location
+								will be degraded or lost. If you're trying to start something new, then create a new
+								Site in the Site menu.
+							</div>
 						</InfoPopover>
 					</button>
 				</div>

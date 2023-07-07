@@ -452,6 +452,12 @@
 				let closeLng = center[0];
 				let closeLat = center[1];
 				let floatingDist = Math.sqrt(floatingDlon * floatingDlon + floatingDlat * floatingDlat);
+
+				if (floatingDist > 0.07) {
+					editor.warnFarCamera.set(true);
+				} else {
+					editor.warnFarCamera.set(false);
+				}
 				if (floatingDist > 0.005 && broker.project.objects.length <= 1) {
 					(async () => {
 						await broker.getOrCreateCornerstone();

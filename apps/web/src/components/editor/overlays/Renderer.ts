@@ -1592,9 +1592,14 @@ export class RendererOverlay extends Overlay {
 					let maxDist = 0;
 					let farObjects: ObjectID[] = [];
 					for (let [id, obj] of this.renderedObjects.entries()) {
-						let dist = obj.getPosition().distanceTo(new THREE.Vector3(0, 0, 0));
-						if (dist > maxDist) maxDist = dist;
-						if (dist > 10000) farObjects.push(id);
+						let realObj = this.broker.project.objectsMap.get(id);
+						if (realObj) {
+							let b = realObj.getBounds();
+							let mid = [b.maxX - b.minX, b.maxY - b.minY];
+							let dist = Math.sqrt(mid[0] * mid[0] + mid[1] * mid[1]);
+							if (dist > maxDist) maxDist = dist;
+							if (dist > 3000) farObjects.push(id);
+						}
 					}
 
 					if (farObjects.length > 0) {
