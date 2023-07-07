@@ -77,7 +77,7 @@
 	export let projectId: string;
 	export let accessToken: string | undefined;
 
-	const ENABLE_CORNERSTONE_PICKER = false;
+	const ENABLE_CORNERSTONE_PICKER = true;
 
 	let midEl: HTMLElement;
 
