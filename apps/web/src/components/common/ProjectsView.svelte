@@ -67,7 +67,7 @@
 
 				await refreshData();
 				setTimeout(() => {
-					newEditId.set(projectId.toString());
+					location.href = `/project/${projectId}`;
 				}, 10);
 			}}><Fa icon={faMapLocation} /> New Site</button
 		>
