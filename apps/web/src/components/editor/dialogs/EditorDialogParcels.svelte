@@ -95,7 +95,6 @@
 							let results = parcelOverlay.getParcelPolyAt($selectedParcelLonLat);
 
 							selectedParcel = results;
-							console.log(selectedParcel);
 						}
 					}
 
@@ -118,6 +117,7 @@
 				let selectedObject = broker.project.objectsMap.get(selectedObjects[0]);
 				if (selectedObject && selectedObject.pinned && selectedObject.type == ObjectType.Path) {
 					editor.deleteSelection(broker);
+					loadedParcelFor = [0, 0];
 				}
 			}
 		}

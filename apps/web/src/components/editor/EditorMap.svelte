@@ -339,7 +339,7 @@
 					});
 
 					editor.deselectAll();
-					editor.selectedParcelLonLat.set([0, 0]);
+
 					if (hover) {
 						let hoverObj = broker.project.objectsMap.get(hover);
 						if (hoverObj) {
@@ -349,8 +349,11 @@
 							}
 						}
 					}
-					if (get(editor.effectiveSelection).length == 0)
+					if (get(editor.effectiveSelection).length == 0) {
 						editor.selectedParcelLonLat.set([ev.lon, ev.lat]);
+					} else {
+						editor.selectedParcelLonLat.set([0, 0]);
+					}
 				}
 
 				if (!$isMobile) return;

@@ -419,11 +419,20 @@
 		}
 	}
 
+	function onWheel(e: WheelEvent) {
+		if (e.ctrlKey) {
+			e.preventDefault();
+			let el = document.querySelector('.map-container') as HTMLDivElement;
+			if (el) el.dispatchEvent(e);
+		}
+	}
+
 	onMount(() => {
 		if (browser) {
 			document.addEventListener('copy', onCopy);
 			document.addEventListener('paste', onPaste);
 			document.addEventListener('cut', onCut);
+			window.addEventListener('wheel', onWheel, { passive: false });
 		}
 	});
 
@@ -432,6 +441,7 @@
 			document.removeEventListener('copy', onCopy);
 			document.removeEventListener('paste', onPaste);
 			document.removeEventListener('cut', onCut);
+			window.removeEventListener('wheel', onWheel);
 		}
 		broker.dispose();
 	});
