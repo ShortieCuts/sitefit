@@ -480,8 +480,15 @@ export function computeBounds(objects: Object2D[]): Flatten.Box {
 					if (fl.box) {
 						let bounds = fl.box;
 						if (bounds) {
-							if (!box) box = bounds.clone();
-							else box = box.merge(bounds);
+							if (
+								!isNaN(bounds.height) &&
+								isFinite(bounds.height) &&
+								!isNaN(bounds.width) &&
+								isFinite(bounds.width)
+							) {
+								if (!box) box = bounds.clone();
+								else box = box.merge(bounds);
+							}
 						}
 					}
 				}

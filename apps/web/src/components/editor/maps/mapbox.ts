@@ -41,6 +41,7 @@ async function createMapWithStyle(
 	let map = new mapboxgl.Map({
 		container: div,
 		style: getMapId(style),
+		boxZoom: false,
 		center: {
 			lat: 0,
 			lng: 0
@@ -432,11 +433,10 @@ export class MapboxMapsProvider extends MapProvider {
 		if (gestureHandling == 'greedy') {
 			this.map.dragPan.enable();
 			this.map.dragRotate.enable();
-			this.map.doubleClickZoom.enable();
+			this.map.doubleClickZoom.disable();
 			this.map.touchZoomRotate.enable();
 			// this.map.scrollZoom.enable();
 			this.map.keyboard.enable();
-			this.map.boxZoom.enable();
 		} else {
 			this.map.dragPan.disable();
 			this.map.dragRotate.disable();
@@ -444,7 +444,6 @@ export class MapboxMapsProvider extends MapProvider {
 			this.map.touchZoomRotate.disable();
 			// this.map.scrollZoom.disable();
 			this.map.keyboard.disable();
-			this.map.boxZoom.disable();
 		}
 	}
 

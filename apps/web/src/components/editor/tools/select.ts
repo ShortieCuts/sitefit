@@ -498,7 +498,6 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 				}
 			} else {
 				if (hover) {
-					console.log('hover', hover);
 					let currentSelection = get(editor.selection);
 					if (currentSelection.includes(hover)) {
 						currentSelection = currentSelection.filter((x) => x != hover);
@@ -510,6 +509,7 @@ export function selectDown(ev: MouseEvent, editor: EditorContext, broker: Projec
 					editor.computeEffectiveSelection(broker);
 					editor.rootGroup.set(null);
 				} else {
+					console.log('Adding to selection');
 					selectionAdditional = [...get(editor.selection)];
 				}
 			}
@@ -1453,6 +1453,7 @@ function computeSelectionBox(
 			}
 		}
 	}
+
 	editor.selection.set([...selectionAdditional, ...selection]);
 	editor.computeEffectiveSelection(broker);
 }

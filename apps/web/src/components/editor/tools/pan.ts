@@ -61,7 +61,11 @@ export const PanTool = {
 				}
 
 				hover = ascendToRoot(editor, broker, hover);
-				editor.selection.set([hover]);
+				if (ev.shiftKey) {
+					editor.selection.set([...get(editor.selection), hover]);
+				} else {
+					editor.selection.set([hover]);
+				}
 				editor.editingObject.set(null);
 
 				editor.computeEffectiveSelection(broker);
