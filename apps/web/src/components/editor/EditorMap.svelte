@@ -16,7 +16,14 @@
 	import { GuidesOverlay } from './overlays/Guides';
 	import { calculateGuides, getObjectAtCursor } from './tools/select';
 	import { getDraggable } from 'src/store/draggable';
-	import { faCompactDisc, faCompass, faTextHeight } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faArrowRight,
+		faArrowRightArrowLeft,
+		faCog,
+		faCompactDisc,
+		faCompass,
+		faTextHeight
+	} from '@fortawesome/free-solid-svg-icons';
 	import { translateDXF } from '$lib/util/dxf';
 	import { ObjectType, type Object2D } from 'core';
 	import { SuperZoomLayer } from '$lib/map/super-zoom-layer';
@@ -30,6 +37,7 @@
 	import { GoogleMapsProvider } from './maps/google';
 	import { MapboxMapsProvider } from './maps/mapbox';
 	import { MAP_STYLES } from './maps/mapStyles';
+	import { localStoragePreference } from '$lib/client/prefs';
 
 	const MIN_ZOOM = 1;
 	const MAX_ZOOM = 45;
@@ -596,6 +604,13 @@
 	let mapRotationNonZero = writable(false);
 	let mapRotation = writable(0);
 	let styleSelectorOpen = false;
+	let zoomSettingsOpen = false;
+	const zoomSettingsPref = localStoragePreference<'auto' | 'manual' | 'prioritize-google'>(
+		'zoomSettings',
+		'manual'
+	);
+
+	let showManualMapZoomWarning = false;
 
 	editor.longitude.subscribe((val) => {
 		if (map) {
@@ -688,11 +703,22 @@
 				let currentZoom = map.getZoom();
 				setTimeout(() => {
 					if (!map) return;
-					if (map.getZoom() == currentZoom) {
-						editor.info('Map switched to Mapbox for increased zoom level.');
-						$mapStyle = $mapStyle.replace('google', 'mapbox');
+					if (map.getZoom() == currentZoom && currentZoom > 18) {
+						if ($zoomSettingsPref == 'auto' || $zoomSettingsPref == 'prioritize-google') {
+							editor.info('Map switched to Mapbox for increased zoom level.');
+							$mapStyle = $mapStyle.replace('google', 'mapbox');
+						} else if ($zoomSettingsPref == 'manual') {
+							showManualMapZoomWarning = true;
+						}
 					}
 				}, 1);
+			}
+		} else {
+			if (map && map.getZoom() <= 17) {
+				if ($zoomSettingsPref == 'prioritize-google') {
+					editor.info('Map switched to Google for decreased zoom level.');
+					$mapStyle = $mapStyle.replace('mapbox', 'google');
+				}
 			}
 		}
 
@@ -943,53 +969,126 @@
 </div>
 
 {#if !$isMobile}
-	<div class="absolute bottom-4 left-4 rounded-xl" class:bg-white={styleSelectorOpen}>
-		{#each [MAP_STYLES.slice(0, 3), MAP_STYLES.slice(3, 6)] as subStyles, i}
-			<div
-				class="flex flex-row items-center justify-center py-2 px-2 select-none"
-				class:border-t-2={styleSelectorOpen && i == 1}
-				class:border-gray-100={styleSelectorOpen && i == 1}
+	<div
+		class="absolute bottom-4 left-4 transition-all z-[2]"
+		style={$activeDialog == '' ? '' : 'left: calc(400px + 1rem);'}
+	>
+		{#if showManualMapZoomWarning && !styleSelectorOpen}
+			<button
+				class="absolute bg-white rounded-lg p-2 text-sm left-24 w-64 h-full cursor-pointer text-left"
+				on:click={() => {
+					$mapStyle = $mapStyle.replace('google', 'mapbox');
+					showManualMapZoomWarning = false;
+				}}
 			>
-				{#each subStyles as style}
-					{#if styleSelectorOpen || $mapStyle == style.key}
-						<button
-							class="flex flex-col items-center first:ml-0 ml-2 relative"
-							on:click={() => {
-								if (styleSelectorOpen) {
-									$mapStyle = style.key;
-									styleSelectorOpen = false;
-								} else {
-									styleSelectorOpen = true;
-								}
-							}}
-						>
-							<img
-								src={style.image}
-								alt={style.name}
-								class="rounded-xl hover:shadow-md hover:brightness-105 border-white [&.active]:border-blue-500"
-								class:active={styleSelectorOpen && $mapStyle == style.key}
-								class:w-20={!styleSelectorOpen}
-								class:border-2={!styleSelectorOpen}
-								class:border-4={styleSelectorOpen}
-							/>
-							{#if styleSelectorOpen}
-								<b class="mt-2 text-sm">{style.name}</b>
-							{/if}
-							{#if !styleSelectorOpen}
-								<span
-									class="absolute bottom-2 text-sm font-bold top-1 mt-1"
-									style="line-height: 1"
-									class:text-black={$mapStyle.endsWith('simple')}
-									class:text-white={$mapStyle.endsWith('satellite') || $mapStyle.endsWith('dark')}
-								>
-									Map Type
-								</span>
-							{/if}
-						</button>
-					{/if}
-				{/each}
+				Switch to Mapbox Satellite for extra zoom?
+				<br /><i class="opacity-50">(Note: satellite imagery may be older).</i>
+			</button>
+		{/if}
+		{#if styleSelectorOpen && !zoomSettingsOpen}
+			<button
+				class="btn mb-4"
+				on:click={() => {
+					zoomSettingsOpen = !zoomSettingsOpen;
+				}}><Fa icon={faCog} /> Map Settings for Extra Zoom</button
+			>
+		{/if}
+		{#if styleSelectorOpen && zoomSettingsOpen}
+			<div
+				class="rounded-xl mb-4 bg-white p-2 flex flex-col justify-start items-start max-w-[357px] text-sm"
+			>
+				<div class="p-2 text-base font-bold">Satellite Imagery Setting for Extra Zoom</div>
+
+				<button
+					class="rounded-md hover:bg-gray-100 text-left p-2 mb-4"
+					class:bg-blue-300={$zoomSettingsPref == 'auto'}
+					class:hover:bg-blue-300={$zoomSettingsPref == 'auto'}
+					on:click={() => {
+						$zoomSettingsPref = 'auto';
+						zoomSettingsOpen = false;
+					}}
+				>
+					<b class="flex flex-row items-center">
+						Google <Fa class="mx-2" icon={faArrowRight} /> Mapbox:
+					</b> Auto switch from Google to Mapbox when I try to zoom in more than Google Satellite allows
+				</button>
+
+				<button
+					class="rounded-md hover:bg-gray-100 text-left p-2 mb-4"
+					class:bg-blue-300={$zoomSettingsPref == 'prioritize-google'}
+					class:hover:bg-blue-300={$zoomSettingsPref == 'prioritize-google'}
+					on:click={() => {
+						$zoomSettingsPref = 'prioritize-google';
+						zoomSettingsOpen = false;
+					}}
+				>
+					<b>Prioritize Google:</b> Auto switch from Google to Mapbox to allow more zoom, but revert
+					back to Google when I zoom back out
+				</button>
+
+				<button
+					class="rounded-md hover:bg-gray-100 text-left p-2"
+					class:bg-blue-300={$zoomSettingsPref == 'manual'}
+					class:hover:bg-blue-300={$zoomSettingsPref == 'manual'}
+					on:click={() => {
+						$zoomSettingsPref = 'manual';
+						zoomSettingsOpen = false;
+					}}
+				>
+					<b>Manual:</b> Only switch satellite imagery when I click the buttons below
+				</button>
 			</div>
-		{/each}
+		{/if}
+		<div class="rounded-xl" class:bg-white={styleSelectorOpen}>
+			{#each [MAP_STYLES.slice(0, 3), MAP_STYLES.slice(3, 6)] as subStyles, i}
+				<div
+					class="flex flex-row items-center justify-center select-none"
+					class:border-t-2={styleSelectorOpen && i == 1}
+					class:border-gray-100={styleSelectorOpen && i == 1}
+					class:p-2={styleSelectorOpen}
+				>
+					{#each subStyles as style}
+						{#if styleSelectorOpen || $mapStyle == style.key}
+							<button
+								class="flex flex-col items-center first:ml-0 ml-2 relative"
+								on:click={() => {
+									if (styleSelectorOpen) {
+										$mapStyle = style.key;
+										styleSelectorOpen = false;
+									} else {
+										styleSelectorOpen = true;
+										showManualMapZoomWarning = false;
+									}
+								}}
+							>
+								<img
+									src={style.image}
+									alt={style.name}
+									class="rounded-xl hover:shadow-md hover:brightness-105 border-white [&.active]:border-blue-500"
+									class:active={styleSelectorOpen && $mapStyle == style.key}
+									class:w-20={!styleSelectorOpen}
+									class:border-2={!styleSelectorOpen}
+									class:border-4={styleSelectorOpen}
+								/>
+								{#if styleSelectorOpen}
+									<b class="mt-2 text-sm">{style.name}</b>
+								{/if}
+								{#if !styleSelectorOpen}
+									<span
+										class="absolute bottom-2 text-sm font-bold top-1 mt-1"
+										style="line-height: 1"
+										class:text-black={$mapStyle.endsWith('simple')}
+										class:text-white={$mapStyle.endsWith('satellite') || $mapStyle.endsWith('dark')}
+									>
+										Map Type
+									</span>
+								{/if}
+							</button>
+						{/if}
+					{/each}
+				</div>
+			{/each}
+		</div>
 	</div>
 {/if}
 
