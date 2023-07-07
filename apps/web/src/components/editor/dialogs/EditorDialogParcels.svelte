@@ -183,13 +183,6 @@
 		</div>
 	{:else}
 		<div class="flex flex-col p-4">
-			<div
-				class="text-lg flex flex-row items-center justify-center text-gray-500 rounded-md bg-blue-300 px-4 py-2"
-			>
-				<Fa icon={faMapLocationDot} />
-				<span class="ml-2"> Click to select/deselect parcels </span>
-			</div>
-
 			{#if selectedParcel}
 				<div class="flex flex-col rounded-lg bg-gray-50 mt-4">
 					<div class="flex flex-row p-4">

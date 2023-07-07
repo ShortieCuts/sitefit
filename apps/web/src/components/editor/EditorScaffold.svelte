@@ -597,6 +597,22 @@
 						Exit Edit Mode
 					</button>
 				</div>
+			{:else if !$isMobile && $activeDialog == 'parcels'}
+				<div
+					transition:fly={{ y: -100 }}
+					class="absolute top-4 left-[50%] z-10 rounded-xl bg-white shadow-lg p-2 flex flex-row items-center"
+					style="transform: translate(-50%, 0)"
+				>
+					<div class="font-bold mr-2">Click to Select / Deselect Parcels</div>
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							editorContext.activateDialog('');
+						}}
+					>
+						Done
+					</button>
+				</div>
 			{/if}
 
 			{#if ($activeTool == 'area' || $activeTool == 'measurement') && $stagingObject}
