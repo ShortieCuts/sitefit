@@ -15,7 +15,13 @@
 	import ProjectsView from 'src/components/common/ProjectsView.svelte';
 	import { browser } from '$app/environment';
 	import ProjectsViewAdmin from 'src/components/common/ProjectsViewAdmin.svelte';
+	import { onMount } from 'svelte';
+	import { checkLoginAndRedirect } from '$lib/client/login';
 	export let data: PageData;
+
+	onMount(() => {
+		checkLoginAndRedirect();
+	});
 </script>
 
 <AppLanding auth={data.user}>
