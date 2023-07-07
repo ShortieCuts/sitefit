@@ -194,16 +194,16 @@
 				<div class="flex flex-col rounded-lg bg-gray-50 mt-4">
 					<div class="flex flex-row p-4">
 						<div class="mr-4">Admin</div>
-						<div>{selectedParcel.county}</div>
+						<div>{selectedParcel.county || 'N/A'}</div>
 					</div>
 					<div class="flex flex-row p-4">
 						<div class="mr-4">Address</div>
-						<div>{selectedParcel.address_street}</div>
+						<div>{selectedParcel.address_street || 'N/A'}</div>
 					</div>
 
 					<div class="flex flex-row p-4">
 						<div class="mr-4">Owner</div>
-						<div>{selectedParcel.owner}</div>
+						<div>{selectedParcel.owner || 'N/A'}</div>
 					</div>
 				</div>
 			{/if}
