@@ -256,6 +256,7 @@ export class MapboxMapsProvider extends MapProvider {
 	sourceCounter = 0;
 	sources: MapMultiPolyInstance[] = [];
 	refreshSources() {
+		if (!this.map) return;
 		let sourceData = {
 			type: 'geojson',
 			data: {
@@ -277,35 +278,39 @@ export class MapboxMapsProvider extends MapProvider {
 				});
 			}
 		}
-		let sour = this.map.getSource('source');
-		if (sour) {
-			(sour as any).setData(sourceData.data);
-		} else {
-			this.map.addSource('source', sourceData as mapboxgl.AnySourceData);
-		}
+		try {
+			let sour = this.map.getSource('source');
+			if (sour) {
+				(sour as any).setData(sourceData.data);
+			} else {
+				this.map.addSource('source', sourceData as mapboxgl.AnySourceData);
+			}
 
-		if (!this.map.getLayer('source-fill')) {
-			this.map.addLayer({
-				id: 'source-fill',
-				type: 'fill',
-				source: 'source',
-				paint: {
-					'fill-color': '#ffeb3b',
-					'fill-opacity': 0.01
-				}
-			});
-		}
+			// if (!this.map.getLayer('source-fill')) {
+			// 	this.map.addLayer({
+			// 		id: 'source-fill',
+			// 		type: 'fill',
+			// 		source: 'source',
+			// 		paint: {
+			// 			'fill-color': '#ffeb3b',
+			// 			'fill-opacity': 0.01
+			// 		}
+			// 	});
+			// }
 
-		if (!this.map.getLayer('source-line')) {
-			this.map.addLayer({
-				id: 'source-line',
-				type: 'line',
-				source: 'source',
-				paint: {
-					'line-color': '#ffeb3b',
-					'line-width': 3
-				}
-			});
+			if (!this.map.getLayer('source-line')) {
+				this.map.addLayer({
+					id: 'source-line',
+					type: 'line',
+					source: 'source',
+					paint: {
+						'line-color': '#ffeb3b',
+						'line-width': 3
+					}
+				});
+			}
+		} catch (e) {
+			console.error(e);
 		}
 	}
 	addMultiPoly(val: MapMultiPolyValue): MapMultiPolyInstance {

@@ -175,8 +175,9 @@ export class GoogleMapsProvider extends MapProvider {
 			strokeColor: '#ffeb3b',
 			strokeOpacity: 1.0,
 			strokeWeight: 3.0,
-			fillColor: '#ffeb3b',
-			fillOpacity: 0.01
+			// fillColor: '#ffeb3b',
+			// fillOpacity: 0.01
+			fillOpacity: 0.0
 		};
 		this.map.data.setStyle(featureStyleOptions);
 
