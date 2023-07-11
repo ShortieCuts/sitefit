@@ -9,6 +9,7 @@
 		faFile,
 		faFolder,
 		faFolderPlus,
+		faFont,
 		faLayerGroup,
 		faMapPin,
 		faObjectGroup,
@@ -29,6 +30,7 @@
 	import { browser } from '$app/environment';
 	import { compareAccess } from '$lib/util/access';
 	import ObjectContextButtons from './ObjectContextButtons.svelte';
+	import { Cornerstone, Object2D, ObjectType, Text } from 'core';
 
 	const { editor, broker } = getSvelteContext();
 	const { sessionAccess } = broker;
@@ -40,6 +42,7 @@
 		object: faVectorSquare,
 		layer: faLayerGroup,
 		cornerstone: faDraftingCompass,
+		text: faFont,
 		folder: faFolder,
 		cad: faFile,
 		path: faVectorSquare,
@@ -134,7 +137,9 @@
 					count++;
 				}
 
-				list.sort((a, b) => a.order - b.order);
+				list.sort((a, b) => {
+					return a.order - b.order;
+				});
 
 				// Make space for the dragged items between the items they are being dragged to
 

@@ -2,7 +2,16 @@
 	import DialogSlideUp from 'src/components/common/DialogSlideUp.svelte';
 	import ResponsiveGroup from 'src/components/common/ResponsiveGroup.svelte';
 	import { getSvelteContext } from 'src/store/editor';
-	import { Path, type Object2D, type ProjectMapStyle, Arc, Circle, Group, Cornerstone } from 'core';
+	import {
+		Path,
+		type Object2D,
+		type ProjectMapStyle,
+		Arc,
+		Circle,
+		Group,
+		Cornerstone,
+		Text
+	} from 'core';
 	import type { EditorLayerNode } from '../common/EditorLayerNode';
 	import EditorLayersNode from '../common/EditorLayersNode.svelte';
 	import { setContext } from 'svelte';
@@ -26,6 +35,8 @@
 			let icon = 'object';
 			if (obj instanceof Path) {
 				icon = 'path';
+			} else if (obj instanceof Text) {
+				icon = 'text';
 			} else if (obj instanceof Arc) {
 				icon = 'arc';
 			} else if (obj instanceof Circle) {
@@ -79,6 +90,19 @@
 	}
 
 	function sortItems(a: EditorLayerNode, b: EditorLayerNode) {
+		const SORT_TO_VERY_TOP = (obj: EditorLayerNode) => {
+			return obj.icon == 'cornerstone';
+		};
+
+		const SORT_TO_TOP = (obj: EditorLayerNode) => {
+			return obj.icon == 'text';
+		};
+
+		if (SORT_TO_VERY_TOP(a) && !SORT_TO_VERY_TOP(b)) return -1;
+		if (!SORT_TO_VERY_TOP(a) && SORT_TO_VERY_TOP(b)) return 1;
+		if (SORT_TO_TOP(a) && !SORT_TO_TOP(b)) return -1;
+		if (!SORT_TO_TOP(a) && SORT_TO_TOP(b)) return 1;
+
 		if (a.order === b.order) {
 			return a.id.localeCompare(b.id);
 		}

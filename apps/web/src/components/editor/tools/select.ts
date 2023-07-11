@@ -1504,11 +1504,12 @@ export function getObjectAtCursor(
 		if (filterObjects && !filterObjects(obj)) continue;
 
 		let objRealOrder = broker.project.computeObjectLayerHeight(obj);
+
 		for (let fl of obj.flatShape) {
 			let [dist, seg] = distanceTo(fl, point(cursor[0], cursor[1]));
 			if (dist < get(editor.screenScale)) {
 				if (objRealOrder >= topZ) {
-					topZ = obj.order ?? 0;
+					topZ = objRealOrder;
 					topObject = obj.id;
 				}
 			}
@@ -1516,7 +1517,7 @@ export function getObjectAtCursor(
 			if (fl instanceof Flatten.Polygon) {
 				if (fl.contains(point(cursor[0], cursor[1]))) {
 					if (objRealOrder >= topZ) {
-						topZ = obj.order ?? 0;
+						topZ = objRealOrder;
 						topObject = obj.id;
 					}
 				}

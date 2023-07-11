@@ -9,7 +9,8 @@ export type EditorLayerNode = {
 		| 'circle'
 		| 'arc'
 		| 'path'
-		| 'solid';
+		| 'solid'
+		| 'text';
 	id: string;
 	name: string;
 	order: number;

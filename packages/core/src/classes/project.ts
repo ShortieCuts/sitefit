@@ -1,6 +1,6 @@
 import { GeoCoordinate } from "./coordinate";
 import { ObjectID } from "./ids";
-import { makeObject, Object2D } from "./object";
+import { makeObject, Object2D, ObjectType } from "./object";
 import type { Serializable } from "./serializable";
 import { Quadtree, Rectangle } from "../../lib/quadtree/index.esm";
 import Flatten from "@flatten-js/core";
@@ -250,6 +250,10 @@ export class Project implements Serializable {
     let height = 0;
     for (let i = 0; i < parentChain.length; i++) {
       height += parentChain[i].order;
+    }
+
+    if (baseObj.type == ObjectType.Text) {
+      return 10000;
     }
 
     return height;
