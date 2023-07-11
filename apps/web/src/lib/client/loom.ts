@@ -10,7 +10,8 @@ export async function setupRecordButton(el: HTMLElement) {
 		const res = await setup({
 			config: {
 				insertButtonText: 'Submit feedback',
-				defaultRecordingType: RecordingType.ScreenOnly
+				defaultRecordingType: RecordingType.ScreenOnly,
+				allowedRecordingTypes: [RecordingType.ScreenOnly]
 			},
 
 			publicAppId: PUBLIC_APP_ID
