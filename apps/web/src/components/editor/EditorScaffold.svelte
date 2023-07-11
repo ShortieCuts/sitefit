@@ -30,8 +30,10 @@
 		faSearch,
 		faShare,
 		faTrash,
-		faUpload
+		faUpload,
+		faVideoCamera
 	} from '@fortawesome/free-solid-svg-icons';
+	import { setupRecordButton } from 'src/lib/client/loom';
 	import { fade, slide, fly } from 'svelte/transition';
 	import { auth, refreshUserData } from '../../store/auth';
 	import { createEditorContext, createProjectBroker, setSvelteContext } from 'src/store/editor';
@@ -460,6 +462,8 @@
 		fileEl;
 		editorContext.fileInput.set(fileEl);
 	}
+
+	let feedbackPopoverKey = 0;
 </script>
 
 <svelte:head>
@@ -528,11 +532,46 @@
 				<button
 					class="btn btn-fat shadow-style overflow-hidden text-ellipsis whitespace-nowrap"
 					style="background: #cdeaff; text-wrap: nowrap;"
-					on:click={() => editorContext.activateDialog('feedback')}
 					class:active={$activeDialog == 'feedback'}
 				>
-					<Fa icon={faEnvelope} /> Feedback / Request a Feature</button
-				>
+					<Fa icon={faEnvelope} /> Feedback / Request a Feature
+
+					{#key feedbackPopoverKey}
+						<Popover
+							showOnClick
+							caretBg="#f3f4f6"
+							offset={5}
+							caretCurveAmount={1}
+							caretWidth={0}
+							caretHeight={0}
+							align="bottom-right"
+							hideOnExternalClick={true}
+						>
+							<div
+								class="shadow-xl bg-white border-gray-100 border-2 space-y-2 py-2 rounded-lg min-w-[150px]"
+							>
+								<button
+									on:click={() => {
+										feedbackPopoverKey++;
+									}}
+									use:setupRecordButton
+									class="w-full flex flex-row items-center px-4 hover:bg-gray-100"
+								>
+									<Fa class="mr-2" icon={faVideoCamera} /> Record
+								</button>
+								<button
+									on:click={() => {
+										feedbackPopoverKey++;
+										editorContext.activateDialog('feedback');
+									}}
+									class="w-full flex flex-row items-center px-4 hover:bg-gray-100"
+								>
+									<Fa class="mr-2" icon={faEnvelope} /> Send Feedback
+								</button>
+							</div>
+						</Popover>
+					{/key}
+				</button>
 				<button
 					class="btn btn-fat shadow-style"
 					on:click={() => editorContext.activateDialog('comments')}
