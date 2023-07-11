@@ -62,6 +62,10 @@ if (browser) {
 	if (window.location.hostname === '192.168.1.105') {
 		WEBSOCKET_URL = '192.168.1.105:8787';
 	}
+
+	if (window.location.hostname === '192.168.1.98') {
+		WEBSOCKET_URL = '192.168.1.98:8787';
+	}
 }
 
 export type ProjectAccessLevel = 'READ' | 'WRITE' | 'COMMENT';
@@ -1205,7 +1209,7 @@ export class EditorContext {
 	// This is written to by the renderer when using google
 	warnFarObject: Writable<boolean> = writable(false);
 	warnFarCamera: Writable<boolean> = writable(false);
-	
+
 	farObjects: Writable<ObjectID[]> = writable([]);
 
 	translating: Writable<boolean> = writable(false);

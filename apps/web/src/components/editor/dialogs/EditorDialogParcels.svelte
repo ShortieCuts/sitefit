@@ -73,14 +73,17 @@
 		broker.needsRender.set(true);
 	}
 	let loadedParcelFor = [0, 0];
+	function decimalCompare(a: number, b: number) {
+		return Math.abs(a - b) < 0.00001;
+	}
 	$: {
 		selectedParcelExisting = null;
 
 		if ($selectedParcelLonLat[0] !== 0 || $selectedParcelLonLat[1] !== 0) {
 			(async () => {
 				if (
-					loadedParcelFor[0] != $selectedParcelLonLat[0] ||
-					loadedParcelFor[1] != $selectedParcelLonLat[1]
+					!decimalCompare(loadedParcelFor[0], $selectedParcelLonLat[0]) ||
+					!decimalCompare(loadedParcelFor[1], $selectedParcelLonLat[1])
 				) {
 					loadedParcelFor = [...$selectedParcelLonLat];
 					if (USE_EXACT_PARCEL_DATA) {
