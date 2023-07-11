@@ -461,6 +461,11 @@
 				if (floatingDist > 0.005 && broker.project.objects.length <= 1) {
 					(async () => {
 						await broker.getOrCreateCornerstone();
+						let cornerObj = broker.project.objectsMap.get('_cornerstone');
+						if (cornerObj && cornerObj.pinned) {
+							// We don't move pinned cornerstones
+							return;
+						}
 						// Wrap longitude
 						closeLng = (((closeLng % 360) + 540) % 360) - 180;
 

@@ -251,6 +251,7 @@
 		let obj = new Cornerstone();
 		obj.id = '_cornerstone';
 		obj.name = 'Site Location';
+		obj.pinned = true;
 		obj.geo = [location[0], location[1]];
 		obj.heading = location[2];
 		transaction.create(obj);
