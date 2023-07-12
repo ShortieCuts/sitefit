@@ -1567,15 +1567,24 @@ export class RendererOverlay extends Overlay {
 					let dirty = this.broker.rendererDirtyObjects;
 
 					for (let obj of dirty) {
+						let realObj = this.broker.project.objectsMap.get(obj)!;
 						let doesExist = this.broker.project.objectsMap.has(obj);
 						if (doesExist) {
 							let renderObj = this.renderedObjects.get(obj);
-							if (!renderObj) {
-								renderObj = createRenderObject(this, this.broker.project.objectsMap.get(obj)!);
-								this.renderedObjects.set(obj, renderObj);
-							}
+							let visible = this.broker.project.computeObjectLayerVisibility(realObj);
+							if (visible) {
+								if (!renderObj) {
+									renderObj = createRenderObject(this, this.broker.project.objectsMap.get(obj)!);
+									this.renderedObjects.set(obj, renderObj);
+								}
 
-							renderObj.refresh(this, this.broker.project.objectsMap.get(obj)!);
+								renderObj.refresh(this, realObj);
+							} else {
+								if (renderObj) {
+									renderObj.destroy(this);
+									this.renderedObjects.delete(obj);
+								}
+							}
 						} else {
 							if (this.renderedObjects.has(obj)) {
 								this.destroyObject(obj);
@@ -1825,13 +1834,21 @@ export class HeadlessRenderer {
 	render(objects: Object2D[]) {
 		for (let obj of objects) {
 			let doesExist = this.renderedObjects.has(obj.id);
-			if (doesExist) {
-				let renderObj = this.renderedObjects.get(obj.id)!;
-				renderObj.refresh(this, obj);
+			if (obj.visible) {
+				if (doesExist) {
+					let renderObj = this.renderedObjects.get(obj.id)!;
+					renderObj.refresh(this, obj);
+				} else {
+					let renderObj = createRenderObject(this, obj);
+					this.renderedObjects.set(obj.id, renderObj);
+					renderObj.refresh(this, obj);
+				}
 			} else {
-				let renderObj = createRenderObject(this, obj);
-				this.renderedObjects.set(obj.id, renderObj);
-				renderObj.refresh(this, obj);
+				if (doesExist) {
+					let renderObj = this.renderedObjects.get(obj.id)!;
+					renderObj.destroy(this);
+					this.renderedObjects.delete(obj.id);
+				}
 			}
 		}
 

@@ -259,6 +259,20 @@ export class Project implements Serializable {
     return height;
   }
 
+  computeObjectLayerVisibility(baseObj: Object2D) {
+    let obj: Object2D | undefined = baseObj;
+
+    if (!baseObj.visible) return false;
+
+    while (obj.parent) {
+      obj = this.objectsMap.get(obj.parent);
+      if (!obj) break;
+      if (!obj.visible) return false;
+    }
+
+    return true;
+  }
+
   getObjectsInBounds(bounds: {
     minX: number;
     minY: number;

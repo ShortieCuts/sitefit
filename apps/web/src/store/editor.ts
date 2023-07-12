@@ -683,7 +683,8 @@ export class ProjectBroker {
 				if (
 					mutation.data &&
 					((mutation.data as PropertyMutation)?.key === 'parent' ||
-						(mutation.data as PropertyMutation)?.key === 'order')
+						(mutation.data as PropertyMutation)?.key === 'order' ||
+						(mutation.data as PropertyMutation)?.key === 'visible')
 				) {
 					didChangeTree = true;
 				}

@@ -6,6 +6,7 @@
 		faCaretRight,
 		faCircle,
 		faDraftingCompass,
+		faEyeSlash,
 		faFile,
 		faFolder,
 		faFolderPlus,
@@ -110,6 +111,15 @@
 
 		return false;
 	}
+
+	function toggleVisibility() {
+		console.log('toggle visibility');
+		let transaction = broker.project.createTransaction();
+
+		transaction.update(node.id, 'visible', !node.visible);
+
+		broker.commitTransaction(transaction);
+	}
 </script>
 
 <div class="flex flex-col">
@@ -177,9 +187,10 @@
 	>
 		<button
 			bind:this={nodeElement}
-			class="layer-item cursor-default flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent"
+			class="layer-item cursor-default flex flex-row p-2 hover:bg-gray-100 items-center border border-transparent group"
 			class:selected
 			class:selected-partial={selectedPartial}
+			class:opacity-50={node.visible === false}
 			on:mousedown={select}
 		>
 			{#if node.children && node.children.length > 0}
@@ -193,9 +204,9 @@
 			{:else}
 				<div class="w-6 h-6" />
 			{/if}
-			<span class="w-6 h-6 flex items-center justify-center"
-				><Fa icon={icons[node.icon] ?? faQuestion} /></span
-			>
+			<span class="w-6 h-6 flex items-center justify-center">
+				<Fa icon={icons[node.icon] ?? faQuestion} />
+			</span>
 			<span class="ml-2 h-6 w-full flex items-center">
 				<EditableLabel
 					readonly={!compareAccess('WRITE', $sessionAccess)}
@@ -208,6 +219,23 @@
 					}}
 				/>
 			</span>
+			{#if !node.visible}
+				<button
+					class="w-6 h-6 pr-4 right-0 flex items-center justify-center hover:opacity-25 opacity-50 cursor-default"
+					on:click|stopPropagation={toggleVisibility}
+					on:mousedown|stopPropagation={() => {}}
+				>
+					<Fa icon={faEyeSlash} />
+				</button>
+			{:else}
+				<button
+					class="w-6 h-6 pr-4 right-0 flex items-center justify-center opacity-0 group-hover:opacity-25 hover:opacity-100 cursor-default"
+					on:click|stopPropagation={toggleVisibility}
+					on:mousedown|stopPropagation={() => {}}
+				>
+					<Fa icon={faEyeSlash} />
+				</button>
+			{/if}
 		</button>
 	</Draggable>
 
