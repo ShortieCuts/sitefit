@@ -970,7 +970,7 @@
 		</div>
 	{/each}
 
-	{#if ($warnFarObject || $warnFarCamera) && $hiddenFarWarning == 'false'}
+	{#if $warnFarCamera && $hiddenFarWarning == 'false'}
 		<div
 			in:fly={{
 				y: 100
