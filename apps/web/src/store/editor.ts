@@ -1458,24 +1458,63 @@ export class EditorContext {
 	}
 
 	flyHome() {
-		let obj = this.broker.project.objects.find((c) => {
-			if (!c.parent && c.type != ObjectType.Cornerstone) {
+		type BucketKey = `${number},${number}`;
+		let buckets = new Map<BucketKey, ObjectID[]>();
+		let roundToMeters = 300; // meters
+		this.broker.project.objects.forEach((c) => {
+			if (!c.parent) {
 				let bounds = this.broker.project.computeBoundsMulti([c.id]);
 				let center = this.getBoundsCenter(bounds);
 				if (isNaN(center[0]) || isNaN(center[1])) {
-					return false;
+					return;
 				}
-				return true;
+
+				let roundedCenter = [
+					Math.round(center[0] / roundToMeters) * roundToMeters,
+					Math.round(center[1] / roundToMeters) * roundToMeters
+				];
+				let key: BucketKey = `${roundedCenter[0]},${roundedCenter[1]}`;
+				let bucket = buckets.get(key);
+				if (!bucket) {
+					bucket = [];
+					buckets.set(key, bucket);
+				}
+				bucket.push(c.id);
 			}
 		});
 
-		if (obj) {
-			this.flyToObject(obj.id);
-		} else {
-			let cornerstone = this.broker.project.objectsMap.get('_cornerstone');
-			if (cornerstone) {
-				this.flyToObject(cornerstone.id);
+		let sortedBuckets = [...buckets.entries()].sort((a, b) => {
+			if (b[1].includes('_cornerstone')) {
+				return 1;
 			}
+			if (a[1].includes('_cornerstone')) {
+				return -1;
+			}
+			return b[1].length - a[1].length;
+		});
+
+		while (sortedBuckets.length > 0) {
+			while (sortedBuckets[0][1].length > 0) {
+				let objId = sortedBuckets[0][1].pop();
+				if (!objId) {
+					continue;
+				}
+				let obj = this.broker.project.objectsMap.get(objId);
+				if (!obj) {
+					continue;
+				}
+
+				if (this.flyToObject(obj.id)) {
+					return;
+				}
+			}
+
+			sortedBuckets.shift();
+		}
+
+		let cornerstone = this.broker.project.objectsMap.get('_cornerstone');
+		if (cornerstone) {
+			this.flyToObject(cornerstone.id);
 		}
 	}
 
@@ -1483,13 +1522,13 @@ export class EditorContext {
 		let bounds = this.broker.project.computeBoundsMulti([id]);
 		let center = this.getBoundsCenter(bounds);
 		if (isNaN(center[0]) || isNaN(center[1])) {
-			return;
+			return false;
 		}
 
 		let [lon, lat] = this.positionToLonLat(center[0], center[1]);
 		let map = get(this.map);
 		if (!map) {
-			return;
+			return false;
 		}
 
 		if (zoom) {
@@ -1498,6 +1537,8 @@ export class EditorContext {
 		} else {
 			map.setCenter(lon, lat);
 		}
+
+		return true;
 	}
 
 	flyTo(lon: number, lat: number, zoom = false) {
