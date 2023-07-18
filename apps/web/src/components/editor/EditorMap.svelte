@@ -710,30 +710,36 @@
 		}
 	}
 
+	let mapSwapTimer: number = 0;
+
 	function handleMouseWheel(e: WheelEvent) {
 		if (!e.target.closest('.map-container') || e.target.closest('.map-container') != containerEl)
 			return;
 
-		if (map instanceof GoogleMapsProvider) {
-			if (e.deltaY < 0) {
-				let currentZoom = map.getZoom();
-				setTimeout(() => {
-					if (!map) return;
-					if (map.getZoom() == currentZoom && currentZoom > 18) {
-						if ($zoomSettingsPref == 'auto' || $zoomSettingsPref == 'prioritize-google') {
-							editor.info('Map switched to Mapbox for increased zoom level.');
-							$mapStyle = $mapStyle.replace('google', 'mapbox');
-						} else if ($zoomSettingsPref == 'manual') {
-							showManualMapZoomWarning = true;
+		if (Math.abs(Date.now() - mapSwapTimer) > 1000) {
+			if (map instanceof GoogleMapsProvider) {
+				if (e.deltaY < 0) {
+					let currentZoom = map.getZoom();
+					setTimeout(() => {
+						if (!map) return;
+						if (map.getZoom() == currentZoom && currentZoom > 18) {
+							if ($zoomSettingsPref == 'auto' || $zoomSettingsPref == 'prioritize-google') {
+								editor.info('Map switched to Mapbox for increased zoom level.');
+								$mapStyle = $mapStyle.replace('google', 'mapbox');
+								mapSwapTimer = Date.now();
+							} else if ($zoomSettingsPref == 'manual') {
+								showManualMapZoomWarning = true;
+							}
 						}
+					}, 1);
+				}
+			} else {
+				if (map && map.getZoom() <= 19) {
+					if ($zoomSettingsPref == 'prioritize-google') {
+						editor.info('Map switched to Google for decreased zoom level.');
+						$mapStyle = $mapStyle.replace('mapbox', 'google');
+						mapSwapTimer = Date.now();
 					}
-				}, 1);
-			}
-		} else {
-			if (map && map.getZoom() <= 17) {
-				if ($zoomSettingsPref == 'prioritize-google') {
-					editor.info('Map switched to Google for decreased zoom level.');
-					$mapStyle = $mapStyle.replace('mapbox', 'google');
 				}
 			}
 		}
