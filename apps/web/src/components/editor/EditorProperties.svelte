@@ -218,8 +218,17 @@
 		recalculateProperties();
 	}
 
-	function doPropChange(prop: ObjectProperty): any {
-		return (e: InputEvent) => {
+	let staged: any[] = [];
+
+	function commitStaged() {
+		for (let s of staged) {
+			s[0](s[1]);
+		}
+		staged = [];
+	}
+
+	function doPropChange(prop: ObjectProperty, stage: boolean = false): any {
+		let cb = (e: InputEvent) => {
 			let existingVal = propertyValueMap.get(prop.name);
 
 			let setTo: any = null;
@@ -293,10 +302,21 @@
 				broker.commitTransaction(transaction);
 			}
 		};
+
+		if (stage) {
+			return (e: InputEvent) => {
+				staged.push([cb, e]);
+			};
+		} else {
+			return cb;
+		}
 	}
 
-	function doTransformChange(prop: 'x' | 'y' | 'width' | 'height' | 'angle'): any {
-		return (e: InputEvent) => {
+	function doTransformChange(
+		prop: 'x' | 'y' | 'width' | 'height' | 'angle',
+		stage: boolean = false
+	): any {
+		let cb = (e: InputEvent) => {
 			let value = parseFloat((e.target as HTMLInputElement).value);
 
 			let oldValue = propertyValueMap.get(prop);
@@ -383,6 +403,14 @@
 
 			broker.commitTransaction(transaction);
 		};
+
+		if (stage) {
+			return (e: InputEvent) => {
+				staged.push([cb, e]);
+			};
+		} else {
+			return cb;
+		}
 	}
 
 	let transactionDebounce: any;
@@ -467,6 +495,7 @@
 
 	let selectionKeyCounter = 0;
 	let sub = () => {
+		commitStaged();
 		selectionKeyCounter++;
 	};
 
@@ -503,7 +532,9 @@
 								id="props-x"
 								class="w-full h-6 cursor-default pl-2"
 								bind:value={propertiesDisplay.x}
-								on:change={doTransformChange('x')}
+								on:input={doTransformChange('x', true)}
+								on:blur={commitStaged}
+								on:change={commitStaged}
 							/>
 						</div>
 						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
@@ -516,7 +547,9 @@
 								id="props-y"
 								class="w-full h-6 cursor-default pl-2"
 								bind:value={propertiesDisplay.y}
-								on:change={doTransformChange('y')}
+								on:input={doTransformChange('y', true)}
+								on:blur={commitStaged}
+								on:change={commitStaged}
 							/>
 						</div>
 					</div>
@@ -532,7 +565,9 @@
 								class="w-full h-6 cursor-default pl-2 text-black"
 								value={propertiesDisplay.width}
 								use:displayUnits={propertiesDisplay.width == 'Mixed' ? '' : 'ft'}
-								on:change={doTransformChange('width')}
+								on:input={doTransformChange('width', true)}
+								on:blur={commitStaged}
+								on:change={commitStaged}
 							/>
 						</div>
 						<div class="flex-1 flex flex-row border border-gray-200 rounded-md hover:shadow-sm">
@@ -546,7 +581,9 @@
 								class="w-full h-6 cursor-default pl-2 text-black"
 								value={propertiesDisplay.height}
 								use:displayUnits={propertiesDisplay.height == 'Mixed' ? '' : 'ft'}
-								on:change={doTransformChange('height')}
+								on:input={doTransformChange('height', true)}
+								on:blur={commitStaged}
+								on:change={commitStaged}
 							/>
 						</div>
 					</div>
@@ -563,7 +600,9 @@
 								class="w-full cursor-default pl-2"
 								bind:value={propertiesDisplay.angle}
 								use:displayUnits={'°'}
-								on:change={doTransformChange('angle')}
+								on:input={doTransformChange('angle', true)}
+								on:blur={commitStaged}
+								on:change={commitStaged}
 							/>
 						</div>
 						<div class="flex-1 flex flex-row" />
@@ -649,7 +688,9 @@
 									class="w-full px-1 rounded-r-md"
 									type="text"
 									bind:value={propertiesDisplay.props[prop.name]}
-									on:change={doPropChange(prop)}
+									on:input={doPropChange(prop, true)}
+									on:blur={commitStaged}
+									on:change={commitStaged}
 								/>
 							{:else if prop.type == 'number'}
 								<input
@@ -658,7 +699,9 @@
 									type="number"
 									value={propertiesDisplay.props[prop.name] *
 										(typeof prop.multiplier == 'number' ? prop.multiplier : 1)}
-									on:change={doPropChange(prop)}
+									on:input={doPropChange(prop, true)}
+									on:blur={commitStaged}
+									on:change={commitStaged}
 								/>
 							{:else if prop.type == 'meters'}
 								<input
@@ -667,7 +710,9 @@
 									use:displayUnits={'ft'}
 									step={1 / 12}
 									value={metersToFeet(propertiesDisplay.props[prop.name])}
-									on:change={doPropChange(prop)}
+									on:input={doPropChange(prop, true)}
+									on:blur={commitStaged}
+									on:change={commitStaged}
 								/>
 							{:else if prop.type == 'angle'}
 								<input
@@ -676,14 +721,18 @@
 									type="number"
 									use:displayUnits={'°'}
 									value={rad2deg(propertiesDisplay.props[prop.name])}
-									on:change={doPropChange(prop)}
+									on:input={doPropChange(prop, true)}
+									on:blur={commitStaged}
+									on:change={commitStaged}
 								/>
 							{:else if prop.type == 'boolean'}
 								<input
 									class="ml-2 px-1"
 									type="checkbox"
 									checked={propertiesDisplay.props[prop.name]}
-									on:change={doPropChange(prop)}
+									on:input={doPropChange(prop, true)}
+									on:blur={commitStaged}
+									on:change={commitStaged}
 								/>
 							{:else if prop.type == 'geo'}
 								<input
@@ -702,7 +751,9 @@
 										class="ml-2 px-1 mr-2"
 										type="checkbox"
 										checked={propertiesDisplay.props[prop.name]?.active ?? false}
-										on:change={doPropChange(prop)}
+										on:input={doPropChange(prop, true)}
+										on:blur={commitStaged}
+										on:change={commitStaged}
 									/>
 									<div
 										class={propertiesDisplay.props[prop.name]?.active ?? false
