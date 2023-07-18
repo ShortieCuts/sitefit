@@ -997,7 +997,7 @@
 	>
 		{#if showManualMapZoomWarning && !styleSelectorOpen}
 			<button
-				class="absolute bg-white rounded-lg p-2 text-sm left-24 w-64 h-full cursor-pointer text-left"
+				class="absolute bg-white rounded-lg p-2 text-sm left-24 w-[283px] h-full cursor-pointer text-left"
 				on:click={() => {
 					$mapStyle = $mapStyle.replace('google', 'mapbox');
 					showManualMapZoomWarning = false;
