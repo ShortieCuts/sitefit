@@ -699,6 +699,7 @@ export class ProjectBroker {
 		for (const obj of changedObjects) {
 			this.objectPropertyStores.get(obj)?.update((n) => n + 1);
 			this.rendererDirtyObjects.add(obj);
+			this.markObjectDirty(obj);
 		}
 
 		this.needsRender.set(true);
@@ -1007,6 +1008,13 @@ export class ProjectBroker {
 				if (obj) {
 					store.set((obj as any)[prop]);
 				}
+			}
+		}
+
+		let children = this.project.objectsMapChildren.get(id);
+		if (children) {
+			for (let child of children) {
+				this.markObjectDirty(child.id);
 			}
 		}
 	}

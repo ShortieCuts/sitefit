@@ -113,7 +113,6 @@
 	}
 
 	function toggleVisibility() {
-		console.log('toggle visibility');
 		let transaction = broker.project.createTransaction();
 
 		transaction.update(node.id, 'visible', !node.visible);
