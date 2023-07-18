@@ -60,7 +60,8 @@
 				name: obj.name,
 				visible: obj.visible,
 				order: obj.order,
-				children: []
+				children: [],
+				globalIndex: 0
 			} as EditorLayerNode;
 
 			if (obj.parent) {
@@ -110,11 +111,30 @@
 	}
 
 	const { objectTreeWatcher } = broker;
+	let indexArray: EditorLayerNode[] = [];
 	$: {
 		let dummy = $objectTreeWatcher;
 		buildObjectTree();
 
 		objectTree.sort(sortItems);
+
+		let globalIndexCounter = 0;
+
+		indexArray = [];
+
+		function recursiveWalk(node: EditorLayerNode) {
+			node.globalIndex = globalIndexCounter++;
+			indexArray.push(node);
+			for (const child of node.children) {
+				recursiveWalk(child);
+			}
+		}
+
+		for (const node of objectTree) {
+			recursiveWalk(node);
+		}
+
+		setContext('globalArray', indexArray);
 	}
 
 	$: {
@@ -148,6 +168,31 @@
 		});
 	}
 </script>
+
+<svelte:window
+	on:keydown={(e) => {
+		let direction = 0;
+		if (e.key == 'ArrowDown') {
+			direction = 1;
+		} else if (e.key == 'ArrowUp') {
+			direction = -1;
+		}
+
+		if (direction != 0) {
+			let nextIndex = 0;
+			for (let i = 0; i < indexArray.length; i++) {
+				if (indexArray[i].id == $selection[0]) {
+					nextIndex = i + direction;
+					break;
+				}
+			}
+
+			if (nextIndex < indexArray.length) {
+				editor.select(indexArray[nextIndex].id);
+			}
+		}
+	}}
+/>
 
 <div class="overflow-y-auto max-h-full">
 	{#each objectTree as node}

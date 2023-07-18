@@ -53,6 +53,8 @@
 
 	export let node: EditorLayerNode;
 
+	const globalArray: EditorLayerNode[] = getContext('globalArray') ?? [];
+
 	let nodeElement: HTMLElement;
 
 	let editingName = false;

@@ -15,5 +15,6 @@ export type EditorLayerNode = {
 	name: string;
 	order: number;
 	visible: boolean;
+	globalIndex: number;
 	children: EditorLayerNode[];
 };
