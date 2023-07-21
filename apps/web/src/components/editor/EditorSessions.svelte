@@ -19,7 +19,7 @@
 				transition:slide={{ duration: 200, axis: 'x' }}
 				class="session -mr-6 hover:-mr-2 last:hover:-mr-6 last:hover:ml-0 hover:ml-4 transition-all hover:z-10 hover:shadow-xl rounded-full relative"
 			>
-				<UserChip userId={session.userId} ringColor={session.color} />
+				<UserChip userId={session.userId} ringColor={session.color} horizontal />
 			</div>
 		{/if}
 	{/each}

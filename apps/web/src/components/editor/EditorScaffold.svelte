@@ -738,7 +738,7 @@
 								>
 									<div class="origin-center -rotate-45 scale-[0.65]">
 										{#if $auth.user}
-											<UserChip userId={$auth.user.id} />
+											<UserChip userId={$auth.user.id} horizontal />
 										{/if}
 									</div>
 								</div>
@@ -798,7 +798,7 @@
 										class:bg-white={comment.read}
 									>
 										<div class="comment-chip origin-center -rotate-45 scale-[0.65]">
-											<UserChip userId={comment.authorId} />
+											<UserChip userId={comment.authorId} horizontal />
 										</div>
 										<div class="absolute comment-text">
 											{comment.text}

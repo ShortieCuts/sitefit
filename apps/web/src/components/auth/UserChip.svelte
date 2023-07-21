@@ -60,7 +60,7 @@
 		class:items-center={horizontal}
 		class:space-x-2={horizontal}
 		title="Anonymous user"
-		class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase flex items-center flex-row justify-center text-gray-400"
+		class="w-10 h-10 rounded-full border-[2px] shadow-md uppercase justify-center text-gray-400"
 		style="background: #eee; border-color: {ringColor};"
 	>
 		<Fa icon={faUser} />
