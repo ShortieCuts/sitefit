@@ -1207,7 +1207,7 @@
 <input
 	id="import-file"
 	type="file"
-	accept=".dwg"
+	accept=".dwg,.DWG"
 	bind:this={fileEl}
 	style="display: none"
 	on:change={async () => {

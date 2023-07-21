@@ -686,7 +686,7 @@ export async function processCadUploads(
 	for (let f of files) {
 		counter++;
 		let i = counter;
-		if (f.name.endsWith('.dwg')) {
+		if (f.name.endsWith('.dwg') || f.name.endsWith('.DWG')) {
 			promises.push(
 				new Promise((resolve, reject) => {
 					// let uploadToast = editor.info("Uploading '" + f.name + "'...", 50000);

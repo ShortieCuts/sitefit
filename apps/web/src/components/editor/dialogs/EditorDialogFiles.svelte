@@ -70,7 +70,7 @@
 				<h2 class="mt-4 text-lg">Uploading CAD{$uploads.length > 1 ? 's' : ''}</h2>
 			</div>
 			{#each $uploads as upload}
-				<div class="flex flex-row items-center min-h-12 border-b border-gray-100 py-4">
+				<div class="flex flex-col items-center min-h-12 border-b border-gray-100 py-4">
 					<div class="flex-1">
 						{upload.name}
 					</div>
