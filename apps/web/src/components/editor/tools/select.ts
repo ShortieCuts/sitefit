@@ -1402,6 +1402,7 @@ function computeSelectionBox(
 	for (let obj of quadObjects) {
 		if (!obj.flatShape) continue;
 		if (IGNORED_OBJECTS.includes(obj.type) || obj.pinned) continue;
+		if (!broker.project.computeObjectLayerVisibility(obj)) continue;
 		let doesIntersect = false;
 		for (let fl of obj.flatShape) {
 			if (doesIntersect) continue;
@@ -1502,6 +1503,7 @@ export function getObjectAtCursor(
 	for (let obj of quadObjects) {
 		if (!obj.flatShape) continue;
 		if (filterObjects && !filterObjects(obj)) continue;
+		if (!broker.project.computeObjectLayerVisibility(obj)) continue;
 
 		let objRealOrder = broker.project.computeObjectLayerHeight(obj);
 
