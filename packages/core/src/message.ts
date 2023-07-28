@@ -13,7 +13,23 @@ export type SocketMessage =
   | WriteGlobalProperty
   | CommitTransaction
   | SetAccessLevel
-  | Refresh;
+  | Refresh
+  | SplitMessage;
+
+type SplitMessage = {
+  type: "split";
+  subType: string;
+  key: string;
+  order: number;
+  value: string;
+  total: number;
+};
+
+export function isSplitMessage(
+  message: SocketMessage
+): message is SplitMessage {
+  return message.type === "split";
+}
 
 type SessionShape = {
   uid: string;
@@ -162,6 +178,23 @@ export namespace SocketMessage {
     };
   }
 
+  export function split(
+    subType: string,
+    key: string,
+    order: number,
+    total: number,
+    value: string
+  ): SplitMessage {
+    return {
+      type: "split",
+      subType,
+      key,
+      order,
+      total,
+      value,
+    };
+  }
+
   export function batch(messages: SocketMessage[]): Batch {
     return {
       type: "batch",
@@ -218,4 +251,5 @@ export namespace SocketMessage {
   export type CommitTransactionType = CommitTransaction;
   export type SetAccessLevelType = SetAccessLevel;
   export type RefreshType = Refresh;
+  export type SplitMessageType = SplitMessage;
 }

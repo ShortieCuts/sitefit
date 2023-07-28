@@ -442,6 +442,7 @@ async function convertAutodeskToObjects(viewer: AutodeskViewer): Promise<string>
 			let dbid = frag[2];
 			let color = frag[2];
 			if (type == 't') {
+				let totalArea = 0;
 				for (let i = frag[3].length - 1; i >= 0; i--) {
 					let t = frag[3][i];
 
@@ -455,13 +456,15 @@ async function convertAutodeskToObjects(viewer: AutodeskViewer): Promise<string>
 					let x3 = c3[0];
 					let y3 = c3[1];
 					let triangleArea = 0.5 * Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
-					if (triangleArea < lineSize) {
-						frag[3].splice(i, 1);
-					}
+					totalArea += triangleArea;
 				}
 
-				if (frag[3].length == 0) {
+				if (totalArea < lineSize) {
 					objects.splice(fragI, 1);
+				} else {
+					if (frag[3].length == 0) {
+						objects.splice(fragI, 1);
+					}
 				}
 			} else if (type == 'l') {
 				for (let i = frag[3].length - 1; i >= 0; i--) {

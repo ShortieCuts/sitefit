@@ -4,6 +4,7 @@ import {
   isJoin,
   isLogin,
   isRefresh,
+  isSplitMessage,
   isWriteGlobalProperty,
   Project,
   SocketMessage,
@@ -439,6 +440,14 @@ export class EngineInstance {
 
     // Set event handlers to receive messages.
     let loggedIn = false;
+    let chunkAccumulator: Map<
+      string,
+      {
+        chunks: { data: string; order: number }[];
+        subType: string;
+        total: number;
+      }
+    > = new Map();
     webSocket.addEventListener("message", async (msg: MessageEvent) => {
       if (session.quit) {
         webSocket.close(1011, "WebSocket broken.");
@@ -479,6 +488,36 @@ export class EngineInstance {
           } else if (isBatch(data)) {
             for (let msg of data.messages) {
               await this.handleMessage(session, msg);
+            }
+          } else if (isSplitMessage(data)) {
+            if (!chunkAccumulator.has(data.key)) {
+              chunkAccumulator.set(data.key, {
+                chunks: [],
+                subType: data.subType,
+                total: data.total,
+              });
+            }
+
+            let chunk = chunkAccumulator.get(data.key)!;
+            chunk.chunks.push({ data: data.value, order: data.order });
+
+            if (chunk.chunks.length === chunk.total) {
+              let value = chunk.chunks
+                .sort((a, b) => a.order - b.order)
+                .map((c) => c.data)
+                .join("");
+              let newData = { type: chunk.subType, ...JSON.parse(value) };
+
+              console.log(
+                "Got full message",
+                (value.length / (1024 * 1024)).toFixed(2),
+                "mb from",
+                data.key,
+                "with type",
+                chunk.subType
+              );
+              await this.handleMessage(session, newData);
+              chunkAccumulator.delete(data.key);
             }
           } else {
             await this.handleMessage(session, data);
@@ -585,6 +624,7 @@ export class EngineInstance {
         }
       }
     } else if (isCommitTransaction(data)) {
+      console.log("Got transaction", data.transaction.mutations.length);
       if (session.checkAccess("WRITE")) {
         if (this.project) {
           let appliedMutations = this.project.applyTransaction(
@@ -615,6 +655,10 @@ export class EngineInstance {
         if (session.checkAccess("COMMENT")) {
           this.broadcast(data);
         }
+      }
+    } else if (isBatch(data)) {
+      for (let msg of data.messages) {
+        await this.handleMessage(session, msg);
       }
     }
   }

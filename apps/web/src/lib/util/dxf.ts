@@ -281,7 +281,7 @@ function translateJSON(json: any): Object2D[] {
 	let lineSize = 1 / 1000; // 1mm
 	let purgeCount = 0;
 
-	while (purgeCount < 100 && JSON.stringify(json.objects).length > 1024 * 1024 * 1.3) {
+	while (purgeCount < 100 && JSON.stringify(json.objects).length > 1024 * 1024 * 10.3) {
 		lineSize *= 2;
 		purgeCount++;
 		// Still too big, remove small lines
@@ -292,6 +292,7 @@ function translateJSON(json: any): Object2D[] {
 			let dbid = frag[1];
 			let color = frag[2];
 			if (type == 't') {
+				let totalArea = 0;
 				for (let i = frag[3].length - 1; i >= 0; i--) {
 					let t = frag[3][i];
 
@@ -305,13 +306,15 @@ function translateJSON(json: any): Object2D[] {
 					let x3 = c3[0];
 					let y3 = c3[1];
 					let triangleArea = 0.5 * Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
-					if (triangleArea < lineSize) {
-						frag[3].splice(i, 1);
-					}
+					totalArea += triangleArea;
 				}
 
-				if (frag[3].length == 0) {
+				if (totalArea < lineSize) {
 					json.objects.splice(fragI, 1);
+				} else {
+					if (frag[3].length == 0) {
+						json.objects.splice(fragI, 1);
+					}
 				}
 			} else if (type == 'l') {
 				for (let i = frag[3].length - 1; i >= 0; i--) {

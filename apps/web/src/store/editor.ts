@@ -37,7 +37,7 @@ import {
 	writeProjectAccess
 } from '$lib/client/api';
 import { browser, dev } from '$app/environment';
-import { auth, getSession } from './auth';
+import { auth, getSession, signOut } from './auth';
 import { nanoid } from 'nanoid';
 import type { ThreeJSOverlayView } from '@googlemaps/three';
 import { translateDXF } from '$lib/util/dxf';
@@ -883,7 +883,26 @@ export class ProjectBroker {
 
 	sendMessage(message: SocketMessage) {
 		if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-			this.socket.send(LZString.compressToUint8Array(JSON.stringify(message)));
+			let json = JSON.stringify(message);
+			let serialized = LZString.compressToUint8Array(json);
+			if (serialized.byteLength > 1024 * 1024) {
+				// Message is too big, split it up
+				let chunks = Math.ceil(json.length / (1024 * 1024)); // We split the json string into 1MB chunks
+				let chunkSize = Math.ceil(json.length / chunks);
+				console.log(message);
+
+				let id = nanoid(52);
+
+				for (let i = 0; i < chunks; i++) {
+					let chunk = json.substring(i * chunkSize, i * chunkSize + chunkSize);
+					let chunkMessage = SocketMessage.split(message.type, id, i, chunks, chunk);
+					let chunkJson = JSON.stringify(chunkMessage);
+					let chunkSerialized = LZString.compressToUint8Array(chunkJson);
+					this.socket.send(chunkSerialized);
+				}
+			} else {
+				this.socket.send(serialized);
+			}
 		}
 	}
 
@@ -896,6 +915,12 @@ export class ProjectBroker {
 
 		if (this.socket) {
 			this.socket.close();
+		}
+
+		if (get(this.error) == 'unauthorized') {
+			this.connected.set(false);
+			this.establishingConnection = false;
+			return;
 		}
 
 		const wss = document.location.protocol === 'http:' ? 'ws://' : 'wss://';
@@ -911,7 +936,14 @@ export class ProjectBroker {
 				if (this.accessToken) {
 					this.sendMessage(SocketMessage.login('!' + this.accessToken));
 				} else {
-					this.sendMessage(SocketMessage.login(await getSession()));
+					let mySession = await getSession();
+					if (!mySession) {
+						console.log('Invalid session, logging out...');
+						await signOut();
+						location.reload();
+					} else {
+						this.sendMessage(SocketMessage.login(await getSession()));
+					}
 				}
 			})();
 		});
